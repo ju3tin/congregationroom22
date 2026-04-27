@@ -40,7 +40,7 @@ export default function MerchPage() {
           <div className="mb-12">
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">Merch Store</h1>
             <p className="text-lg text-muted-foreground max-w-2xl">
-              Rep your favorite radio station with official Pulse Radio merchandise.
+              Rep your favorite radio station with official Congregation Room 22 merchandise.
             </p>
           </div>
 

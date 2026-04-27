@@ -10,8 +10,8 @@ import { LivePlayer } from "@/components/live-player"
 import { events, djs } from "@/data/radio-data"
 
 export const metadata = {
-  title: "Events - Pulse Radio",
-  description: "Upcoming Pulse Radio events. Get your tickets and join us on the dancefloor.",
+  title: "Events - Congregation Room 22",
+  description: "Upcoming Congregation Room 22 events. Get your tickets and join us on the dancefloor.",
 }
 
 export default function EventsPage() {
@@ -28,7 +28,7 @@ export default function EventsPage() {
           <div className="mb-12">
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">Events</h1>
             <p className="text-lg text-muted-foreground max-w-2xl">
-              Experience Pulse Radio live. Get your tickets for our upcoming events and join us on the dancefloor.
+              Experience Congregation Room 22 live. Get your tickets for our upcoming events and join us on the dancefloor.
             </p>
           </div>
 

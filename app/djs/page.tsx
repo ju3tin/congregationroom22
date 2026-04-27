@@ -9,8 +9,8 @@ import { LivePlayer } from "@/components/live-player"
 import { djs } from "@/data/radio-data"
 
 export const metadata = {
-  title: "DJs - Pulse Radio",
-  description: "Meet the talented DJs behind Pulse Radio's world-class programming.",
+  title: "DJs - Congregation Room 22",
+  description: "Meet the talented DJs behind Congregation Room 22's world-class programming.",
 }
 
 export default function DJsPage() {

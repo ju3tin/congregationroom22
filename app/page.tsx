@@ -230,7 +230,7 @@ export default function HomePage() {
                 <div className="text-center md:text-left flex-1">
                   <h2 className="text-2xl sm:text-3xl font-bold mb-2">Listen on DAB Digital Radio</h2>
                   <p className="text-muted-foreground max-w-xl">
-                    Take Pulse Radio with you anywhere. Find us on DAB digital radio across major cities, or stream directly from our app.
+                    Take Congregation Room 22 with you anywhere. Find us on DAB digital radio across major cities, or stream directly from our app.
                   </p>
                 </div>
                 <Link href="/listen">

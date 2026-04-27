@@ -8,8 +8,8 @@ import { LivePlayer } from "@/components/live-player"
 import { dabChannels } from "@/data/radio-data"
 
 export const metadata = {
-  title: "Listen - Pulse Radio",
-  description: "Find Pulse Radio on DAB digital radio or stream online. Multiple ways to tune in.",
+  title: "Listen - Congregation Room 22",
+  description: "Find Congregation Room 22 on DAB digital radio or stream online. Multiple ways to tune in.",
 }
 
 export default function ListenPage() {
@@ -26,7 +26,7 @@ export default function ListenPage() {
             <div className="max-w-3xl">
               <Badge variant="secondary" className="mb-4">DAB Digital Radio</Badge>
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
-                Listen to Pulse Radio
+                Listen to Congregation Room 22
               </h1>
               <p className="text-lg text-muted-foreground mb-8">
                 Tune in anywhere, anytime. Find us on DAB digital radio across major cities, 
@@ -74,7 +74,7 @@ export default function ListenPage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
             <h2 className="text-2xl sm:text-3xl font-bold mb-2">Ways to Listen</h2>
             <p className="text-muted-foreground mb-8">
-              Multiple ways to tune in to Pulse Radio.
+              Multiple ways to tune in to Congregation Room 22.
             </p>
             
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -85,7 +85,7 @@ export default function ListenPage() {
                   </div>
                   <h3 className="font-bold mb-2">DAB Radio</h3>
                   <p className="text-sm text-muted-foreground">
-                    Search for Pulse Radio on your DAB digital radio receiver.
+                    Search for Congregation Room 22 on your DAB digital radio receiver.
                   </p>
                 </CardContent>
               </Card>
@@ -145,7 +145,7 @@ export default function ListenPage() {
                   </div>
                   <h3 className="text-xl font-bold mb-2">DAB Coverage</h3>
                   <p className="text-muted-foreground max-w-md mx-auto">
-                    Pulse Radio is available on DAB digital radio in London, Manchester, Birmingham, Leeds, 
+                    Congregation Room 22 is available on DAB digital radio in London, Manchester, Birmingham, Leeds, 
                     Glasgow, and more UK cities. Can&apos;t find us? Stream online instead!
                   </p>
                 </div>
@@ -186,7 +186,7 @@ export default function ListenPage() {
                 <div className="text-center md:text-left flex-1">
                   <h2 className="text-2xl sm:text-3xl font-bold mb-2">Smart Speaker Compatible</h2>
                   <p className="text-muted-foreground max-w-xl">
-                    Just say &quot;Play Pulse Radio&quot; to your Alexa, Google Home, or Siri-enabled device. 
+                    Just say &quot;Play Congregation Room 22&quot; to your Alexa, Google Home, or Siri-enabled device. 
                     We&apos;re available on all major smart speaker platforms.
                   </p>
                 </div>

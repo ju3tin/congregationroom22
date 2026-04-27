@@ -277,7 +277,7 @@ export const events: Event[] = [
 export const merch: MerchItem[] = [
   {
     id: "1",
-    name: "Pulse Radio Logo Tee",
+    name: "Congregation Room 22 Logo Tee",
     description: "Premium cotton tee featuring our iconic logo. Soft, comfortable, and perfect for the dancefloor.",
     price: 35,
     image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&h=400&fit=crop",
@@ -306,7 +306,7 @@ export const merch: MerchItem[] = [
   },
   {
     id: "4",
-    name: "Pulse Radio Snapback",
+    name: "Congregation Room 22 Snapback",
     description: "Classic snapback with embroidered logo. One size fits most.",
     price: 28,
     image: "https://images.unsplash.com/photo-1588850561407-ed78c282e89b?w=400&h=400&fit=crop",
@@ -334,7 +334,7 @@ export const merch: MerchItem[] = [
   },
   {
     id: "7",
-    name: "Pulse Radio Tote Bag",
+    name: "Congregation Room 22 Tote Bag",
     description: "Eco-friendly canvas tote with our signature design. Great for carrying your vinyl.",
     price: 22,
     image: "https://images.unsplash.com/photo-1544816155-12df9643f363?w=400&h=400&fit=crop",
@@ -365,9 +365,9 @@ export const schedule: ScheduleSlot[] = [
 ]
 
 export const dabChannels = [
-  { id: "main", name: "Pulse Radio Main", frequency: "11D", bitrate: "128kbps", description: "Our flagship channel with 24/7 programming" },
-  { id: "bass", name: "Pulse Bass", frequency: "11D", bitrate: "96kbps", description: "Non-stop bass music - DnB, Dubstep, and more" },
-  { id: "chill", name: "Pulse Chill", frequency: "11D", bitrate: "96kbps", description: "Relaxed vibes and melodic sounds" }
+  { id: "main", name: "Congregation Room 22 Main", frequency: "11D", bitrate: "128kbps", description: "Our flagship channel with 24/7 programming" },
+  { id: "bass", name: "Congregation Room 22 Bass", frequency: "11D", bitrate: "96kbps", description: "Non-stop bass music - DnB, Dubstep, and more" },
+  { id: "chill", name: "Congregation Room 22 Chill", frequency: "11D", bitrate: "96kbps", description: "Relaxed vibes and melodic sounds" }
 ]
 
 export const getDjById = (id: string) => djs.find(dj => dj.id === id)

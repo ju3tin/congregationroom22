@@ -22,7 +22,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   if (!dj) return { title: "DJ Not Found" }
   
   return {
-    title: `${dj.name} - Pulse Radio`,
+    title: `${dj.name} - Congregation Room 22`,
     description: dj.bio,
   }
 }
@@ -119,7 +119,7 @@ export default async function DJProfilePage({ params }: { params: Promise<{ slug
                   </div>
                   <div>
                     <p className="font-medium">{show}</p>
-                    <p className="text-sm text-muted-foreground">On Pulse Radio</p>
+                    <p className="text-sm text-muted-foreground">On Congregation Room 22</p>
                   </div>
                 </CardContent>
               </Card>
