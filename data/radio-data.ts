@@ -63,17 +63,17 @@ export interface ScheduleSlot {
 export const djs: DJ[] = [
   {
     id: "1",
-    name: "DJ Nova",
-    slug: "dj-nova",
+    name: "Gary G",
+    slug: "garyg",
     genre: "House / Tech House",
-    bio: "Nova has been at the forefront of the underground house scene for over a decade. Known for her energetic sets and seamless transitions, she brings the heat to dancefloors worldwide. Her weekly show 'Nova Nights' has become a staple for house music lovers.",
+    bio: "Gary G has been at the forefront of the underground house scene for over a decade. Known for his energetic sets and seamless transitions, he brings the heat to dancefloors worldwide. His weekly show has become a staple for house and Gary G music lovers.",
     image: "https://images.unsplash.com/photo-1571266028243-e4733b0f0bb0?w=400&h=400&fit=crop",
     socialLinks: {
-      instagram: "djnova",
-      soundcloud: "djnova",
-      twitter: "djnova"
+      instagram: "garygrierson78",
+      soundcloud: "GaryG",
+      twitter: "garygrierson78"
     },
-    upcomingShows: ["Nova Nights - Every Friday 10PM"]
+    upcomingShows: ["GaryG - Every Thursday 10PM"]
   },
   {
     id: "2",
