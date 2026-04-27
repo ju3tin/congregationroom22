@@ -147,14 +147,14 @@ export const djs: DJ[] = [
 export const mixes: Mix[] = [
   {
     id: "1",
-    title: "Nova Nights Vol. 47",
+    title: "Gary G's House Mix",
     djId: "1",
-    djName: "DJ Nova",
-    genre: "House",
+    djName: "Gary G",
+    genre: "House / Garage",
     duration: "1:32:45",
     releaseDate: "2026-04-20",
-    downloadUrl: "/mixes/nova-nights-47.mp3",
-    coverImage: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=400&h=400&fit=crop",
+    downloadUrl: "/downloads/garyginthemix.mp3",
+    coverImage: "/images/image101.jpg",
     plays: 12450
   },
   {
