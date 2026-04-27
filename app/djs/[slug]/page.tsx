@@ -152,11 +152,11 @@ export default async function DJProfilePage({ params }: { params: Promise<{ slug
                           <span>{mix.plays.toLocaleString()} plays</span>
                         </div>
                       </div>
-                      <Link href={mix.downloadUrl}>
+                      <a href={mix.downloadUrl}>
                       <Button variant="outline" size="icon" className="shrink-0">
                         <Download className="w-4 h-4" />
                       </Button>
-                      </Link>
+                      </a>
                     </div>
                   </CardContent>
                 </Card>

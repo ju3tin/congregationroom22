@@ -148,12 +148,12 @@ export default function MixesPage() {
                         </div>
                         
                         <div className="mt-auto flex items-center gap-3">
-                        <Link href={mix.downloadUrl}>
+                        <a href={mix.downloadUrl} download>
                           <Button className="bg-primary hover:bg-primary/90">
                             <Download className="w-4 h-4 mr-2" />
                             Download MP3
                           </Button>
-                          </Link>
+                          </a>
                           <Button variant="outline">
                             <Play className="w-4 h-4 mr-2" />
                             Preview
