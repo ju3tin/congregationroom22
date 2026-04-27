@@ -66,11 +66,11 @@ export const djs: DJ[] = [
     name: "Gary G",
     slug: "garyg",
     genre: "House / Tech House",
-    bio: "Gary G has been at the forefront of the underground house scene for over a decade. Known for his energetic sets and seamless transitions, he brings the heat to dancefloors worldwide. His weekly show has become a staple for house and Gary G music lovers.",
+    bio: "Gary G has been at the forefront of the underground house scene for over a decade. Known for his energetic sets and seamless transitions, he brings the heat to dancefloors worldwide. His weekly show has become a staple for house and garage music lovers.",
     image: "/images/image101.jpg",
     socialLinks: {
       instagram: "garygrierson78",
-      soundcloud: "GaryG",
+      soundcloud: "gary-grierson-591563083",
       twitter: "garygrierson78"
     },
     upcomingShows: ["GaryG - Every Thursday 10PM"]
