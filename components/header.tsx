@@ -4,6 +4,7 @@ import Link from "next/link"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Menu, X, Radio } from "lucide-react"
+import  RadioIcon  from "@/components/logo.svg"
 
 const navLinks = [
   { href: "/", label: "Home" },
@@ -24,7 +25,7 @@ export function Header() {
         <div className="flex items-center justify-between h-16">
           <Link href="/" className="flex items-center gap-2">
             <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
-              <Radio className="w-6 h-6 text-primary-foreground" />
+              <RadioIcon className="w-6 h-6 text-primary-foreground" />
             </div>
             <span className="text-xl font-bold tracking-tight">Congregation Room 22</span>
           </Link>
