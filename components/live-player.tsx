@@ -38,7 +38,7 @@ export function LivePlayer() {
       })
     } else {
       setCurrentShow({
-        djName: "Pulse Radio",
+        djName: "congregationroom22",
         showName: "Non-Stop Mix",
       })
     }
