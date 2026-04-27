@@ -3,8 +3,8 @@
 import Link from "next/link"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Menu, X, Radio } from "lucide-react"
-import  RadioIcon  from "@/components/logo.svg"
+import { Menu, X } from "lucide-react"
+import RadioIcon from "@/components/logo.svg"
 
 const navLinks = [
   { href: "/", label: "Home" },
