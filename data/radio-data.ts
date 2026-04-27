@@ -67,7 +67,7 @@ export const djs: DJ[] = [
     slug: "garyg",
     genre: "House / Tech House",
     bio: "Gary G has been at the forefront of the underground house scene for over a decade. Known for his energetic sets and seamless transitions, he brings the heat to dancefloors worldwide. His weekly show has become a staple for house and Gary G music lovers.",
-    image: "https://images.unsplash.com/photo-1571266028243-e4733b0f0bb0?w=400&h=400&fit=crop",
+    image: "/images/image101.jpg",
     socialLinks: {
       instagram: "garygrierson78",
       soundcloud: "GaryG",
