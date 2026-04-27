@@ -7,9 +7,9 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'Pulse Radio - Underground Electronic Music 24/7',
+  title: 'congregationroom22 - Underground Electronic Music 24/7',
   description: 'Your home for the best house, techno, drum & bass, and more. Tune in to discover new sounds and connect with our global community.',
-  generator: 'v0.app',
+//  generator: 'v0.app',
   icons: {
     icon: [
       {
