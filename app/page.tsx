@@ -49,10 +49,12 @@ export default function HomePage() {
                   <Radio className="w-5 h-5 mr-2" />
                   Listen Live
                 </Button>
-                <Button size="lg" variant="outline">
+                <Link href="/schedule">                
+                  <Button size="lg" variant="outline">
                   <Calendar className="w-5 h-5 mr-2" />
                   View Schedule
                 </Button>
+                  </Link>
               </div>
             </div>
           </div>
