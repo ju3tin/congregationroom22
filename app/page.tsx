@@ -7,7 +7,7 @@ import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { LivePlayer } from "@/components/live-player"
 import { djs, events, mixes } from "@/data/radio-data"
-
+ 
 export default function HomePage() {
   const featuredDjs = djs.slice(0, 4)
   const upcomingEvents = events.slice(0, 2)
