@@ -39,6 +39,8 @@
     "@radix-ui/react-tooltip": "1.2.8",
     "@svgr/webpack": "^8.1.0",
     "@vercel/analytics": "1.6.1",
+    "@types/bcryptjs": "^3.0.0",
+    "@types/qrcode": "^1.5.6",
     "autoprefixer": "^10.4.20",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
