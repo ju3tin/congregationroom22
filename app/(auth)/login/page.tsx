@@ -7,7 +7,7 @@ import { Music2, Eye, EyeOff } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { login } from "../actions"
+import { login } from "@/app/(auth)/actions"
 
 export default function LoginPage() {
   const router = useRouter()
