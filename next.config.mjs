@@ -8,10 +8,6 @@ const nextConfig = {
   },
   turbopack: {
     rules: {
-       "*.less": {
-        loaders: ["less-loader"],
-        as: "*.css",
-      },
       "*.svg": {
         loaders: ["@svgr/webpack"],
         as: "*.js",
