@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useRef } from 'react';
 import { Timeline } from '@knight-lab/timelinejs';
-import '@knight-lab/timelinejs/dist/css/timeline.css';
+//import '@knight-lab/timelinejs/dist/css/timeline.css';
 
 export default function RadioTimeline() {
   const timelineRef = useRef<HTMLDivElement>(null);
