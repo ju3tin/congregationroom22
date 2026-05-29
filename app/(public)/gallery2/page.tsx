@@ -70,12 +70,9 @@ export default function RadioTimeline() {
   if (error) return <div className="text-center py-20 text-red-500 text-xl">{error}</div>;
 
   return (
-    <div className="min-h-screen bg-gray-950 py-12 px-4">
-      <div className="max-w-6xl mx-auto">
-        <h1 className="text-4xl font-bold text-center text-white mb-10">
-          Vibe FM Timeline
-        </h1>
-        <div ref={timelineRef} style={{ height: "680px", width: "100%" }} />
+      <div className="bg-gray-950">
+      <div className="mx-auto">
+        <div ref={timelineRef} style={{height: "100vh", width: "100%" }} />
       </div>
     </div>
   );
