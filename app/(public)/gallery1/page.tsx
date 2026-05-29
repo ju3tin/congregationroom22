@@ -51,12 +51,12 @@ export default function RadioTimeline() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-950 py-12 px-4">
+    <div className="bg-gray-950 py-12 px-4">
       <div className="max-w-6xl mx-auto">
         <h1 className="text-4xl font-bold text-center text-white mb-10">
           Radio Station Timeline
         </h1>
-        <div ref={timelineRef} style={{ height: "700px", width: "100%" }} />
+        <div ref={timelineRef} style={{ width: "100%" }} />
       </div>
     </div>
   );
