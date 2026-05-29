@@ -53,9 +53,6 @@ export default function RadioTimeline() {
   return (
     <div className="bg-gray-950">
       <div className="mx-auto">
-        <h1 className="text-4xl font-bold text-center text-white mb-10">
-          Radio Station Timeline
-        </h1>
         <div ref={timelineRef} style={{height: "100vh", width: "100%" }} />
       </div>
     </div>
