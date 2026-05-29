@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import TimelineEvent from '@/models/TimelineEvent';
-import { getAuthUser } from '@/lib/auth';
+import { getAuthUser } from '@/lib/auth1';
 
 export async function GET() {
   await connectDB();
