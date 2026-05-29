@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import connectDB from '@/lib/mongodb';
+import connectDB from '@/lib/db';
 import TimelineEvent from '@/models/TimelineEvent';
 
 export async function GET() {
