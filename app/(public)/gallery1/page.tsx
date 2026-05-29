@@ -51,8 +51,8 @@ export default function RadioTimeline() {
   }, []);
 
   return (
-    <div className="bg-gray-950 py-12 px-4">
-      <div className="max-w-6xl mx-auto">
+    <div className="bg-gray-950">
+      <div className="mx-auto">
         <h1 className="text-4xl font-bold text-center text-white mb-10">
           Radio Station Timeline
         </h1>
