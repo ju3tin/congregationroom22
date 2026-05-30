@@ -4,10 +4,7 @@ import TimelineEvent from '@/models/TimelineEvent';
 
 export async function GET() {
   try {
-    console.log('Timeline API HIT');
-
     await connectDB();
-    console.log('DB CONNECTED');
 
     const events = await TimelineEvent.find().sort({
       'start_date.year': 1,
@@ -24,7 +21,7 @@ export async function GET() {
       },
 
       events: events.map((event: any) => {
-        const timelineEvent: any = {
+        const item: any = {
           start_date: {
             year: event.start_date?.year || '',
             month: event.start_date?.month || '',
@@ -32,23 +29,23 @@ export async function GET() {
           },
 
           text: {
-            headline: event.headline,
-            text: event.text,
+            headline: event.headline || '',
+            text: event.text || '',
           },
         };
 
         // ✅ END DATE (only if valid)
         if (event.end_date?.year) {
-          timelineEvent.end_date = {
+          item.end_date = {
             year: event.end_date.year,
             month: event.end_date.month || '',
             day: event.end_date.day || '',
           };
         }
 
-        // ✅ MEDIA (only if url exists)
+        // ✅ MEDIA (Timeline style main media)
         if (event.media?.url) {
-          timelineEvent.media = {
+          item.media = {
             url: event.media.url,
             caption: event.media.caption || '',
             credit: event.media.credit || '',
@@ -56,22 +53,24 @@ export async function GET() {
           };
         }
 
-        // ✅ ASSETS (only if array has items)
-        if (event.assets?.length > 0) {
-          timelineEvent.assets = event.assets.map((asset: any) => ({
-            title: asset.title,
-            url: asset.url,
-            type: asset.type,
-            caption: asset.caption || '',
-          }));
+        // ✅ ASSETS (your social + extras)
+        if (Array.isArray(event.assets) && event.assets.length > 0) {
+          item.assets = event.assets
+            .filter((a: any) => a?.url)
+            .map((a: any) => ({
+              type: a.type || 'image',
+              title: a.title || '',
+              url: a.url,
+              caption: a.caption || '',
+            }));
         }
 
         // ✅ GROUP
         if (event.group) {
-          timelineEvent.group = event.group;
+          item.group = event.group;
         }
 
-        return timelineEvent;
+        return item;
       }),
     };
 
