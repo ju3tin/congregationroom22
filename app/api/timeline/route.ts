@@ -4,20 +4,16 @@ import TimelineEvent from '@/models/TimelineEvent';
 
 export async function GET() {
   try {
+    console.log('Timeline API HIT');
+
     await connectDB();
+    console.log('DB CONNECTED');
 
     const events = await TimelineEvent.find().sort({
       'start_date.year': 1,
       'start_date.month': 1,
       'start_date.day': 1,
     });
-
-
-const hasValidEndDate =
-  event.end_date &&
-  event.end_date.year &&
-  event.end_date.year !== '';
-    
 
     const timelineData = {
       title: {
@@ -41,16 +37,16 @@ const hasValidEndDate =
           },
         };
 
-        // Optional end date
-        if (hasValidEndDate) {
+        // ✅ END DATE (only if valid)
+        if (event.end_date?.year) {
           timelineEvent.end_date = {
             year: event.end_date.year,
-            month: event.end_date.month,
-            day: event.end_date.day,
+            month: event.end_date.month || '',
+            day: event.end_date.day || '',
           };
         }
 
-        // Optional media
+        // ✅ MEDIA (only if url exists)
         if (event.media?.url) {
           timelineEvent.media = {
             url: event.media.url,
@@ -60,7 +56,7 @@ const hasValidEndDate =
           };
         }
 
-        // Optional assets array
+        // ✅ ASSETS (only if array has items)
         if (event.assets?.length > 0) {
           timelineEvent.assets = event.assets.map((asset: any) => ({
             title: asset.title,
@@ -70,7 +66,7 @@ const hasValidEndDate =
           }));
         }
 
-        // Optional group
+        // ✅ GROUP
         if (event.group) {
           timelineEvent.group = event.group;
         }
@@ -80,13 +76,13 @@ const hasValidEndDate =
     };
 
     return NextResponse.json(timelineData);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Timeline API Error:', error);
 
     return NextResponse.json(
       {
         success: false,
-        message: 'Failed to load timeline data',
+        message: error.message || 'Failed to load timeline data',
       },
       { status: 500 }
     );
