@@ -23,11 +23,13 @@ export async function GET() {
         month: event.start_date?.month || "",
         day: event.start_date?.day || ""
       },
-      end_date: event.end_date ? {
-        year: event.end_date.year,
-        month: event.end_date.month,
-        day: event.end_date.day
-      } : undefined,
+     ...(event.end_date && {
+    end_date: {
+      year: event.end_date.year,
+      month: event.end_date.month,
+      day: event.end_date.day
+    }
+  }),
       text: {
         headline: event.headline,
         text: event.text
