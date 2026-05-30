@@ -12,6 +12,13 @@ export async function GET() {
       'start_date.day': 1,
     });
 
+
+const hasValidEndDate =
+  event.end_date &&
+  event.end_date.year &&
+  event.end_date.year !== '';
+    
+
     const timelineData = {
       title: {
         text: {
@@ -35,7 +42,7 @@ export async function GET() {
         };
 
         // Optional end date
-        if (event.end_date) {
+        if (hasValidEndDate) {
           timelineEvent.end_date = {
             year: event.end_date.year,
             month: event.end_date.month,
