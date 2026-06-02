@@ -45,10 +45,10 @@ export function Header() {
           </nav>
 
           <div className="hidden md:flex items-center gap-3">
-            <Button variant="outline" size="sm">
+            <Button onClick={() => router.push("/login")} variant="outline" size="sm">
               Sign In
             </Button>
-            <Button size="sm" className="bg-primary hover:bg-primary/90">
+            <Button onClick={() => router.push("/listen")} size="sm" className="bg-primary hover:bg-primary/90">
               Listen Live
             </Button>
           </div>
