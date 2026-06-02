@@ -2,6 +2,7 @@ import dbConnect from "@/lib/db";
 import { SiteSettings } from "@/models";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { SiteSettingsForm } from "./settings-form";
+import { Editor } from "./editor";
 
 interface Settings {
   siteName?: string;
@@ -49,9 +50,7 @@ export default async function AdminSettingsPage() {
             <CardDescription>Customize the main homepage banner</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-              The hero section settings are included in the main settings form.
-            </p>
+            <Editor />
           </CardContent>
         </Card>
       </div>
