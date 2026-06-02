@@ -1,3 +1,4 @@
+"use client"
 import dbConnect from "@/lib/db";
 import { SiteSettings } from "@/models";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
