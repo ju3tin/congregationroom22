@@ -5,6 +5,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Menu, X } from "lucide-react"
 import RadioIcon from "@/components/logo.svg"
+import { useRouter } from "next/navigation";
 
 const navLinks = [
   { href: "/", label: "Home" },
@@ -75,16 +76,16 @@ export function Header() {
                 </Link>
               ))}
               <div className="flex flex-col gap-2 mt-4 px-4">
-                <link href="/login">
-                <Button variant="outline" size="sm" className="w-full">
+             
+                <Button onClick={() => router.push("/login")} variant="outline" size="sm" className="w-full">
                   Sign In
                 </Button>
-                  </link>
-                <link href="/listen">
-                <Button size="sm" className="w-full bg-primary hover:bg-primary/90">
+             
+           
+                <Button onClick={() => router.push("/listen")} size="sm" className="w-full bg-primary hover:bg-primary/90">
                   Listen Live
                 </Button>
-                </link>
+          
               </div>
             </nav>
           </div>
