@@ -21,6 +21,7 @@ const adminNav = [
   { name: "Users", href: "/admin/users", icon: Users },
   { name: "Pages", href: "/admin/pages", icon: FileText },
   { name: "Promo Codes", href: "/admin/promo-codes", icon: Tag },
+  { name: "Timeline", href: "/admin/timeline", icon: Tag },
   { name: "Settings", href: "/admin/settings", icon: Settings },
 ]
 
