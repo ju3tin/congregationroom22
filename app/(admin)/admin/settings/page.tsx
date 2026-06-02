@@ -1,10 +1,9 @@
-"use client"
 import dbConnect from "@/lib/db";
 import { SiteSettings } from "@/models";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { SiteSettingsForm } from "./settings-form";
 import { useState } from 'react';
-import Editor from '@/components/Editor1';
+import { Editor } from '@/components/Editor1';
 
 interface Settings {
   siteName?: string;
