@@ -2,7 +2,7 @@ import dbConnect from "@/lib/db";
 import { SiteSettings } from "@/models";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { SiteSettingsForm } from "./settings-form";
-import Editor from "@/components/editor";
+import Editor from "@/components/editor1";
 
 interface Settings {
   siteName?: string;
