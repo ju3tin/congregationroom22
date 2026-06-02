@@ -75,12 +75,16 @@ export function Header() {
                 </Link>
               ))}
               <div className="flex flex-col gap-2 mt-4 px-4">
+                <link href="/login">
                 <Button variant="outline" size="sm" className="w-full">
                   Sign In
                 </Button>
+                  </link>
+                <link href="/listen">
                 <Button size="sm" className="w-full bg-primary hover:bg-primary/90">
                   Listen Live
                 </Button>
+                </link>
               </div>
             </nav>
           </div>
