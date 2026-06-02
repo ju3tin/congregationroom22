@@ -51,11 +51,7 @@ export default async function AdminSettingsPage() {
             <CardDescription>Customize the main homepage banner</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-           <Editor 
-          content={description} 
-          onChange={setDescription} 
-          placeholder="Write detailed description here..."
-        />
+          <Editor content={description} onChange={setDescription} />
           </CardContent>
         </Card>
       </div>
