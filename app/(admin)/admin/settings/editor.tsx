@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import Editor from '@/components/Editor1';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function ProductForm() {
   const [description, setDescription] = useState('');
@@ -11,6 +12,14 @@ export default function ProductForm() {
   };
 
   return (
+
+      <Card>
+          <CardHeader>
+            <CardTitle>Homepage Hero</CardTitle>
+            <CardDescription>Customize the main homepage banner</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+          
     <div className="max-w-4xl mx-auto p-6">
       <h2 className="text-2xl font-bold mb-6">Create Product / Event</h2>
 
@@ -26,5 +35,7 @@ export default function ProductForm() {
         Save Product
       </button>
     </div>
+          </CardContent>
+        </Card>
   );
 }
