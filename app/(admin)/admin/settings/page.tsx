@@ -25,6 +25,7 @@ async function getSettings(): Promise<Settings> {
 
 export default async function AdminSettingsPage() {
   const settings = await getSettings();
+   const [description, setDescription] = useState('');
 
   return (
     <div className="space-y-6">
