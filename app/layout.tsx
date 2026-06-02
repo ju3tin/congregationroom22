@@ -1,3 +1,4 @@
+import { SessionProvider } from "next-auth/react";
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
@@ -37,8 +38,10 @@ export default function RootLayout({
   return (
     <html lang="en" className="bg-background">
       <body className="font-sans antialiased bg-background">
+      <SessionProvider>
         {children}
         {process.env.NODE_ENV === 'production' && <Analytics />}
+      </SessionProvider>
       </body>
     </html>
   )
