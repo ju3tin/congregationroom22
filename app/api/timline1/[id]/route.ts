@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import dbConnect from "@/lib/dbConnect";
+import connectDB from '@/lib/db';
 import TimelineEvent from "@/models/TimelineEvents";
 
 interface RouteParams {
