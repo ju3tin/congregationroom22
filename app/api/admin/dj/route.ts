@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server"
 import connectDB from "@/lib/db"
 import DJ from "@/models/DJ"
-import { getUserFromRequest } from "@/lib/auth"
+import { getAuthUser } from '@/lib/auth1';
 
 export async function GET(req: NextRequest) {
   try {
-    const user = await getUserFromRequest(req)
+    const user = await getAuthUser();
 
     if (!user || !["admin"].includes(user.role)) {
       return NextResponse.json(
