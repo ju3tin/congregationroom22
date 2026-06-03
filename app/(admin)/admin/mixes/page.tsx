@@ -13,13 +13,17 @@ import {
 } from "@/components/ui/table"
 
 import dbConnect from "@/lib/db"
+
+// IMPORTANT: force registration of DJ model
+import "@/models/DJ"
+
 import Mix from "@/models/Mix"
 
 async function getMixes() {
   await dbConnect()
 
   const mixes = await Mix.find()
-    .populate("djId", "name")
+    .populate("djId", "name slug")
     .sort({ releaseDate: -1 })
     .lean()
 
@@ -35,7 +39,7 @@ export default async function AdminMixesPage() {
         <div>
           <h1 className="text-3xl font-bold">Mixes</h1>
           <p className="mt-2 text-muted-foreground">
-            Manage all mixes
+            Manage all mixes on the platform
           </p>
         </div>
 
@@ -47,8 +51,8 @@ export default async function AdminMixesPage() {
         </Button>
       </div>
 
-      {mixes.length ? (
-        <div className="rounded-lg border">
+      {mixes.length > 0 ? (
+        <div className="rounded-lg border border-border">
           <Table>
             <TableHeader>
               <TableRow>
@@ -71,14 +75,15 @@ export default async function AdminMixesPage() {
                       <p className="font-medium">
                         {mix.title}
                       </p>
+
                       <p className="text-xs text-muted-foreground">
-                        {mix.duration}s
+                        {mix.slug}
                       </p>
                     </div>
                   </TableCell>
 
                   <TableCell>
-                    {mix.djId?.name}
+                    {mix.djId?.name || "Unknown DJ"}
                   </TableCell>
 
                   <TableCell>
@@ -86,14 +91,16 @@ export default async function AdminMixesPage() {
                   </TableCell>
 
                   <TableCell>
-                    {format(
-                      new Date(mix.releaseDate),
-                      "MMM d, yyyy"
-                    )}
+                    {mix.releaseDate
+                      ? format(
+                          new Date(mix.releaseDate),
+                          "MMM d, yyyy"
+                        )
+                      : "-"}
                   </TableCell>
 
                   <TableCell>
-                    {mix.plays}
+                    {mix.plays || 0}
                   </TableCell>
 
                   <TableCell className="text-right">
@@ -115,12 +122,16 @@ export default async function AdminMixesPage() {
           </Table>
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-16">
+        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border py-16">
           <Disc3 className="h-12 w-12 text-muted-foreground" />
 
           <h2 className="mt-4 text-xl font-semibold">
             No mixes yet
           </h2>
+
+          <p className="mt-2 text-muted-foreground">
+            Create your first mix to get started
+          </p>
 
           <Button asChild className="mt-4">
             <Link href="/admin/mixes/new">
