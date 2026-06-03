@@ -39,7 +39,7 @@ export default async function AdminDJsPage() {
         </div>
 
         <Button asChild>
-          <Link href="/admin/djs/new">
+          <Link href="/admin/dj/new">
             <Plus className="mr-2 h-4 w-4" />
             Add DJ
           </Link>
@@ -149,7 +149,7 @@ export default async function AdminDJsPage() {
           </p>
 
           <Button asChild className="mt-4">
-            <Link href="/admin/djs/new">
+            <Link href="/admin/dj/new">
               <Plus className="mr-2 h-4 w-4" />
               Add DJ
             </Link>
