@@ -1,148 +1,110 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
-interface TimelineEvent {
-  _id: string;
-  title: string;
-  category?: string;
-  featured?: boolean;
-  startDate: {
-    year: number;
-    month?: number;
-    day?: number;
-  };
-}
-
-export default function TimelinePage() {
-  const [events, setEvents] = useState<TimelineEvent[]>([]);
+export default function TimelineAdminPage() {
+  const [events, setEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchEvents();
+    loadEvents();
   }, []);
 
-  async function fetchEvents() {
+  async function loadEvents() {
     try {
       const res = await fetch("/api/admin/timeline");
       const data = await res.json();
       setEvents(data);
     } catch (error) {
-      console.error("Failed to load timeline events:", error);
+      console.error(error);
     } finally {
       setLoading(false);
     }
   }
 
-  async function handleDelete(id: string) {
-    const confirmed = window.confirm(
-      "Are you sure you want to delete this timeline event?"
-    );
+  async function deleteEvent(id: string) {
+    if (!confirm("Delete this timeline event?")) return;
 
-    if (!confirmed) return;
+    await fetch(`/api/admin/timeline/${id}`, {
+      method: "DELETE",
+    });
 
-    try {
-      const res = await fetch(`/api/admin/timeline/${id}`, {
-        method: "DELETE",
-      });
-
-      if (!res.ok) {
-        throw new Error("Delete failed");
-      }
-
-      setEvents((prev) => prev.filter((event) => event._id !== id));
-    } catch (error) {
-      console.error(error);
-      alert("Failed to delete event.");
-    }
+    setEvents((prev) => prev.filter((e) => e._id !== id));
   }
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Timeline Events</h1>
-          <p className="text-muted-foreground">
-            Manage timeline entries displayed on the site.
-          </p>
-        </div>
+    <div className="p-6">
+      <div className="mb-6 flex items-center justify-between">
+        <h1 className="text-3xl font-bold">
+          Timeline Events
+        </h1>
 
         <Link
           href="/admin/timeline/new"
-          className="rounded-lg bg-primary px-4 py-2 text-primary-foreground"
+          className="rounded bg-black px-4 py-2 text-white"
         >
           Add Event
         </Link>
       </div>
 
-      <div className="overflow-hidden rounded-lg border">
-        <table className="w-full">
-          <thead className="border-b bg-muted/50">
-            <tr>
-              <th className="px-4 py-3 text-left">Date</th>
-              <th className="px-4 py-3 text-left">Title</th>
-              <th className="px-4 py-3 text-left">Category</th>
-              <th className="px-4 py-3 text-left">Featured</th>
-              <th className="px-4 py-3 text-right">Actions</th>
-            </tr>
-          </thead>
+      {loading ? (
+        <p>Loading...</p>
+      ) : (
+        <div className="overflow-hidden rounded border">
+          <table className="w-full">
+            <thead className="bg-gray-100">
+              <tr>
+                <th className="p-3 text-left">Year</th>
+                <th className="p-3 text-left">Title</th>
+                <th className="p-3 text-left">Category</th>
+                <th className="p-3 text-right">
+                  Actions
+                </th>
+              </tr>
+            </thead>
 
-          <tbody>
-            {loading ? (
-              <tr>
-                <td colSpan={5} className="px-4 py-8 text-center">
-                  Loading...
-                </td>
-              </tr>
-            ) : events.length === 0 ? (
-              <tr>
-                <td colSpan={5} className="px-4 py-8 text-center">
-                  No timeline events found.
-                </td>
-              </tr>
-            ) : (
-              events.map((event) => (
-                <tr key={event._id} className="border-b">
-                  <td className="px-4 py-3">
-                    {event.startDate.year}
+            <tbody>
+              {events.map((event) => (
+                <tr
+                  key={event._id}
+                  className="border-t"
+                >
+                  <td className="p-3">
+                    {event.startDate?.year}
                   </td>
 
-                  <td className="px-4 py-3 font-medium">
+                  <td className="p-3">
                     {event.title}
                   </td>
 
-                  <td className="px-4 py-3">
-                    {event.category || "-"}
+                  <td className="p-3">
+                    {event.category}
                   </td>
 
-                  <td className="px-4 py-3">
-                    {event.featured ? "✓" : "-"}
-                  </td>
+                  <td className="p-3 text-right">
+                    <Link
+                      href={`/admin/timeline/${event._id}`}
+                      className="mr-3 text-blue-600"
+                    >
+                      Edit
+                    </Link>
 
-                  <td className="px-4 py-3">
-                    <div className="flex justify-end gap-2">
-                      <Link
-                        href={`/admin/timeline/${event._id}`}
-                        className="rounded border px-3 py-1"
-                      >
-                        Edit
-                      </Link>
-
-                      <button
-                        onClick={() => handleDelete(event._id)}
-                        className="rounded border border-red-500 px-3 py-1 text-red-500"
-                      >
-                        Delete
-                      </button>
-                    </div>
+                    <button
+                      onClick={() =>
+                        deleteEvent(event._id)
+                      }
+                      className="text-red-600"
+                    >
+                      Delete
+                    </button>
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }
