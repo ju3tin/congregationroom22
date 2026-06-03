@@ -23,6 +23,8 @@ const adminNav = [
   { name: "Promo Codes", href: "/admin/promo-codes", icon: Tag },
   { name: "Timeline", href: "/admin/timeline", icon: Tag },
   { name: "Settings", href: "/admin/settings", icon: Settings },
+  { name: "DJ's", href: "/admin/dj", icon: Music },
+  { name: "Mixes", href: "/admin/mixes", icon: Music },
 ]
 
 export default async function AdminLayout({
