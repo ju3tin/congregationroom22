@@ -25,7 +25,7 @@ export default function TimelinePage() {
 
   async function fetchEvents() {
     try {
-      const res = await fetch("/api/timeline");
+      const res = await fetch("/api/admin/timeline");
       const data = await res.json();
       setEvents(data);
     } catch (error) {
@@ -43,7 +43,7 @@ export default function TimelinePage() {
     if (!confirmed) return;
 
     try {
-      const res = await fetch(`/api/timeline/${id}`, {
+      const res = await fetch(`/api/admin/timeline/${id}`, {
         method: "DELETE",
       });
 
