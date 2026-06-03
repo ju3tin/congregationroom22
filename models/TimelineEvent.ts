@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+import mongoose, { Schema, Document, Model, Types } from "mongoose"
 
 const TimelineEventSchema = new mongoose.Schema({
   headline: { type: String, required: true },
