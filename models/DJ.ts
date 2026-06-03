@@ -32,7 +32,7 @@ const DJSchema = new Schema<IDJ>(
   { timestamps: true }
 )
 
-DJSchema.index({ slug: 1 })
+
 DJSchema.index({ genre: 1 })
 
 const DJ: Model<IDJ> =
