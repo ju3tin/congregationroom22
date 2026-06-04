@@ -20,7 +20,7 @@ async function getDJs() {
     "http://localhost:3000"
 
   const res = await fetch(
-    `${baseUrl}/api/dj`,
+    `/api/dj`,
     {
       cache: "no-store",
     }
