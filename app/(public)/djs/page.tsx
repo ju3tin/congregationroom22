@@ -15,9 +15,7 @@ export const metadata = {
 }
 
 async function getDJs() {
-  const baseUrl =
-    process.env.NEXT_PUBLIC_SITE_URL ||
-    "http://localhost:3000"
+
 
   const res = await fetch(
     `/api/dj`,
