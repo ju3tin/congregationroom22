@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { connectToDB } from "@/lib/mongodb"; // ← adjust path if needed
+import dbConnect from "@/lib/db" // ← adjust path if needed
 import Event from "@/models/Event";
 
 export async function GET(
@@ -7,7 +7,7 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    await connectToDB();
+    await dbConnect();
     const event = await Event.findById(params.id).lean();
 
     if (!event) {
