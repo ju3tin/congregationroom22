@@ -18,7 +18,7 @@ async function getDJs() {
 
 
   const res = await fetch(
-    `/api/dj`,
+    `https://congregationroom22.vercel.app/api/dj`,
     {
       cache: "no-store",
     }
