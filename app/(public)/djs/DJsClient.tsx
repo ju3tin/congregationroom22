@@ -30,7 +30,7 @@ export default function DJsClient() {
     async function fetchDJs() {
       try {
         console.log("🔄 Fetching DJs...");
-        const res = await fetch("/api/dj", { 
+        const res = await fetch("/api/dj1", { 
           cache: "no-store",
           next: { revalidate: 0 }
         });
