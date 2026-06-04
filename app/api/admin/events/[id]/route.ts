@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { connectToDB } from "@/lib/mongodb"; // adjust path if needed
+import dbConnect from "@/lib/db" // adjust path if needed
 import Event from "@/models/Event"; // adjust path if needed
 
 // GET - Fetch single event
