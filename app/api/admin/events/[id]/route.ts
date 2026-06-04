@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import dbConnect from "@/lib/db" // ← adjust path if needed
+import dbConnect from "@/lib/db";
 import Event from "@/models/Event";
 
 export async function GET(
@@ -16,7 +16,7 @@ export async function GET(
 
     return Response.json(event);
   } catch (error) {
-    console.error(error);
+    console.error("Fetch event error:", error);
     return Response.json({ error: "Failed to fetch event" }, { status: 500 });
   }
 }
@@ -26,10 +26,10 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    await connectToDB();
+    await dbConnect();
 
     const formData = await req.formData();
-    const ticketTiersRaw = formData.get("ticketTiers") as string;
+    const ticketTiersRaw = formData.get("ticketTiers") as string | null;
 
     const updateData: any = {
       title: formData.get("title"),
@@ -56,7 +56,7 @@ export async function PUT(
 
     return Response.json({ success: true, event });
   } catch (error: any) {
-    console.error("Update error:", error);
+    console.error("Update event error:", error);
     return Response.json({ error: error.message || "Failed to update event" }, { status: 500 });
   }
 }
