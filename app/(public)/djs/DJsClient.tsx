@@ -29,19 +29,22 @@ export default function DJsClient() {
   useEffect(() => {
     async function fetchDJs() {
       try {
-        console.log("Fetching DJs from /api/dj..."); // Debug
-        const res = await fetch("/api/dj", { cache: "no-store" });
+        console.log("🔄 Fetching DJs...");
+        const res = await fetch("/api/dj", { 
+          cache: "no-store",
+          next: { revalidate: 0 }
+        });
 
         if (!res.ok) {
-          throw new Error(`HTTP ${res.status}`);
+          throw new Error(`Failed with status: ${res.status}`);
         }
 
         const data = await res.json();
-        console.log("DJs data received:", data); // Debug
+        console.log("✅ DJs received:", data.djs);
 
         setDjs(data.djs || []);
       } catch (err: any) {
-        console.error("Fetch error:", err);
+        console.error("❌ Fetch error:", err);
         setError(err.message || "Failed to load DJs");
       } finally {
         setLoading(false);
@@ -50,6 +53,9 @@ export default function DJsClient() {
 
     fetchDJs();
   }, []);
+
+  // Debug render
+  console.log("Current DJs state:", djs.length, "items");
 
   if (loading) {
     return (
@@ -81,7 +87,10 @@ export default function DJsClient() {
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {djs.length > 0 ? (
           djs.map((dj) => (
-            <Card key={dj._id} className="group overflow-hidden bg-card hover:bg-secondary/30 transition-colors border-border">
+            <Card
+              key={dj._id}
+              className="group overflow-hidden bg-card hover:bg-secondary/30 transition-colors border-border"
+            >
               <CardContent className="p-0">
                 <Link href={`/djs/${dj.slug}`}>
                   <div className="relative aspect-square">
@@ -110,21 +119,33 @@ export default function DJsClient() {
                     <div className="flex gap-2">
                       {dj.socialLinks?.instagram && (
                         <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
-                          <a href={`https://instagram.com/${dj.socialLinks.instagram}`} target="_blank" rel="noopener noreferrer">
+                          <a
+                            href={`https://instagram.com/${dj.socialLinks.instagram}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
                             <Instagram className="w-4 h-4" />
                           </a>
                         </Button>
                       )}
                       {dj.socialLinks?.soundcloud && (
                         <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
-                          <a href={`https://soundcloud.com/${dj.socialLinks.soundcloud}`} target="_blank" rel="noopener noreferrer">
+                          <a
+                            href={`https://soundcloud.com/${dj.socialLinks.soundcloud}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
                             <Music2 className="w-4 h-4" />
                           </a>
                         </Button>
                       )}
                       {dj.socialLinks?.twitter && (
                         <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
-                          <a href={`https://twitter.com/${dj.socialLinks.twitter}`} target="_blank" rel="noopener noreferrer">
+                          <a
+                            href={`https://twitter.com/${dj.socialLinks.twitter}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
                             <Twitter className="w-4 h-4" />
                           </a>
                         </Button>
@@ -132,7 +153,9 @@ export default function DJsClient() {
                     </div>
 
                     <Link href={`/djs/${dj.slug}`}>
-                      <Button variant="outline" size="sm">View Profile</Button>
+                      <Button variant="outline" size="sm">
+                        View Profile
+                      </Button>
                     </Link>
                   </div>
                 </div>
@@ -140,9 +163,9 @@ export default function DJsClient() {
             </Card>
           ))
         ) : (
-          <p className="text-center text-muted-foreground col-span-full py-12">
-            No DJs available at the moment.
-          </p>
+          <div className="col-span-full py-20 text-center">
+            <p className="text-muted-foreground text-lg">No DJs found.</p>
+          </div>
         )}
       </div>
     </section>
