@@ -27,7 +27,7 @@ interface TicketTier {
   salesEnd: string;
 }
 
-interface Event {
+interface EventData {
   _id: string;
   title: string;
   slug: string;
@@ -48,20 +48,19 @@ export default function EditEventPage() {
 
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
-  const [event, setEvent] = useState<Event | null>(null);
-
+  const [event, setEvent] = useState<EventData | null>(null);
   const [tiers, setTiers] = useState<TicketTier[]>([]);
 
-  // Fetch existing event
+  // Fetch Event
   useEffect(() => {
     async function fetchEvent() {
       if (!id) return;
 
       try {
-        const res = await fetch(`/api/events/${id}`);
+        const res = await fetch(`/api/admin/events/${id}`);
         if (!res.ok) throw new Error("Failed to fetch event");
 
-        const data: Event = await res.json();
+        const data: EventData = await res.json();
         setEvent(data);
         setTiers(data.ticketTiers || []);
       } catch (error) {
@@ -105,25 +104,22 @@ export default function EditEventPage() {
 
   async function handleSubmit(formData: FormData) {
     if (!id) return;
-
     setLoading(true);
+
     formData.append("ticketTiers", JSON.stringify(tiers));
 
     try {
-      const res = await fetch(`/api/events/${id}`, {
+      const res = await fetch(`/api/admin/events/${id}`, {
         method: "PUT",
         body: formData,
       });
 
       const result = await res.json();
 
-      if (!res.ok) {
-        throw new Error(result.error || "Failed to update event");
-      }
+      if (!res.ok) throw new Error(result.error || "Update failed");
 
       toast.success("Event updated successfully");
       router.push("/admin/events");
-      router.refresh(); // Refresh server data
     } catch (error: any) {
       toast.error(error.message || "Something went wrong");
     } finally {
@@ -131,13 +127,8 @@ export default function EditEventPage() {
     }
   }
 
-  if (initialLoading) {
-    return <div className="p-8 text-center">Loading event...</div>;
-  }
-
-  if (!event) {
-    return <div className="p-8 text-center text-red-500">Event not found</div>;
-  }
+  if (initialLoading) return <div className="p-10 text-center">Loading event...</div>;
+  if (!event) return <div className="p-10 text-center text-red-600">Event not found</div>;
 
   return (
     <div className="max-w-4xl mx-auto p-6">
@@ -206,7 +197,7 @@ export default function EditEventPage() {
           </CardContent>
         </Card>
 
-        {/* Venue Info */}
+        {/* Venue */}
         <Card>
           <CardHeader>
             <CardTitle>Venue</CardTitle>
@@ -214,30 +205,15 @@ export default function EditEventPage() {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="venueName">Venue Name</Label>
-              <Input
-                id="venueName"
-                name="venueName"
-                defaultValue={event.venueName}
-                required
-              />
+              <Input id="venueName" name="venueName" defaultValue={event.venueName} required />
             </div>
             <div className="space-y-2">
               <Label htmlFor="venueAddress">Address</Label>
-              <Input
-                id="venueAddress"
-                name="venueAddress"
-                defaultValue={event.venueAddress}
-                required
-              />
+              <Input id="venueAddress" name="venueAddress" defaultValue={event.venueAddress} required />
             </div>
             <div className="space-y-2">
               <Label htmlFor="venueCity">City</Label>
-              <Input
-                id="venueCity"
-                name="venueCity"
-                defaultValue={event.venueCity}
-                required
-              />
+              <Input id="venueCity" name="venueCity" defaultValue={event.venueCity} required />
             </div>
           </CardContent>
         </Card>
@@ -255,7 +231,7 @@ export default function EditEventPage() {
                   id="date"
                   name="date"
                   type="datetime-local"
-                  defaultValue={event.date.slice(0, 16)}
+                  defaultValue={event.date?.slice(0, 16)}
                   required
                 />
               </div>
@@ -265,7 +241,7 @@ export default function EditEventPage() {
                   id="doors"
                   name="doors"
                   type="datetime-local"
-                  defaultValue={event.doors.slice(0, 16)}
+                  defaultValue={event.doors?.slice(0, 16)}
                   required
                 />
               </div>
@@ -284,8 +260,8 @@ export default function EditEventPage() {
           </CardHeader>
           <CardContent className="space-y-6">
             {tiers.map((tier, index) => (
-              <div key={index} className="rounded-lg border border-border p-4 space-y-4">
-                <div className="flex items-center justify-between">
+              <div key={index} className="rounded-lg border p-4 space-y-4">
+                <div className="flex justify-between items-center">
                   <h4 className="font-medium">Tier {index + 1}</h4>
                   {tiers.length > 1 && (
                     <Button
@@ -305,7 +281,6 @@ export default function EditEventPage() {
                     <Input
                       value={tier.name}
                       onChange={(e) => updateTier(index, "name", e.target.value)}
-                      placeholder="e.g., VIP, General Admission"
                       required
                     />
                   </div>
@@ -313,12 +288,9 @@ export default function EditEventPage() {
                     <Label>Price ($)</Label>
                     <Input
                       type="number"
-                      min="0"
                       step="0.01"
                       value={tier.price}
-                      onChange={(e) =>
-                        updateTier(index, "price", parseFloat(e.target.value) || 0)
-                      }
+                      onChange={(e) => updateTier(index, "price", parseFloat(e.target.value) || 0)}
                       required
                     />
                   </div>
@@ -329,11 +301,8 @@ export default function EditEventPage() {
                     <Label>Total Quantity</Label>
                     <Input
                       type="number"
-                      min="1"
                       value={tier.quantity}
-                      onChange={(e) =>
-                        updateTier(index, "quantity", parseInt(e.target.value) || 1)
-                      }
+                      onChange={(e) => updateTier(index, "quantity", parseInt(e.target.value) || 1)}
                       required
                     />
                   </div>
@@ -341,12 +310,8 @@ export default function EditEventPage() {
                     <Label>Max Per Order</Label>
                     <Input
                       type="number"
-                      min="1"
-                      max="20"
                       value={tier.maxPerOrder}
-                      onChange={(e) =>
-                        updateTier(index, "maxPerOrder", parseInt(e.target.value) || 1)
-                      }
+                      onChange={(e) => updateTier(index, "maxPerOrder", parseInt(e.target.value) || 1)}
                       required
                     />
                   </div>
@@ -382,7 +347,7 @@ export default function EditEventPage() {
             <Link href="/admin/events">Cancel</Link>
           </Button>
           <Button type="submit" disabled={loading}>
-            {loading ? "Saving Changes..." : "Update Event"}
+            {loading ? "Saving..." : "Update Event"}
           </Button>
         </div>
       </form>
