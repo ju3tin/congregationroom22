@@ -1,15 +1,14 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import Link from "next/link"
-import Image from "next/image"
-import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Header } from "@/components/header"
-import { Footer } from "@/components/footer"
-import { LivePlayer } from "@/components/live-player"
-import { schedule, djs } from "@/data/radio-data"
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Header } from "@/components/header";
+import { Footer } from "@/components/footer";
+import { LivePlayer } from "@/components/live-player";
 
 const daysOfWeek = [
   "Sunday",
@@ -19,32 +18,102 @@ const daysOfWeek = [
   "Thursday",
   "Friday",
   "Saturday",
-]
+];
+
+interface DJ {
+  _id: string;
+  name: string;
+  slug: string;
+  genre: string;
+  image: string;
+  socialLinks?: {
+    instagram?: string;
+    soundcloud?: string;
+    twitter?: string;
+  };
+}
+
+interface ScheduleSlot {
+  _id: string;
+  dayOfWeek: number;
+  startTime: string;
+  endTime: string;
+  showName: string;
+  dj: DJ;
+}
+
+interface ScheduleData {
+  _id: string;
+  slots: ScheduleSlot[];
+  groupedByDay: Record<number, ScheduleSlot[]>;
+}
 
 export default function SchedulePage() {
-  const [selectedDay, setSelectedDay] = useState(new Date().getDay())
+  const [selectedDay, setSelectedDay] = useState(new Date().getDay());
+  const [scheduleData, setScheduleData] = useState<ScheduleData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string>("");
 
-  const daySchedule = schedule
-    .filter((slot) => slot.dayOfWeek === selectedDay)
-    .sort((a, b) => a.startTime.localeCompare(b.startTime))
+  // Fetch schedule from API
+  useEffect(() => {
+    async function fetchSchedule() {
+      try {
+        const res = await fetch("/api/schedule");
+        if (!res.ok) throw new Error("Failed to load schedule");
+
+        const data = await res.json();
+        setScheduleData(data.schedule);
+      } catch (err: any) {
+        setError(err.message || "Failed to load schedule");
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchSchedule();
+  }, []);
+
+  const daySchedule = scheduleData?.slots
+    ?.filter((slot) => slot.dayOfWeek === selectedDay)
+    .sort((a, b) => a.startTime.localeCompare(b.startTime)) || [];
 
   const getCurrentShow = () => {
-    const now = new Date()
-    const currentTime = now.getHours().toString().padStart(2, "0") + ":" + now.getMinutes().toString().padStart(2, "0")
-    const currentDay = now.getDay()
+    if (!scheduleData?.slots) return null;
 
-    return schedule.find((slot) => {
-      if (slot.dayOfWeek !== currentDay) return false
-      return currentTime >= slot.startTime && currentTime < slot.endTime
-    })
+    const now = new Date();
+    const currentTime = now.getHours().toString().padStart(2, "0") + ":" +
+                       now.getMinutes().toString().padStart(2, "0");
+    const currentDay = now.getDay();
+
+    return scheduleData.slots.find((slot) => {
+      if (slot.dayOfWeek !== currentDay) return false;
+      return currentTime >= slot.startTime && currentTime < slot.endTime;
+    });
+  };
+
+  const currentShow = getCurrentShow();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p className="text-lg">Loading schedule...</p>
+      </div>
+    );
   }
 
-  const currentShow = getCurrentShow()
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p className="text-red-500">{error}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      
+
       <main className="pb-20">
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
           <div className="mb-12">
@@ -68,30 +137,26 @@ export default function SchedulePage() {
                   </span>
                 </div>
                 <div className="flex items-center gap-4">
-                  {(() => {
-                    const dj = djs.find((d) => d.id === currentShow.djId)
-                    return dj ? (
-                      <>
-                        <div className="relative w-16 h-16 rounded-full overflow-hidden">
-                          <Image
-                            src={dj.image}
-                            alt={dj.name}
-                            fill
-                            className="object-cover"
-                          />
-                        </div>
-                        <div>
-                          <h2 className="text-xl font-bold">{currentShow.showName}</h2>
-                          <Link href={`/djs/${dj.slug}`} className="text-primary hover:underline">
-                            {dj.name}
-                          </Link>
-                          <p className="text-sm text-muted-foreground">
-                            {currentShow.startTime} - {currentShow.endTime}
-                          </p>
-                        </div>
-                      </>
-                    ) : null
-                  })()}
+                  <div className="relative w-16 h-16 rounded-full overflow-hidden">
+                    <Image
+                      src={currentShow.dj.image}
+                      alt={currentShow.dj.name}
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold">{currentShow.showName}</h2>
+                    <Link
+                      href={`/djs/${currentShow.dj.slug}`}
+                      className="text-primary hover:underline"
+                    >
+                      {currentShow.dj.name}
+                    </Link>
+                    <p className="text-sm text-muted-foreground">
+                      {currentShow.startTime} - {currentShow.endTime}
+                    </p>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -120,12 +185,11 @@ export default function SchedulePage() {
           <div className="grid gap-4">
             {daySchedule.length > 0 ? (
               daySchedule.map((slot) => {
-                const dj = djs.find((d) => d.id === slot.djId)
-                const isLive = currentShow?.id === slot.id
+                const isLive = currentShow?._id === slot._id;
 
                 return (
                   <Card
-                    key={slot.id}
+                    key={slot._id}
                     className={`bg-card border-border ${isLive ? "ring-2 ring-primary" : ""}`}
                   >
                     <CardContent className="p-4 sm:p-6">
@@ -134,42 +198,39 @@ export default function SchedulePage() {
                           <p className="text-lg font-bold">{slot.startTime}</p>
                           <p className="text-sm text-muted-foreground">{slot.endTime}</p>
                         </div>
-                        
+
                         <div className="w-px h-12 bg-border" />
-                        
-                        {dj && (
-                          <>
-                            <div className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-full overflow-hidden shrink-0">
-                              <Image
-                                src={dj.image}
-                                alt={dj.name}
-                                fill
-                                className="object-cover"
-                              />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <h3 className="font-semibold">{slot.showName}</h3>
-                                {isLive && (
-                                  <Badge className="bg-accent text-accent-foreground">
-                                    Live Now
-                                  </Badge>
-                                )}
-                              </div>
-                              <Link
-                                href={`/djs/${dj.slug}`}
-                                className="text-sm text-primary hover:underline"
-                              >
-                                {dj.name}
-                              </Link>
-                              <p className="text-sm text-muted-foreground">{dj.genre}</p>
-                            </div>
-                          </>
-                        )}
+
+                        <div className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-full overflow-hidden shrink-0">
+                          <Image
+                            src={slot.dj.image}
+                            alt={slot.dj.name}
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h3 className="font-semibold">{slot.showName}</h3>
+                            {isLive && (
+                              <Badge className="bg-accent text-accent-foreground">
+                                Live Now
+                              </Badge>
+                            )}
+                          </div>
+                          <Link
+                            href={`/djs/${slot.dj.slug}`}
+                            className="text-sm text-primary hover:underline"
+                          >
+                            {slot.dj.name}
+                          </Link>
+                          <p className="text-sm text-muted-foreground">{slot.dj.genre}</p>
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
-                )
+                );
               })
             ) : (
               <Card className="bg-card border-border">
@@ -187,5 +248,5 @@ export default function SchedulePage() {
       <Footer />
       <LivePlayer />
     </div>
-  )
+  );
 }
