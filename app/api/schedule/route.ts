@@ -1,36 +1,66 @@
-import { NextResponse } from "next/server"
-import dbConnect from "@/lib/db"
-import Schedule from "@/models/Schedule"
+import { NextResponse } from "next/server";
+import dbConnect from "@/lib/db";
+import Schedule from "@/models/Schedule";
+import DJ from "@/models/DJ";
 
 export async function GET() {
   try {
-    await dbConnect()
+    await dbConnect();
 
-    const schedules = await Schedule.find()
+    // Fetch schedule and populate DJ details
+    const schedule = await Schedule.findOne()
       .populate({
         path: "slots.djId",
-        model: "DJ",
-        select: "name slug image",
+        model: DJ,
+        select: "name slug genre image socialLinks", // Select what you need
       })
-      .lean()
+      .lean();
 
-    const formatted = schedules.map((schedule: any) => ({
-      ...schedule,
-      slots: schedule.slots.map((slot: any) => ({
-        ...slot,
-        djName: slot.djId?.name || null,
-        djSlug: slot.djId?.slug || null,
-        djImage: slot.djId?.image || null,
-      })),
-    }))
+    if (!schedule || !schedule.slots?.length) {
+      return NextResponse.json(
+        { message: "No schedule found" },
+        { status: 404 }
+      );
+    }
 
-    return NextResponse.json(formatted)
-  } catch (error) {
-    console.error(error)
+    // Transform data to make it frontend-friendly
+    const formattedSlots = schedule.slots.map((slot: any) => ({
+      _id: slot._id,
+      dayOfWeek: slot.dayOfWeek,
+      startTime: slot.startTime,
+      endTime: slot.endTime,
+      showName: slot.showName,
+      dj: {
+        _id: slot.djId?._id,
+        name: slot.djId?.name || "Unknown DJ",
+        slug: slot.djId?.slug,
+        genre: slot.djId?.genre,
+        image: slot.djId?.image,
+        socialLinks: slot.djId?.socialLinks || {},
+      },
+    }));
 
+    // Group by day (optional but very useful for UI)
+    const groupedByDay = formattedSlots.reduce((acc: any, slot: any) => {
+      const day = slot.dayOfWeek;
+      if (!acc[day]) acc[day] = [];
+      acc[day].push(slot);
+      return acc;
+    }, {});
+
+    return NextResponse.json({
+      success: true,
+      schedule: {
+        _id: schedule._id,
+        slots: formattedSlots,
+        groupedByDay, // Helpful for displaying Monday, Tuesday, etc.
+      },
+    });
+  } catch (error: any) {
+    console.error("Schedule API error:", error);
     return NextResponse.json(
       { error: "Failed to fetch schedule" },
       { status: 500 }
-    )
+    );
   }
 }
