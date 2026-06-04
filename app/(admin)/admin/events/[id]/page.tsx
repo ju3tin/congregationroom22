@@ -33,10 +33,12 @@ interface EventData {
   slug: string;
   description: string;
   image: string;
-  status: "draft" | "published" | "cancelled";
-  venueName: string;
-  venueAddress: string;
-  venueCity: string;
+  status: string;
+  venue: {
+    name: string;
+    address: string;
+    city: string;
+  };
   date: string;
   doors: string;
   ticketTiers: TicketTier[];
@@ -51,7 +53,6 @@ export default function EditEventPage() {
   const [event, setEvent] = useState<EventData | null>(null);
   const [tiers, setTiers] = useState<TicketTier[]>([]);
 
-  // Fetch Event
   useEffect(() => {
     async function fetchEvent() {
       if (!id) return;
@@ -116,10 +117,11 @@ export default function EditEventPage() {
 
       const result = await res.json();
 
-      if (!res.ok) throw new Error(result.error || "Update failed");
+      if (!res.ok) throw new Error(result.error || "Failed to update");
 
       toast.success("Event updated successfully");
       router.push("/admin/events");
+      router.refresh();
     } catch (error: any) {
       toast.error(error.message || "Something went wrong");
     } finally {
@@ -135,15 +137,13 @@ export default function EditEventPage() {
       <div className="flex items-center gap-4 mb-6">
         <Button variant="ghost" asChild>
           <Link href="/admin/events">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back
+            <ArrowLeft className="mr-2 h-4 w-4" /> Back
           </Link>
         </Button>
         <h1 className="text-3xl font-bold">Edit Event</h1>
       </div>
 
       <form action={handleSubmit} className="space-y-8">
-        {/* Basic Information */}
         <Card>
           <CardHeader>
             <CardTitle>Basic Information</CardTitle>
@@ -172,13 +172,7 @@ export default function EditEventPage() {
 
             <div className="space-y-2">
               <Label htmlFor="image">Image URL</Label>
-              <Input
-                id="image"
-                name="image"
-                type="url"
-                defaultValue={event.image}
-                required
-              />
+              <Input id="image" name="image" type="url" defaultValue={event.image} required />
             </div>
 
             <div className="space-y-2">
@@ -191,6 +185,7 @@ export default function EditEventPage() {
                   <SelectItem value="draft">Draft</SelectItem>
                   <SelectItem value="published">Published</SelectItem>
                   <SelectItem value="cancelled">Cancelled</SelectItem>
+                  <SelectItem value="completed">Completed</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -205,15 +200,15 @@ export default function EditEventPage() {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="venueName">Venue Name</Label>
-              <Input id="venueName" name="venueName" defaultValue={event.venueName} required />
+              <Input id="venueName" name="venueName" defaultValue={event.venue?.name} required />
             </div>
             <div className="space-y-2">
               <Label htmlFor="venueAddress">Address</Label>
-              <Input id="venueAddress" name="venueAddress" defaultValue={event.venueAddress} required />
+              <Input id="venueAddress" name="venueAddress" defaultValue={event.venue?.address} required />
             </div>
             <div className="space-y-2">
               <Label htmlFor="venueCity">City</Label>
-              <Input id="venueCity" name="venueCity" defaultValue={event.venueCity} required />
+              <Input id="venueCity" name="venueCity" defaultValue={event.venue?.city} required />
             </div>
           </CardContent>
         </Card>
@@ -231,7 +226,7 @@ export default function EditEventPage() {
                   id="date"
                   name="date"
                   type="datetime-local"
-                  defaultValue={event.date?.slice(0, 16)}
+                  defaultValue={event.date ? new Date(event.date).toISOString().slice(0, 16) : ""}
                   required
                 />
               </div>
@@ -241,7 +236,7 @@ export default function EditEventPage() {
                   id="doors"
                   name="doors"
                   type="datetime-local"
-                  defaultValue={event.doors?.slice(0, 16)}
+                  defaultValue={event.doors ? new Date(event.doors).toISOString().slice(0, 16) : ""}
                   required
                 />
               </div>
@@ -264,12 +259,7 @@ export default function EditEventPage() {
                 <div className="flex justify-between items-center">
                   <h4 className="font-medium">Tier {index + 1}</h4>
                   {tiers.length > 1 && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => removeTier(index)}
-                    >
+                    <Button type="button" variant="ghost" size="icon" onClick={() => removeTier(index)}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   )}
@@ -347,7 +337,7 @@ export default function EditEventPage() {
             <Link href="/admin/events">Cancel</Link>
           </Button>
           <Button type="submit" disabled={loading}>
-            {loading ? "Saving..." : "Update Event"}
+            {loading ? "Saving Changes..." : "Update Event"}
           </Button>
         </div>
       </form>
