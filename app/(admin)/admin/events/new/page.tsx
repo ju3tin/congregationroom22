@@ -1,5 +1,4 @@
 "use client"
-
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
@@ -16,6 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Checkbox } from "@/components/ui/checkbox" // Add this import
 import { createEvent } from "../actions"
 import { toast } from "sonner"
 
@@ -28,9 +28,16 @@ interface TicketTier {
   salesEnd: string
 }
 
+interface LineupItem {
+  dj: string // ObjectId as string from form
+  setTime?: string
+  headline: boolean
+}
+
 export default function NewEventPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
+  
   const [tiers, setTiers] = useState<TicketTier[]>([
     {
       name: "General Admission",
@@ -41,6 +48,13 @@ export default function NewEventPage() {
       salesEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
         .toISOString()
         .slice(0, 16),
+    },
+  ])
+
+  const [lineup, setLineup] = useState<LineupItem[]>([
+    {
+      dj: "",
+      headline: false,
     },
   ])
 
@@ -72,12 +86,34 @@ export default function NewEventPage() {
     setTiers(updated)
   }
 
+  const addLineupItem = () => {
+    setLineup([
+      ...lineup,
+      {
+        dj: "",
+        headline: false,
+      },
+    ])
+  }
+
+  const removeLineupItem = (index: number) => {
+    if (lineup.length > 1) {
+      setLineup(lineup.filter((_, i) => i !== index))
+    }
+  }
+
+  const updateLineupItem = (index: number, field: keyof LineupItem, value: string | boolean) => {
+    const updated = [...lineup]
+    updated[index] = { ...updated[index], [field]: value }
+    setLineup(updated)
+  }
+
   async function handleSubmit(formData: FormData) {
     setLoading(true)
     formData.append("ticketTiers", JSON.stringify(tiers))
-
+    formData.append("lineup", JSON.stringify(lineup))
+    
     const result = await createEvent(formData)
-
     if (result.error) {
       toast.error(result.error)
       setLoading(false)
@@ -117,12 +153,10 @@ export default function NewEventPage() {
                 <Input id="slug" name="slug" required placeholder="my-event" />
               </div>
             </div>
-
             <div className="space-y-2">
               <Label htmlFor="description">Description</Label>
               <Textarea id="description" name="description" rows={4} required />
             </div>
-
             <div className="space-y-2">
               <Label htmlFor="image">Image URL</Label>
               <Input
@@ -133,7 +167,6 @@ export default function NewEventPage() {
                 placeholder="https://..."
               />
             </div>
-
             <div className="space-y-2">
               <Label htmlFor="status">Status</Label>
               <Select name="status" defaultValue="draft">
@@ -190,6 +223,73 @@ export default function NewEventPage() {
           </CardContent>
         </Card>
 
+        {/* Lineup */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle>Lineup</CardTitle>
+            <Button type="button" variant="outline" size="sm" onClick={addLineupItem}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add DJ
+            </Button>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {lineup.map((item, index) => (
+              <div
+                key={index}
+                className="rounded-lg border border-border p-4 space-y-4"
+              >
+                <div className="flex items-center justify-between">
+                  <h4 className="font-medium">Lineup Item {index + 1}</h4>
+                  {lineup.length > 1 && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removeLineupItem(index)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label>DJ ID (ObjectId)</Label>
+                  <Input
+                    value={item.dj}
+                    onChange={(e) => updateLineupItem(index, "dj", e.target.value)}
+                    placeholder="Enter DJ ObjectId"
+                    required
+                  />
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label>Set Time (optional)</Label>
+                    <Input
+                      type="datetime-local"
+                      value={item.setTime || ""}
+                      onChange={(e) => updateLineupItem(index, "setTime", e.target.value)}
+                    />
+                  </div>
+
+                  <div className="flex items-center space-x-3 pt-8">
+                    <Checkbox
+                      id={`headline-${index}`}
+                      checked={item.headline}
+                      onCheckedChange={(checked) => 
+                        updateLineupItem(index, "headline", !!checked)
+                      }
+                    />
+                    <Label htmlFor={`headline-${index}`} className="cursor-pointer">
+                      Headline Act
+                    </Label>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
         {/* Ticket Tiers */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
@@ -218,7 +318,6 @@ export default function NewEventPage() {
                     </Button>
                   )}
                 </div>
-
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label>Tier Name</Label>
@@ -243,7 +342,6 @@ export default function NewEventPage() {
                     />
                   </div>
                 </div>
-
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label>Total Quantity</Label>
@@ -271,7 +369,6 @@ export default function NewEventPage() {
                     />
                   </div>
                 </div>
-
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label>Sales Start</Label>
