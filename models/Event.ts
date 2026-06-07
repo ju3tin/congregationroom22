@@ -11,6 +11,13 @@ export interface ITicketTier {
   salesEnd: Date
 }
 
+export interface ILineupItem {
+  _id: Types.ObjectId
+  dj: Types.ObjectId
+  setTime?: Date
+  headline?: boolean
+}
+
 export interface IEvent extends Document {
   _id: Types.ObjectId
   title: string
@@ -28,6 +35,7 @@ export interface IEvent extends Document {
   organizerId: Types.ObjectId
   status: "draft" | "published" | "cancelled" | "completed"
   ticketTiers: ITicketTier[]
+  lineup: ILineupItem[]
   createdAt: Date
   updatedAt: Date
 }
@@ -42,27 +50,57 @@ const TicketTierSchema = new Schema<ITicketTier>({
   salesEnd: { type: Date, required: true },
 })
 
+const LineupItemSchema = new Schema<ILineupItem>({
+  dj: {
+    type: Schema.Types.ObjectId,
+    ref: "DJ",
+    required: true,
+  },
+  setTime: {
+    type: Date,
+  },
+  headline: {
+    type: Boolean,
+    default: false,
+  },
+})
+
 const EventSchema = new Schema<IEvent>(
   {
     title: { type: String, required: true },
     slug: { type: String, required: true, unique: true },
     description: { type: String, required: true },
+
     venue: {
       name: { type: String, required: true },
       address: { type: String, required: true },
       city: { type: String, required: true },
     },
+
     date: { type: Date, required: true },
     doors: { type: Date, required: true },
     endDate: { type: Date },
+
     image: { type: String, required: true },
-    organizerId: { type: Schema.Types.ObjectId, ref: "User", required: true },
+
+    organizerId: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+
     status: {
       type: String,
       enum: ["draft", "published", "cancelled", "completed"],
       default: "draft",
     },
+
     ticketTiers: [TicketTierSchema],
+
+    lineup: {
+      type: [LineupItemSchema],
+      default: [],
+    },
   },
   { timestamps: true }
 )
