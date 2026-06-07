@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/select"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
-import { updateEvent } from "actions" // Adjust path if needed
+import { updateEvent } from "./actions" // Adjust path if needed
 import { toast } from "sonner"
 
 interface TicketTier {
