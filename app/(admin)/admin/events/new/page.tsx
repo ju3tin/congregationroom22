@@ -69,7 +69,7 @@ export default function NewEventPage() {
   useEffect(() => {
     async function fetchDJs() {
       try {
-        const res = await fetch("/api/dj")
+        const res = await fetch("/api/djs")
         if (res.ok) {
           const data = await res.json()
           setDjs(data)
