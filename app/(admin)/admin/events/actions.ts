@@ -15,195 +15,294 @@ const ticketTierSchema = z.object({
   salesEnd: z.string(),
 })
 
+const lineupSchema = z.object({
+  dj: z.string().min(1, "DJ is required"),
+  setTime: z.string().optional(),
+  headline: z.boolean().optional(),
+})
+
 const eventSchema = z.object({
   title: z.string().min(1, "Title is required"),
   slug: z.string().min(1, "Slug is required"),
   description: z.string().min(1, "Description is required"),
+
   venueName: z.string().min(1, "Venue name is required"),
   venueAddress: z.string().min(1, "Venue address is required"),
   venueCity: z.string().min(1, "Venue city is required"),
+
   date: z.string().min(1, "Date is required"),
   doors: z.string().min(1, "Doors time is required"),
+
   image: z.string().min(1, "Image URL is required"),
-  status: z.enum(["draft", "published", "cancelled", "completed"]),
-  ticketTiers: z.array(ticketTierSchema).min(1, "At least one ticket tier is required"),
+
+  status: z.enum([
+    "draft",
+    "published",
+    "cancelled",
+    "completed",
+  ]),
+
+  ticketTiers: z
+    .array(ticketTierSchema)
+    .min(1, "At least one ticket tier is required"),
+
+  lineup: z.array(lineupSchema).default([]),
 })
 
-export async function createEvent(formData: FormData) {
+async function validateAdmin() {
   const session = await auth()
+
   if (!session?.user?.id || session.user.role !== "admin") {
-    return { error: "Unauthorized" }
+    return null
   }
 
-  const ticketTiersJson = formData.get("ticketTiers") as string
-  let ticketTiers
+  return session
+}
+
+function parseFormData(formData: FormData) {
+  let ticketTiers = []
+  let lineup = []
+
   try {
-    ticketTiers = JSON.parse(ticketTiersJson)
+    const ticketTiersJson = formData.get("ticketTiers") as string
+    ticketTiers = ticketTiersJson ? JSON.parse(ticketTiersJson) : []
   } catch {
-    return { error: "Invalid ticket tiers data" }
+    throw new Error("Invalid ticket tiers data")
+  }
+
+  try {
+    const lineupJson = formData.get("lineup") as string
+    lineup = lineupJson ? JSON.parse(lineupJson) : []
+  } catch {
+    throw new Error("Invalid lineup data")
   }
 
   const rawData = {
     title: formData.get("title") as string,
-    slug: (formData.get("slug") as string).toLowerCase().replace(/\s+/g, "-"),
+    slug: (formData.get("slug") as string)
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, "-"),
+
     description: formData.get("description") as string,
+
     venueName: formData.get("venueName") as string,
     venueAddress: formData.get("venueAddress") as string,
     venueCity: formData.get("venueCity") as string,
+
     date: formData.get("date") as string,
     doors: formData.get("doors") as string,
+
     image: formData.get("image") as string,
     status: formData.get("status") as string,
+
     ticketTiers,
+    lineup,
   }
 
   const result = eventSchema.safeParse(rawData)
+
   if (!result.success) {
-    return { error: result.error.errors[0].message }
+    throw new Error(result.error.errors[0].message)
+  }
+
+  return result.data
+}
+
+function transformTicketTiers(
+  tiers: z.infer<typeof ticketTierSchema>[],
+  existingTiers?: any[]
+) {
+  return tiers.map((tier) => {
+    const existingTier = existingTiers?.find(
+      (t) => t.name === tier.name
+    )
+
+    return {
+      ...tier,
+      salesStart: new Date(tier.salesStart),
+      salesEnd: new Date(tier.salesEnd),
+      sold: existingTier?.sold ?? 0,
+    }
+  })
+}
+
+function transformLineup(
+  lineup: z.infer<typeof lineupSchema>[]
+) {
+  return lineup.map((item) => ({
+    dj: item.dj,
+    setTime: item.setTime
+      ? new Date(item.setTime)
+      : undefined,
+    headline: item.headline ?? false,
+  }))
+}
+
+export async function createEvent(formData: FormData) {
+  const session = await validateAdmin()
+
+  if (!session) {
+    return { error: "Unauthorized" }
   }
 
   try {
+    const data = parseFormData(formData)
+
     await dbConnect()
 
-    const existingEvent = await Event.findOne({ slug: result.data.slug })
+    const existingEvent = await Event.findOne({
+      slug: data.slug,
+    })
+
     if (existingEvent) {
-      return { error: "An event with this slug already exists" }
+      return {
+        error: "An event with this slug already exists",
+      }
     }
 
     await Event.create({
-      title: result.data.title,
-      slug: result.data.slug,
-      description: result.data.description,
+      title: data.title,
+      slug: data.slug,
+      description: data.description,
+
       venue: {
-        name: result.data.venueName,
-        address: result.data.venueAddress,
-        city: result.data.venueCity,
+        name: data.venueName,
+        address: data.venueAddress,
+        city: data.venueCity,
       },
-      date: new Date(result.data.date),
-      doors: new Date(result.data.doors),
-      image: result.data.image,
-      status: result.data.status,
+
+      date: new Date(data.date),
+      doors: new Date(data.doors),
+
+      image: data.image,
+      status: data.status,
+
       organizerId: session.user.id,
-      ticketTiers: result.data.ticketTiers.map((tier) => ({
-        ...tier,
-        salesStart: new Date(tier.salesStart),
-        salesEnd: new Date(tier.salesEnd),
-        sold: 0,
-      })),
+
+      ticketTiers: transformTicketTiers(
+        data.ticketTiers
+      ),
+
+      lineup: transformLineup(data.lineup),
     })
 
     revalidatePath("/admin/events")
     revalidatePath("/events")
+
     return { success: true }
   } catch (error) {
     console.error("Create event error:", error)
-    return { error: "Failed to create event" }
+
+    return {
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to create event",
+    }
   }
 }
 
-export async function updateEvent(eventId: string, formData: FormData) {
-  const session = await auth()
-  if (!session?.user?.id || session.user.role !== "admin") {
+export async function updateEvent(
+  eventId: string,
+  formData: FormData
+) {
+  const session = await validateAdmin()
+
+  if (!session) {
     return { error: "Unauthorized" }
   }
 
-  const ticketTiersJson = formData.get("ticketTiers") as string
-  let ticketTiers
   try {
-    ticketTiers = JSON.parse(ticketTiersJson)
-  } catch {
-    return { error: "Invalid ticket tiers data" }
-  }
+    const data = parseFormData(formData)
 
-  const rawData = {
-    title: formData.get("title") as string,
-    slug: (formData.get("slug") as string).toLowerCase().replace(/\s+/g, "-"),
-    description: formData.get("description") as string,
-    venueName: formData.get("venueName") as string,
-    venueAddress: formData.get("venueAddress") as string,
-    venueCity: formData.get("venueCity") as string,
-    date: formData.get("date") as string,
-    doors: formData.get("doors") as string,
-    image: formData.get("image") as string,
-    status: formData.get("status") as string,
-    ticketTiers,
-  }
-
-  const result = eventSchema.safeParse(rawData)
-  if (!result.success) {
-    return { error: result.error.errors[0].message }
-  }
-
-  try {
     await dbConnect()
 
     const existingEvent = await Event.findOne({
-      slug: result.data.slug,
+      slug: data.slug,
       _id: { $ne: eventId },
     })
+
     if (existingEvent) {
-      return { error: "An event with this slug already exists" }
+      return {
+        error: "An event with this slug already exists",
+      }
     }
 
     const event = await Event.findById(eventId)
+
     if (!event) {
       return { error: "Event not found" }
     }
 
-    // Preserve sold counts for existing tiers
-    const updatedTiers = result.data.ticketTiers.map((tier) => {
-      const existingTier = event.ticketTiers.find(
-        (t: { name: string }) => t.name === tier.name
-      )
-      return {
-        ...tier,
-        salesStart: new Date(tier.salesStart),
-        salesEnd: new Date(tier.salesEnd),
-        sold: existingTier?.sold || 0,
-      }
-    })
-
     await Event.findByIdAndUpdate(eventId, {
-      title: result.data.title,
-      slug: result.data.slug,
-      description: result.data.description,
+      title: data.title,
+      slug: data.slug,
+      description: data.description,
+
       venue: {
-        name: result.data.venueName,
-        address: result.data.venueAddress,
-        city: result.data.venueCity,
+        name: data.venueName,
+        address: data.venueAddress,
+        city: data.venueCity,
       },
-      date: new Date(result.data.date),
-      doors: new Date(result.data.doors),
-      image: result.data.image,
-      status: result.data.status,
-      ticketTiers: updatedTiers,
+
+      date: new Date(data.date),
+      doors: new Date(data.doors),
+
+      image: data.image,
+      status: data.status,
+
+      ticketTiers: transformTicketTiers(
+        data.ticketTiers,
+        event.ticketTiers
+      ),
+
+      lineup: transformLineup(data.lineup),
     })
 
     revalidatePath("/admin/events")
     revalidatePath("/events")
-    revalidatePath(`/events/${result.data.slug}`)
+    revalidatePath(`/events/${data.slug}`)
+
     return { success: true }
   } catch (error) {
     console.error("Update event error:", error)
-    return { error: "Failed to update event" }
+
+    return {
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to update event",
+    }
   }
 }
 
 export async function deleteEvent(eventId: string) {
-  const session = await auth()
-  if (!session?.user?.id || session.user.role !== "admin") {
+  const session = await validateAdmin()
+
+  if (!session) {
     return { error: "Unauthorized" }
   }
 
   try {
     await dbConnect()
+
+    const event = await Event.findById(eventId)
+
+    if (!event) {
+      return { error: "Event not found" }
+    }
+
     await Event.findByIdAndDelete(eventId)
 
     revalidatePath("/admin/events")
     revalidatePath("/events")
+    revalidatePath(`/events/${event.slug}`)
+
     return { success: true }
   } catch (error) {
     console.error("Delete event error:", error)
+
     return { error: "Failed to delete event" }
   }
 }
