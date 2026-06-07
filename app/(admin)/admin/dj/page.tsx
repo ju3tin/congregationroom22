@@ -123,7 +123,7 @@ export default async function AdminDJsPage() {
                           size="sm"
                         >
                           <Link
-                            href={`/admin/djs/${dj._id}`}
+                            href={`/admin/dj/${dj._id}`}
                           >
                             Edit
                           </Link>
