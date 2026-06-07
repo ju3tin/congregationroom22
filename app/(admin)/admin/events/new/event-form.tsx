@@ -176,10 +176,7 @@ export default function EventForm({
   }
 
   return (
-    <form
-      action={handleSubmit}
-      className="space-y-8"
-    >
+   <div className="space-y-8">
       <div className="flex items-center gap-4">
         <Link
           href="/admin/events"
@@ -188,153 +185,296 @@ export default function EventForm({
           <ArrowLeft className="h-4 w-4" />
           Back
         </Link>
-
-        <h1 className="text-3xl font-bold">
-          Create Event
-        </h1>
+        <h1 className="text-3xl font-bold">Create Event</h1>
       </div>
 
-      {/* Basic Information */}
-
-      {/* Venue */}
-
-      {/* Date & Time */}
-
-      {/* DJ Lineup */}
-
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>DJ Lineup</CardTitle>
-
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={addLineupItem}
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Add DJ
-          </Button>
-        </CardHeader>
-
-        <CardContent className="space-y-6">
-          {lineup.map((item, index) => (
-            <div
-              key={index}
-              className="rounded-lg border p-4 space-y-4"
-            >
-              <div className="flex items-center justify-between">
-                <h4 className="font-medium">
-                  DJ {index + 1}
-                </h4>
-
-                {lineup.length > 1 && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() =>
-                      removeLineupItem(index)
-                    }
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                )}
-              </div>
-
+      <form action={handleSubmit} className="space-y-8">
+        {/* Basic Info */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Basic Information</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label>DJ</Label>
-
-                <Select
-                  value={item.dj}
-                  onValueChange={(value) =>
-                    updateLineupItem(
-                      index,
-                      "dj",
-                      value
-                    )
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select DJ" />
-                  </SelectTrigger>
-
-                  <SelectContent>
-                    {djs.map((dj) => (
-                      <SelectItem
-                        key={dj._id}
-                        value={dj._id}
-                      >
-                        {dj.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Label htmlFor="title">Event Title</Label>
+                <Input id="title" name="title" required />
               </div>
-
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label>Set Time</Label>
-
-                  <Input
-                    type="datetime-local"
-                    value={item.setTime || ""}
-                    onChange={(e) =>
-                      updateLineupItem(
-                        index,
-                        "setTime",
-                        e.target.value
-                      )
-                    }
-                  />
-                </div>
-
-                <div className="flex items-center gap-3 pt-8">
-                  <Checkbox
-                    checked={item.headline}
-                    onCheckedChange={(checked) =>
-                      updateLineupItem(
-                        index,
-                        "headline",
-                        !!checked
-                      )
-                    }
-                  />
-
-                  <Label>
-                    Headline Act
-                  </Label>
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="slug">Slug</Label>
+                <Input id="slug" name="slug" required placeholder="my-event" />
               </div>
             </div>
-          ))}
-        </CardContent>
-      </Card>
+            <div className="space-y-2">
+              <Label htmlFor="description">Description</Label>
+              <Textarea id="description" name="description" rows={4} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="image">Image URL</Label>
+              <Input
+                id="image"
+                name="image"
+                type="url"
+                required
+                placeholder="https://..."
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="status">Status</Label>
+              <Select name="status" defaultValue="draft">
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="draft">Draft</SelectItem>
+                  <SelectItem value="published">Published</SelectItem>
+                  <SelectItem value="cancelled">Cancelled</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
+        </Card>
 
-      {/* Ticket Tiers */}
+        {/* Venue */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Venue</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="venueName">Venue Name</Label>
+              <Input id="venueName" name="venueName" required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="venueAddress">Address</Label>
+              <Input id="venueAddress" name="venueAddress" required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="venueCity">City</Label>
+              <Input id="venueCity" name="venueCity" required />
+            </div>
+          </CardContent>
+        </Card>
 
-      {/* Your existing ticket tier card can stay unchanged */}
+        {/* Date & Time */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Date & Time</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="date">Event Date & Time</Label>
+                <Input id="date" name="date" type="datetime-local" required />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="doors">Doors Open</Label>
+                <Input id="doors" name="doors" type="datetime-local" required />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
-      <div className="flex justify-end gap-4">
-        <Button
-          type="button"
-          variant="outline"
-          asChild
-        >
-          <Link href="/admin/events">
-            Cancel
-          </Link>
-        </Button>
+        {/* Lineup */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle>Lineup</CardTitle>
+            <Button type="button" variant="outline" size="sm" onClick={addLineupItem}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add DJ
+            </Button>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {lineup.map((item, index) => (
+              <div
+                key={index}
+                className="rounded-lg border border-border p-4 space-y-4"
+              >
+                <div className="flex items-center justify-between">
+                  <h4 className="font-medium">Lineup Item {index + 1}</h4>
+                  {lineup.length > 1 && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removeLineupItem(index)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
 
-        <Button
-          type="submit"
-          disabled={loading}
-        >
-          {loading
-            ? "Creating..."
-            : "Create Event"}
-        </Button>
-      </div>
-    </form>
+                <div className="space-y-2">
+                  <Label>DJ</Label>
+                  <Select
+                    value={item.dj}
+                    onValueChange={(value) => updateLineupItem(index, "dj", value)}
+                    required
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a DJ" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {djsLoading ? (
+                        <SelectItem value="" disabled>Loading DJs...</SelectItem>
+                      ) : djs.length === 0 ? (
+                        <SelectItem value="" disabled>No DJs available</SelectItem>
+                      ) : (
+                        djs.map((dj) => (
+                          <SelectItem key={dj._id} value={dj._id}>
+                            {dj.name}
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label>Set Time (optional)</Label>
+                    <Input
+                      type="datetime-local"
+                      value={item.setTime || ""}
+                      onChange={(e) => updateLineupItem(index, "setTime", e.target.value)}
+                    />
+                  </div>
+
+                  <div className="flex items-center space-x-3 pt-8">
+                    <Checkbox
+                      id={`headline-${index}`}
+                      checked={item.headline}
+                      onCheckedChange={(checked) =>
+                        updateLineupItem(index, "headline", !!checked)
+                      }
+                    />
+                    <Label htmlFor={`headline-${index}`} className="cursor-pointer">
+                      Headline Act
+                    </Label>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        {/* Ticket Tiers */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle>Ticket Tiers</CardTitle>
+            <Button type="button" variant="outline" size="sm" onClick={addTier}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Tier
+            </Button>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {tiers.map((tier, index) => (
+              <div
+                key={index}
+                className="rounded-lg border border-border p-4 space-y-4"
+              >
+                <div className="flex items-center justify-between">
+                  <h4 className="font-medium">Tier {index + 1}</h4>
+                  {tiers.length > 1 && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removeTier(index)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label>Tier Name</Label>
+                    <Input
+                      value={tier.name}
+                      onChange={(e) => updateTier(index, "name", e.target.value)}
+                      placeholder="e.g., VIP, General Admission"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Price ($)</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={tier.price}
+                      onChange={(e) =>
+                        updateTier(index, "price", parseFloat(e.target.value) || 0)
+                      }
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label>Total Quantity</Label>
+                    <Input
+                      type="number"
+                      min="1"
+                      value={tier.quantity}
+                      onChange={(e) =>
+                        updateTier(index, "quantity", parseInt(e.target.value) || 1)
+                      }
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Max Per Order</Label>
+                    <Input
+                      type="number"
+                      min="1"
+                      max="20"
+                      value={tier.maxPerOrder}
+                      onChange={(e) =>
+                        updateTier(index, "maxPerOrder", parseInt(e.target.value) || 1)
+                      }
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label>Sales Start</Label>
+                    <Input
+                      type="datetime-local"
+                      value={tier.salesStart}
+                      onChange={(e) =>
+                        updateTier(index, "salesStart", e.target.value)
+                      }
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Sales End</Label>
+                    <Input
+                      type="datetime-local"
+                      value={tier.salesEnd}
+                      onChange={(e) =>
+                        updateTier(index, "salesEnd", e.target.value)
+                      }
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        <div className="flex justify-end gap-4">
+          <Button type="button" variant="outline" asChild>
+            <Link href="/admin/events">Cancel</Link>
+          </Button>
+          <Button type="submit" disabled={loading}>
+            {loading ? "Creating..." : "Create Event"}
+          </Button>
+        </div>
+      </form>
+    </div>
   )
 }
