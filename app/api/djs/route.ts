@@ -1,12 +1,15 @@
-// app/api/djs/route.ts
-import { NextResponse } from "next/server"
-import DJ from "@/models/DJ"   // adjust path as needed
+import { NextResponse } from "next/server";
+import dbConnect from "@/lib/db";
+import DJ from "@/models/DJ";
 
 export async function GET() {
   try {
-    const djs = await DJ.find({}).select("name _id").sort({ name: 1 })
-    return NextResponse.json(djs)
+    await dbConnect();
+    const djs = await DJ.find().sort({ name: 1 }).lean();
+
+    return NextResponse.json(djs);   // ← Return array directly (matches your current response)
   } catch (error) {
-    return NextResponse.json({ error: "Failed to fetch DJs" }, { status: 500 })
+    console.error("DJ API error:", error);
+    return NextResponse.json([], { status: 500 });
   }
 }
