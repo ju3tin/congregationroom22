@@ -203,11 +203,11 @@ export default function EventForm({
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="title">Event Title</Label>
-                <Input id="title" name="title" required />
+                <Input id="title" name="title" required defaultValue={event.title} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="slug">Slug</Label>
-                <Input id="slug" name="slug" required placeholder="my-event" />
+                <Input id="slug" name="slug" required placeholder="my-event" defaultValue={event.slug} />
               </div>
             </div>
             <div className="space-y-2">
