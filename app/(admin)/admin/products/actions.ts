@@ -147,3 +147,26 @@ export async function deleteProduct(productId: string) {
     return { error: "Failed to delete product" }
   }
 }
+
+export async function getProduct(productId: string) {
+  try {
+    await dbConnect()
+    const product = await Product.findById(productId).lean()
+    
+    if (!product) return null
+
+    return {
+      id: product._id.toString(),
+      name: product.name,
+      slug: product.slug,
+      description: product.description,
+      category: product.category,
+      status: product.status,
+      images: product.images || [],
+      variants: product.variants || [],
+    }
+  } catch (error) {
+    console.error("Get product error:", error)
+    return null
+  }
+}
