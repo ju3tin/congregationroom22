@@ -117,7 +117,7 @@ export default async function AdminEventsPage() {
                     </TableCell>
                     <TableCell className="text-right">
                       <Button asChild variant="ghost" size="sm">
-                        <Link href={`/admin/events/${event._id}`}>Edit</Link>
+                        <Link href={`/admin/events/${event._id}/edit`}>Edit</Link>
                       </Button>
                     </TableCell>
                   </TableRow>
