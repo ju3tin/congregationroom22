@@ -86,7 +86,7 @@ export async function createTimelineEvent(formData: FormData) {
   try {
     await dbConnect();
     await TimelineEvents.create(result.data);
-    revalidatePath("/admin/timeline");
+    revalidatePath("api/admin/timeline");
     return { success: true };
   } catch (error) {
     console.error("Create timeline error:", error);
