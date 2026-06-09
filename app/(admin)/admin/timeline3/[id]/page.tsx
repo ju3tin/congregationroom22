@@ -26,22 +26,22 @@ export default function EditTimelineEventPage() {
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
 
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [category, setCategory] = useState("");
-  const [tags, setTags] = useState<string[]>([""]);
-  const [featured, setFeatured] = useState(false);
-  const [sortOrder, setSortOrder] = useState(0);
-
-  const [startDate, setStartDate] = useState({ year: 0, month: 1, day: 1 });
-  const [endDate, setEndDate] = useState<{ year: number; month?: number; day?: number } | null>(null);
-
-  const [media, setMedia] = useState({ url: "", caption: "", credit: "", thumbnail: "" });
-  const [location, setLocation] = useState({ name: "", latitude: "", longitude: "" });
-  const [sources, setSources] = useState<Source[]>([{ title: "", url: "" }]);
+  const [form, setForm] = useState({
+    title: "",
+    description: "",
+    category: "",
+    startDate: { year: 0, month: undefined as number | undefined, day: undefined as number | undefined },
+    endDate: null as { year: number; month?: number; day?: number } | null,
+    featured: false,
+    sortOrder: 0,
+    tags: [""] as string[],
+    media: { url: "", caption: "", credit: "", thumbnail: "" },
+    location: { name: "", latitude: "", longitude: "" },
+    sources: [{ title: "", url: "" }] as Source[],
+  });
 
   useEffect(() => {
-    async function fetchEvent() {
+    async function loadEvent() {
       const event = await getTimelineEvent(id);
       if (!event) {
         toast.error("Event not found");
@@ -49,58 +49,82 @@ export default function EditTimelineEventPage() {
         return;
       }
 
-      setTitle(event.title);
-      setDescription(event.description);
-      setCategory(event.category || "");
-      setTags(event.tags?.length ? event.tags : [""]);
-      setFeatured(event.featured || false);
-      setSortOrder(event.sortOrder || 0);
-
-      setStartDate(event.startDate);
-      setEndDate(event.endDate || null);
-
-      if (event.media) setMedia(event.media);
-      if (event.location) setLocation({
-        name: event.location.name || "",
-        latitude: event.location.latitude?.toString() || "",
-        longitude: event.location.longitude?.toString() || ""
+      setForm({
+        title: event.title,
+        description: event.description,
+        category: event.category || "",
+        startDate: event.startDate,
+        endDate: event.endDate || null,
+        featured: event.featured || false,
+        sortOrder: event.sortOrder || 0,
+        tags: event.tags?.length ? event.tags : [""],
+        media: event.media || { url: "", caption: "", credit: "", thumbnail: "" },
+        location: {
+          name: event.location?.name || "",
+          latitude: event.location?.latitude?.toString() || "",
+          longitude: event.location?.longitude?.toString() || "",
+        },
+        sources: event.sources?.length ? event.sources : [{ title: "", url: "" }],
       });
-      if (event.sources?.length) setSources(event.sources);
-
       setInitialLoading(false);
     }
-    fetchEvent();
+    loadEvent();
   }, [id, router]);
 
-  const handleSubmit = async (formData: FormData) => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setLoading(true);
 
-    formData.append("startDate", JSON.stringify(startDate));
-    if (endDate) formData.append("endDate", JSON.stringify(endDate));
-    formData.append("tags", JSON.stringify(tags.filter(t => t.trim())));
-    formData.append("media", JSON.stringify(media));
-    formData.append("location", JSON.stringify({
-      name: location.name,
-      latitude: location.latitude ? Number(location.latitude) : undefined,
-      longitude: location.longitude ? Number(location.longitude) : undefined,
+    const fd = new FormData();
+    fd.append("title", form.title);
+    fd.append("description", form.description);
+    fd.append("category", form.category || "");
+    fd.append("startDate", JSON.stringify(form.startDate));
+    if (form.endDate) fd.append("endDate", JSON.stringify(form.endDate));
+    fd.append("tags", JSON.stringify(form.tags.filter(Boolean)));
+    fd.append("media", JSON.stringify(form.media));
+    fd.append("location", JSON.stringify({
+      name: form.location.name,
+      latitude: form.location.latitude ? Number(form.location.latitude) : undefined,
+      longitude: form.location.longitude ? Number(form.location.longitude) : undefined,
     }));
-    formData.append("sources", JSON.stringify(sources.filter(s => s.title && s.url)));
+    fd.append("sources", JSON.stringify(form.sources.filter(s => s.title.trim())));
+    fd.append("featured", form.featured.toString());
+    fd.append("sortOrder", form.sortOrder.toString());
 
-    const result = await updateTimelineEvent(id, formData);
+    const result = await updateTimelineEvent(id, fd);
 
-    if (result.error) {
-      toast.error(result.error);
-    } else {
+    if (result.error) toast.error(result.error);
+    else {
       toast.success("Event updated successfully");
       router.push("/admin/timeline");
     }
     setLoading(false);
   };
 
-  if (initialLoading) return <div className="p-8">Loading event...</div>;
+  // Reuse the same helper functions as New page (addTag, updateTag, etc.)
+  const addTag = () => setForm({ ...form, tags: [...form.tags, ""] });
+  const updateTag = (index: number, value: string) => {
+    const newTags = [...form.tags]; newTags[index] = value; setForm({ ...form, tags: newTags });
+  };
+  const removeTag = (index: number) => {
+    if (form.tags.length > 1) setForm({ ...form, tags: form.tags.filter((_, i) => i !== index) });
+  };
+
+  const addSource = () => setForm({ ...form, sources: [...form.sources, { title: "", url: "" }] });
+  const updateSource = (index: number, field: "title" | "url", value: string) => {
+    const newSources = [...form.sources];
+    newSources[index] = { ...newSources[index], [field]: value };
+    setForm({ ...form, sources: newSources });
+  };
+  const removeSource = (index: number) => {
+    if (form.sources.length > 1) setForm({ ...form, sources: form.sources.filter((_, i) => i !== index) });
+  };
+
+  if (initialLoading) return <div className="p-8 text-center">Loading event...</div>;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 max-w-4xl mx-auto">
       <div className="flex items-center gap-4">
         <Link href="/admin/timeline" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className="h-4 w-4" /> Back
@@ -108,9 +132,9 @@ export default function EditTimelineEventPage() {
         <h1 className="text-3xl font-bold">Edit Timeline Event</h1>
       </div>
 
-      <form action={handleSubmit} className="space-y-8">
-        {/* Same form fields as New Event — just with pre-filled values */}
-        {/* You can copy the Card sections from the New page above */}
+      <form onSubmit={handleSubmit} className="space-y-8">
+        {/* Copy all Card sections from New page here (Basic Info, Dates, Media, Location, Tags, Sources) */}
+        {/* ... (Paste the same JSX from New page) ... */}
 
         <div className="flex justify-end gap-4">
           <Button type="button" variant="outline" asChild>
