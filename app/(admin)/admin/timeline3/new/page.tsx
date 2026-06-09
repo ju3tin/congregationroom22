@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
-import { createTimelineEvent } from "@/app/actions"; // Adjust import path
+import { createTimelineEvent } from "@/app/actions";
 import { toast } from "sonner";
 
 interface Source {
@@ -22,47 +22,75 @@ export default function NewTimelineEventPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [category, setCategory] = useState("");
-  const [tags, setTags] = useState<string[]>([""]);
-  const [featured, setFeatured] = useState(false);
-  const [sortOrder, setSortOrder] = useState(0);
+  const [form, setForm] = useState({
+    title: "",
+    description: "",
+    category: "",
+    startDate: { year: new Date().getFullYear(), month: undefined as number | undefined, day: undefined as number | undefined },
+    endDate: null as { year: number; month?: number; day?: number } | null,
+    featured: false,
+    sortOrder: 0,
+    tags: [""] as string[],
+    media: { url: "", caption: "", credit: "", thumbnail: "" },
+    location: { name: "", latitude: "", longitude: "" },
+    sources: [{ title: "", url: "" }] as Source[],
+  });
 
-  const [startDate, setStartDate] = useState({ year: new Date().getFullYear(), month: 1, day: 1 });
-  const [endDate, setEndDate] = useState<{ year: number; month?: number; day?: number } | null>(null);
-
-  const [media, setMedia] = useState({ url: "", caption: "", credit: "", thumbnail: "" });
-  const [location, setLocation] = useState({ name: "", latitude: "", longitude: "" });
-  const [sources, setSources] = useState<Source[]>([{ title: "", url: "" }]);
-
-  const handleSubmit = async (formData: FormData) => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setLoading(true);
 
-    formData.append("startDate", JSON.stringify(startDate));
-    if (endDate) formData.append("endDate", JSON.stringify(endDate));
-    formData.append("tags", JSON.stringify(tags.filter(t => t.trim())));
-    formData.append("media", JSON.stringify(media));
-    formData.append("location", JSON.stringify({
-      name: location.name,
-      latitude: location.latitude ? Number(location.latitude) : undefined,
-      longitude: location.longitude ? Number(location.longitude) : undefined,
+    const fd = new FormData();
+    fd.append("title", form.title);
+    fd.append("description", form.description);
+    fd.append("category", form.category || "");
+    fd.append("startDate", JSON.stringify(form.startDate));
+    if (form.endDate) fd.append("endDate", JSON.stringify(form.endDate));
+    fd.append("tags", JSON.stringify(form.tags.filter(Boolean)));
+    fd.append("media", JSON.stringify(form.media));
+    fd.append("location", JSON.stringify({
+      name: form.location.name,
+      latitude: form.location.latitude ? Number(form.location.latitude) : undefined,
+      longitude: form.location.longitude ? Number(form.location.longitude) : undefined,
     }));
-    formData.append("sources", JSON.stringify(sources.filter(s => s.title && s.url)));
+    fd.append("sources", JSON.stringify(form.sources.filter(s => s.title.trim())));
+    fd.append("featured", form.featured.toString());
+    fd.append("sortOrder", form.sortOrder.toString());
 
-    const result = await createTimelineEvent(formData);
+    const result = await createTimelineEvent(fd);
 
     if (result.error) {
       toast.error(result.error);
     } else {
-      toast.success("Event created successfully");
+      toast.success("Timeline event created successfully");
       router.push("/admin/timeline");
     }
     setLoading(false);
   };
 
+  // Helper functions
+  const addTag = () => setForm({ ...form, tags: [...form.tags, ""] });
+  const updateTag = (index: number, value: string) => {
+    const newTags = [...form.tags];
+    newTags[index] = value;
+    setForm({ ...form, tags: newTags });
+  };
+  const removeTag = (index: number) => {
+    if (form.tags.length > 1) setForm({ ...form, tags: form.tags.filter((_, i) => i !== index) });
+  };
+
+  const addSource = () => setForm({ ...form, sources: [...form.sources, { title: "", url: "" }] });
+  const updateSource = (index: number, field: "title" | "url", value: string) => {
+    const newSources = [...form.sources];
+    newSources[index] = { ...newSources[index], [field]: value };
+    setForm({ ...form, sources: newSources });
+  };
+  const removeSource = (index: number) => {
+    if (form.sources.length > 1) setForm({ ...form, sources: form.sources.filter((_, i) => i !== index) });
+  };
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 max-w-4xl mx-auto">
       <div className="flex items-center gap-4">
         <Link href="/admin/timeline" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className="h-4 w-4" /> Back
@@ -70,87 +98,128 @@ export default function NewTimelineEventPage() {
         <h1 className="text-3xl font-bold">New Timeline Event</h1>
       </div>
 
-      <form action={handleSubmit} className="space-y-8">
+      <form onSubmit={handleSubmit} className="space-y-8">
+        {/* Basic Info */}
         <Card>
-          <CardHeader>
-            <CardTitle>Basic Information</CardTitle>
-          </CardHeader>
+          <CardHeader><CardTitle>Basic Information</CardTitle></CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="title">Title</Label>
-              <Input id="title" name="title" value={title} onChange={(e) => setTitle(e.target.value)} required />
+              <Label>Title</Label>
+              <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required />
             </div>
-
             <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea id="description" name="description" value={description} onChange={(e) => setDescription(e.target.value)} rows={5} required />
+              <Label>Description</Label>
+              <Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={5} required />
             </div>
-
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Category</Label>
-                <Input name="category" value={category} onChange={(e) => setCategory(e.target.value)} placeholder="History, War, etc." />
+                <Input value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} placeholder="e.g. War, Politics, Science" />
               </div>
               <div className="space-y-2">
                 <Label>Sort Order</Label>
-                <Input type="number" name="sortOrder" value={sortOrder} onChange={(e) => setSortOrder(Number(e.target.value))} />
+                <Input type="number" value={form.sortOrder} onChange={(e) => setForm({ ...form, sortOrder: Number(e.target.value) })} />
               </div>
             </div>
-
-            <div className="flex items-center gap-2">
-              <Switch checked={featured} onCheckedChange={setFeatured} />
+            <div className="flex items-center gap-3">
+              <Switch checked={form.featured} onCheckedChange={(checked) => setForm({ ...form, featured: checked })} />
               <Label>Featured Event</Label>
-              <input type="hidden" name="featured" value={featured.toString()} />
             </div>
           </CardContent>
         </Card>
 
         {/* Dates */}
         <Card>
-          <CardHeader>
-            <CardTitle>Dates</CardTitle>
-          </CardHeader>
+          <CardHeader><CardTitle>Dates</CardTitle></CardHeader>
           <CardContent className="space-y-6">
             <div>
-              <h4 className="font-medium mb-3">Start Date</h4>
+              <h4 className="font-medium mb-3">Start Date *</h4>
               <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <Label>Year</Label>
-                  <Input type="number" value={startDate.year} onChange={(e) => setStartDate({ ...startDate, year: Number(e.target.value) })} required />
-                </div>
-                <div>
-                  <Label>Month (optional)</Label>
-                  <Input type="number" min="1" max="12" value={startDate.month || ""} onChange={(e) => setStartDate({ ...startDate, month: Number(e.target.value) || undefined })} />
-                </div>
-                <div>
-                  <Label>Day (optional)</Label>
-                  <Input type="number" min="1" max="31" value={startDate.day || ""} onChange={(e) => setStartDate({ ...startDate, day: Number(e.target.value) || undefined })} />
-                </div>
+                <div><Label>Year</Label><Input type="number" value={form.startDate.year} onChange={(e) => setForm({ ...form, startDate: { ...form.startDate, year: Number(e.target.value) } })} required /></div>
+                <div><Label>Month</Label><Input type="number" min="1" max="12" value={form.startDate.month || ""} onChange={(e) => setForm({ ...form, startDate: { ...form.startDate, month: e.target.value ? Number(e.target.value) : undefined } })} /></div>
+                <div><Label>Day</Label><Input type="number" min="1" max="31" value={form.startDate.day || ""} onChange={(e) => setForm({ ...form, startDate: { ...form.startDate, day: e.target.value ? Number(e.target.value) : undefined } })} /></div>
               </div>
             </div>
 
             <div>
               <h4 className="font-medium mb-3">End Date (optional)</h4>
               <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <Label>Year</Label>
-                  <Input type="number" value={endDate?.year || ""} onChange={(e) => setEndDate({ year: Number(e.target.value), month: 1, day: 1 })} />
-                </div>
-                <div>
-                  <Label>Month</Label>
-                  <Input type="number" min="1" max="12" value={endDate?.month || ""} onChange={(e) => setEndDate(endDate ? { ...endDate, month: Number(e.target.value) || undefined } : null)} />
-                </div>
-                <div>
-                  <Label>Day</Label>
-                  <Input type="number" min="1" max="31" value={endDate?.day || ""} onChange={(e) => setEndDate(endDate ? { ...endDate, day: Number(e.target.value) || undefined } : null)} />
-                </div>
+                <div><Label>Year</Label><Input type="number" value={form.endDate?.year || ""} onChange={(e) => setForm({ ...form, endDate: { year: Number(e.target.value), month: 1, day: 1 } })} /></div>
+                <div><Label>Month</Label><Input type="number" min="1" max="12" value={form.endDate?.month || ""} onChange={(e) => setForm({ ...form, endDate: form.endDate ? { ...form.endDate, month: Number(e.target.value) || undefined } : null })} /></div>
+                <div><Label>Day</Label><Input type="number" min="1" max="31" value={form.endDate?.day || ""} onChange={(e) => setForm({ ...form, endDate: form.endDate ? { ...form.endDate, day: Number(e.target.value) || undefined } : null })} /></div>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Media, Location, Tags, Sources */}
-        {/* I can add them if you want — let me know if you need the full expanded version. For brevity, the core is above. */}
+        {/* Media */}
+        <Card>
+          <CardHeader><CardTitle>Media</CardTitle></CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div><Label>URL</Label><Input value={form.media.url} onChange={(e) => setForm({ ...form, media: { ...form.media, url: e.target.value } })} placeholder="https://..." /></div>
+              <div><Label>Thumbnail</Label><Input value={form.media.thumbnail} onChange={(e) => setForm({ ...form, media: { ...form.media, thumbnail: e.target.value } })} /></div>
+            </div>
+            <div><Label>Caption</Label><Input value={form.media.caption} onChange={(e) => setForm({ ...form, media: { ...form.media, caption: e.target.value } })} /></div>
+            <div><Label>Credit</Label><Input value={form.media.credit} onChange={(e) => setForm({ ...form, media: { ...form.media, credit: e.target.value } })} /></div>
+          </CardContent>
+        </Card>
+
+        {/* Location */}
+        <Card>
+          <CardHeader><CardTitle>Location</CardTitle></CardHeader>
+          <CardContent className="space-y-4">
+            <div><Label>Location Name</Label><Input value={form.location.name} onChange={(e) => setForm({ ...form, location: { ...form.location, name: e.target.value } })} /></div>
+            <div className="grid grid-cols-2 gap-4">
+              <div><Label>Latitude</Label><Input type="number" step="any" value={form.location.latitude} onChange={(e) => setForm({ ...form, location: { ...form.location, latitude: e.target.value } })} /></div>
+              <div><Label>Longitude</Label><Input type="number" step="any" value={form.location.longitude} onChange={(e) => setForm({ ...form, location: { ...form.location, longitude: e.target.value } })} /></div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Tags */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle>Tags</CardTitle>
+            <Button type="button" variant="outline" size="sm" onClick={addTag}><Plus className="h-4 w-4" /></Button>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {form.tags.map((tag, index) => (
+              <div key={index} className="flex gap-2">
+                <Input value={tag} onChange={(e) => updateTag(index, e.target.value)} placeholder="e.g. WWII, Politics" />
+                {form.tags.length > 1 && (
+                  <Button type="button" variant="ghost" size="icon" onClick={() => removeTag(index)}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        {/* Sources */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle>Sources</CardTitle>
+            <Button type="button" variant="outline" size="sm" onClick={addSource}><Plus className="h-4 w-4" /></Button>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {form.sources.map((source, index) => (
+              <div key={index} className="border p-4 rounded-lg space-y-3">
+                <div className="flex justify-between">
+                  <h4 className="font-medium">Source {index + 1}</h4>
+                  {form.sources.length > 1 && (
+                    <Button type="button" variant="ghost" size="icon" onClick={() => removeSource(index)}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+                <Input placeholder="Source Title" value={source.title} onChange={(e) => updateSource(index, "title", e.target.value)} required />
+                <Input placeholder="https://..." value={source.url} onChange={(e) => updateSource(index, "url", e.target.value)} />
+              </div>
+            ))}
+          </CardContent>
+        </Card>
 
         <div className="flex justify-end gap-4">
           <Button type="button" variant="outline" asChild>
