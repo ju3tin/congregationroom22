@@ -122,7 +122,7 @@ export async function updateTimelineEvent(id: string, formData: FormData) {
   try {
     await dbConnect();
     await TimelineEvents.findByIdAndUpdate(id, result.data);
-    revalidatePath("/admin/timeline");
+    revalidatePath("/api/admin/timeline");
     return { success: true };
   } catch (error) {
     console.error("Update timeline error:", error);
@@ -139,7 +139,7 @@ export async function deleteTimelineEvent(id: string) {
   try {
     await dbConnect();
     await TimelineEvents.findByIdAndDelete(id);
-    revalidatePath("/admin/timeline");
+    revalidatePath("/api/admin/timeline");
     return { success: true };
   } catch (error) {
     console.error("Delete timeline error:", error);
