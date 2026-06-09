@@ -2,11 +2,11 @@
 
 import { auth } from "@/lib/auth";
 import dbConnect from "@/lib/db";
-import TimelineEvents from "@/models/TimelineEvents";   // ← Make sure path is correct
+import TimelineEvents from "@/models/TimelineEvents1";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
-// ====================== TIMELINE SCHEMA ======================
+// ====================== SCHEMA ======================
 const timelineSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string().min(1, "Description is required"),
@@ -24,7 +24,7 @@ const timelineSchema = z.object({
     .optional()
     .nullable(),
   category: z.string().optional(),
-  tags: z.array(z.string()).optional().default([]),
+  tags: z.array(z.string()).default([]),
   media: z
     .object({
       url: z.string().optional(),
@@ -32,7 +32,6 @@ const timelineSchema = z.object({
       credit: z.string().optional(),
       thumbnail: z.string().optional(),
     })
-    .optional()
     .default({}),
   location: z
     .object({
@@ -40,7 +39,6 @@ const timelineSchema = z.object({
       latitude: z.number().optional(),
       longitude: z.number().optional(),
     })
-    .optional()
     .default({}),
   sources: z
     .array(
@@ -49,14 +47,12 @@ const timelineSchema = z.object({
         url: z.string().optional(),
       })
     )
-    .optional()
     .default([]),
   featured: z.boolean().default(false),
   sortOrder: z.number().default(0),
 });
 
-// ====================== TIMELINE ACTIONS ======================
-
+// ====================== ACTIONS ======================
 export async function getTimelineEvents() {
   try {
     await dbConnect();
@@ -65,7 +61,7 @@ export async function getTimelineEvents() {
       .lean();
     return events.map((e: any) => ({ ...e, id: e._id.toString() }));
   } catch (error) {
-    console.error("Get timeline events error:", error);
+    console.error(error);
     return [];
   }
 }
@@ -77,7 +73,7 @@ export async function getTimelineEvent(id: string) {
     if (!event) return null;
     return { ...event, id: event._id.toString() };
   } catch (error) {
-    console.error("Get timeline event error:", error);
+    console.error(error);
     return null;
   }
 }
@@ -113,7 +109,7 @@ export async function createTimelineEvent(formData: FormData) {
     revalidatePath("/admin/timeline");
     return { success: true };
   } catch (error) {
-    console.error("Create timeline error:", error);
+    console.error(error);
     return { error: "Failed to create event" };
   }
 }
@@ -149,23 +145,7 @@ export async function updateTimelineEvent(id: string, formData: FormData) {
     revalidatePath("/admin/timeline");
     return { success: true };
   } catch (error) {
-    console.error("Update timeline error:", error);
+    console.error(error);
     return { error: "Failed to update event" };
-  }
-}
-
-export async function deleteTimelineEvent(id: string) {
-  const session = await auth();
-  if (!session?.user?.id || session.user.role !== "admin") {
-    return { error: "Unauthorized" };
-  }
-  try {
-    await dbConnect();
-    await TimelineEvents.findByIdAndDelete(id);
-    revalidatePath("/admin/timeline");
-    return { success: true };
-  } catch (error) {
-    console.error("Delete timeline error:", error);
-    return { error: "Failed to delete event" };
   }
 }
