@@ -1,3 +1,12 @@
+"use server"
+
+import { auth } from "@/lib/auth"
+import dbConnect from "@/lib/db"
+import Product from "@/models/Product"
+import TimelineEvents from "@/models/TimelineEvents"   // ← Make sure this import exists
+import { revalidatePath } from "next/cache"
+import { z } from "zod"   // ← This must be here
+
 // ==================== TIMELINE ACTIONS ====================
 
 const timelineSchema = z.object({
