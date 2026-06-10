@@ -1,6 +1,6 @@
 "use client";
-import dbConnect from "@/lib/db";
-import { SiteSettings } from "@/models";
+
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { SiteSettingsForm } from "./settings-form";
 import Editor from "@/components/Editor1";
@@ -18,15 +18,34 @@ interface Settings {
   };
 }
 
-async function getSettings(): Promise<Settings> {
-  await dbConnect();
-  const settings = await SiteSettings.findOne().lean();
-  return settings ? JSON.parse(JSON.stringify(settings)) : {};
-}
+export default function AdminSettingsPage() {
+  const [settings, setSettings] = useState<Settings>({});
+  const [description, setDescription] = useState("");
+  const [loading, setLoading] = useState(true);
 
-export default async function AdminSettingsPage() {
-  const settings = await getSettings();
-   const [description, setDescription] = useState('');
+  // Fetch settings on client side
+  useEffect(() => {
+    async function fetchSettings() {
+      try {
+        const res = await fetch("/api/settings", { cache: "no-store" });
+        if (res.ok) {
+          const data = await res.json();
+          setSettings(data);
+          setDescription(data.siteDescription || "");
+        }
+      } catch (error) {
+        console.error("Failed to fetch settings:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchSettings();
+  }, []);
+
+  if (loading) {
+    return <div className="p-8 text-center">Loading settings...</div>;
+  }
 
   return (
     <div className="space-y-6">
@@ -52,7 +71,7 @@ export default async function AdminSettingsPage() {
             <CardDescription>Customize the main homepage banner</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-          <Editor content={description} onChange={setDescription} />
+            <Editor content={description} onChange={setDescription} />
           </CardContent>
         </Card>
       </div>
