@@ -35,6 +35,17 @@ export async function GET() {
           };
         }
 
+        let background = undefined;
+        if (event.background) {
+          if (event.background.url) {
+            background = { url: event.background.url };
+          } else if (event.background.color) {
+            background = { color: event.background.color };
+          }
+        } else if (event.featured) {
+          background = { color: "#e6f0fa" }; // default for featured
+        }
+        
         return {
           unique_id: event._id.toString(),
 
