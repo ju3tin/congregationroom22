@@ -27,6 +27,7 @@ export default function NewTimelineEventPage() {
     description: "",
     category: "",
     startDate: { year: new Date().getFullYear(), month: undefined as number | undefined, day: undefined as number | undefined },
+    background: { color: "", url: "" },
     endDate: null as { year: number; month?: number; day?: number } | null,
     featured: false,
     sortOrder: 0,
@@ -56,6 +57,7 @@ export default function NewTimelineEventPage() {
     fd.append("sources", JSON.stringify(form.sources.filter(s => s.title.trim())));
     fd.append("featured", form.featured.toString());
     fd.append("sortOrder", form.sortOrder.toString());
+    fd.append("background", JSON.stringify(form.background || {}));
 
     const result = await createTimelineEvent(fd);
 
@@ -221,6 +223,62 @@ export default function NewTimelineEventPage() {
           </CardContent>
         </Card>
 
+{/* ==================== BACKGROUND ==================== */}
+<Card>
+  <CardHeader>
+    <CardTitle>Background (TimelineJS)</CardTitle>
+  </CardHeader>
+  <CardContent className="space-y-4">
+    <div className="grid grid-cols-2 gap-4">
+      <div className="space-y-2">
+        <Label>Background Color (Hex)</Label>
+        <div className="flex gap-2">
+          <Input
+            type="color"
+            value={form.background?.color || "#ffffff"}
+            onChange={(e) =>
+              setForm((p) => ({
+                ...p,
+                background: { ...p.background, color: e.target.value },
+              }))
+            }
+          />
+          <Input
+            value={form.background?.color || ""}
+            onChange={(e) =>
+              setForm((p) => ({
+                ...p,
+                background: { ...p.background, color: e.target.value },
+              }))
+            }
+            placeholder="#e6f0fa"
+          />
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label>Background Image URL (optional)</Label>
+        <Input
+          type="url"
+          value={form.background?.url || ""}
+          onChange={(e) =>
+            setForm((p) => ({
+              ...p,
+              background: { ...p.background, url: e.target.value },
+            }))
+          }
+          placeholder="https://example.com/background.jpg"
+        />
+      </div>
+    </div>
+
+    <p className="text-xs text-muted-foreground">
+      Color will be used if both are provided. Leave empty to use default.
+    </p>
+  </CardContent>
+</Card>
+
+        
         <div className="flex justify-end gap-4">
           <Button type="button" variant="outline" asChild>
             <Link href="/admin/timeline">Cancel</Link>
