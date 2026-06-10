@@ -33,6 +33,10 @@ const TimelineEvent1Schema = new mongoose.Schema(
         url: String,
       },
     ],
+    background: {
+      color: String,     // e.g. "#e6f0fa" or "#ff0000"
+      url: String,       // background image URL
+    },
     featured: { type: Boolean, default: false },
     sortOrder: { type: Number, default: 0 },
   },
