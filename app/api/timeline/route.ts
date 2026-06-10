@@ -1,88 +1,73 @@
-import { NextResponse } from 'next/server';
-import connectDB from '@/lib/db';
-import TimelineEvent from '@/models/TimelineEvents1';
+import { NextResponse } from "next/server";
+import dbConnect from "@/lib/db";
+import TimelineEvents from "@/models/TimelineEvents1";
 
 export async function GET() {
   try {
-    await connectDB();
+    await dbConnect();
 
-    const events = await TimelineEvent.find().sort({
-      'start_date.year': 1,
-      'start_date.month': 1,
-      'start_date.day': 1,
-    });
+    const events = await TimelineEvents.find()
+      .sort({ sortOrder: 1, "startDate.year": -1 })
+      .lean();
 
     const timelineData = {
       title: {
         text: {
-          headline: 'Vibe FM Radio Station',
-          text: 'Our Journey & Milestones',
+          headline: "Our Timeline",
+          text: "Key moments and events",
         },
       },
-
       events: events.map((event: any) => {
-        const item: any = {
-          start_date: {
-            year: event.startDate?.year ? String(event.startDate.year) : "",
-            month: event.start_date?.month ? String(event.startDate.month) : "",
-            day: event.start_date?.day ? String(event.startDate.day) : "",
-          },
-
-          text: {
-            headline: event.headline || '',
-            text: event.text || '',
-          },
+        // Safe string conversion
+        const startDate = {
+          year: event.startDate?.year ? String(event.startDate.year) : "",
+          month: event.startDate?.month ? String(event.startDate.month) : undefined,
+          day: event.startDate?.day ? String(event.startDate.day) : undefined,
         };
 
-        // ✅ END DATE (only if valid)
-        if (event.end_date?.year) {
-          item.end_date = {
-            year: event.end_date.year,
-            month: event.end_date.month || '',
-            day: event.end_date.day || '',
+        // Only include end_date if it actually exists and has a year
+        let endDate = undefined;
+        if (event.endDate && event.endDate.year) {
+          endDate = {
+            year: String(event.endDate.year),
+            month: event.endDate.month ? String(event.endDate.month) : undefined,
+            day: event.endDate.day ? String(event.endDate.day) : undefined,
           };
         }
 
-        // ✅ MEDIA (Timeline style main media)
-        if (event.media?.url) {
-          item.media = {
-            url: event.media.url,
-            caption: event.media.caption || '',
-            credit: event.media.credit || '',
-            thumbnail: event.media.thumbnail || '',
-          };
-        }
+        return {
+          unique_id: event._id.toString(),
 
-        // ✅ ASSETS (your social + extras)
-        if (Array.isArray(event.assets) && event.assets.length > 0) {
-          item.assets = event.assets
-            .filter((a: any) => a?.url)
-            .map((a: any) => ({
-              type: a.type || 'image',
-              title: a.title || '',
-              url: a.url,
-              caption: a.caption || '',
-            }));
-        }
+          start_date: startDate,
+          ...(endDate && { end_date: endDate }),
 
-        // ✅ GROUP
-        if (event.group) {
-          item.group = event.group;
-        }
+          text: {
+            headline: event.title || "Untitled Event",
+            text: event.description || "",
+          },
 
-        return item;
+          media: event.media?.url
+            ? {
+                url: event.media.url,
+                caption: event.media.caption || "",
+                credit: event.media.credit || "",
+                thumbnail: event.media.thumbnail || undefined,
+              }
+            : undefined,
+
+          group: event.category || "General",
+          tags: event.tags?.length ? event.tags.join(", ") : undefined,
+
+          background: event.featured ? { color: "#e6f0fa" } : undefined,
+        };
       }),
     };
 
     return NextResponse.json(timelineData);
-  } catch (error: any) {
-    console.error('Timeline API Error:', error);
-
+  } catch (error) {
+    console.error("Timeline API Error:", error);
     return NextResponse.json(
-      {
-        success: false,
-        message: error.message || 'Failed to load timeline data',
-      },
+      { error: "Failed to fetch timeline events" },
       { status: 500 }
     );
   }
