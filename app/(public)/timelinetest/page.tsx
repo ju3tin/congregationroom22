@@ -8,14 +8,14 @@ export default function RadioTimeline() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch('/api/timeline')
+    fetch('/api/testtimeline.json')
       .then(res => res.json())
       .then(data => {
         // Ensure proper structure
         const safeData = {
           title: data.title || {
             text: {
-              headline: "Vibe FM Radio Station",
+              headline: data.headline,
               text: "Our Journey & Milestones"
             }
           },
