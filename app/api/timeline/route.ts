@@ -18,16 +18,14 @@ export async function GET() {
         },
       },
       events: events.map((event: any) => {
-        // Safe string conversion
         const startDate = {
           year: event.startDate?.year ? String(event.startDate.year) : "",
           month: event.startDate?.month ? String(event.startDate.month) : undefined,
           day: event.startDate?.day ? String(event.startDate.day) : undefined,
         };
 
-        // Only include end_date if it actually exists and has a year
         let endDate = undefined;
-        if (event.endDate && event.endDate.year) {
+        if (event.endDate?.year) {
           endDate = {
             year: String(event.endDate.year),
             month: event.endDate.month ? String(event.endDate.month) : undefined,
@@ -35,6 +33,7 @@ export async function GET() {
           };
         }
 
+        // Background handling (color or image)
         let background = undefined;
         if (event.background) {
           if (event.background.url) {
@@ -45,10 +44,9 @@ export async function GET() {
         } else if (event.featured) {
           background = { color: "#e6f0fa" }; // default for featured
         }
-        
+
         return {
           unique_id: event._id.toString(),
-
           start_date: startDate,
           ...(endDate && { end_date: endDate }),
 
@@ -62,14 +60,13 @@ export async function GET() {
                 url: event.media.url,
                 caption: event.media.caption || "",
                 credit: event.media.credit || "",
-                thumbnail: event.media.thumbnail || undefined,
               }
             : undefined,
 
           group: event.category || "General",
           tags: event.tags?.length ? event.tags.join(", ") : undefined,
 
-          background,
+          background, // ← This is what TimelineJS uses
         };
       }),
     };
@@ -77,9 +74,6 @@ export async function GET() {
     return NextResponse.json(timelineData);
   } catch (error) {
     console.error("Timeline API Error:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch timeline events" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to fetch timeline" }, { status: 500 });
   }
 }
