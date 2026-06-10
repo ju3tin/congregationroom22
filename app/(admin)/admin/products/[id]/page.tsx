@@ -16,7 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { updateProduct, getProduct } from "@/app/(admin)/admin/products/actions"; // ← Adjust path if needed
+import { updateProduct, getProduct } from "@/app/actions";
 import { toast } from "sonner";
 
 interface Variant {
@@ -34,6 +34,7 @@ export default function EditProductPage() {
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
 
+  // Form fields
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
   const [description, setDescription] = useState("");
@@ -42,20 +43,16 @@ export default function EditProductPage() {
 
   const [images, setImages] = useState<string[]>([""]);
   const [variants, setVariants] = useState<Variant[]>([
-    { name: "Default", sku: "", price: 0, stock: 0 },
+    { name: "", sku: "", price: 0, stock: 0 },
   ]);
 
   // Fetch product
   useEffect(() => {
     async function fetchProduct() {
-      if (!productId) {
-        toast.error("Product ID is missing");
-        return;
-      }
+      if (!productId) return;
 
       try {
         const product = await getProduct(productId);
-
         if (!product) {
           toast.error("Product not found");
           router.push("/admin/products");
@@ -84,6 +81,7 @@ export default function EditProductPage() {
     fetchProduct();
   }, [productId, router]);
 
+  // Image handlers
   const addImage = () => setImages([...images, ""]);
   const removeImage = (index: number) => {
     if (images.length > 1) setImages(images.filter((_, i) => i !== index));
@@ -94,6 +92,7 @@ export default function EditProductPage() {
     setImages(updated);
   };
 
+  // Variant handlers
   const addVariant = () => {
     setVariants([...variants, { name: "", sku: "", price: 0, stock: 0 }]);
   };
@@ -108,7 +107,7 @@ export default function EditProductPage() {
     setVariants(updated);
   };
 
-  async function handleSubmit(formData: FormData) {
+  const handleSubmit = async (formData: FormData) => {
     setLoading(true);
 
     formData.append("images", JSON.stringify(images.filter((i) => i.trim())));
@@ -123,7 +122,7 @@ export default function EditProductPage() {
       router.push("/admin/products");
     }
     setLoading(false);
-  }
+  };
 
   if (initialLoading) {
     return <div className="p-8 text-center">Loading product...</div>;
@@ -152,11 +151,23 @@ export default function EditProductPage() {
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="name">Product Name</Label>
-                <Input id="name" name="name" value={name} onChange={(e) => setName(e.target.value)} required />
+                <Input
+                  id="name"
+                  name="name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="slug">Slug</Label>
-                <Input id="slug" name="slug" value={slug} onChange={(e) => setSlug(e.target.value)} required />
+                <Input
+                  id="slug"
+                  name="slug"
+                  value={slug}
+                  onChange={(e) => setSlug(e.target.value)}
+                  required
+                />
               </div>
             </div>
 
@@ -167,7 +178,7 @@ export default function EditProductPage() {
                 name="description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                rows={4}
+                rows={5}
                 required
               />
             </div>
@@ -175,11 +186,21 @@ export default function EditProductPage() {
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="category">Category</Label>
-                <Input id="category" name="category" value={category} onChange={(e) => setCategory(e.target.value)} required />
+                <Input
+                  id="category"
+                  name="category"
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  required
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="status">Status</Label>
-                <Select name="status" value={status} onValueChange={(v: any) => setStatus(v)}>
+                <Select
+                  name="status"
+                  value={status}
+                  onValueChange={(value: "draft" | "active" | "archived") => setStatus(value)}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -194,8 +215,113 @@ export default function EditProductPage() {
           </CardContent>
         </Card>
 
-        {/* Images & Variants sections remain the same as previous message */}
-        {/* ... (Images Card and Variants Card) ... */}
+        {/* Images */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle>Images</CardTitle>
+            <Button type="button" variant="outline" size="sm" onClick={addImage}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Image
+            </Button>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {images.map((image, index) => (
+              <div key={index} className="flex gap-2">
+                <Input
+                  value={image}
+                  onChange={(e) => updateImage(index, e.target.value)}
+                  placeholder="https://..."
+                  type="url"
+                />
+                {images.length > 1 && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => removeImage(index)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        {/* Variants */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle>Variants</CardTitle>
+            <Button type="button" variant="outline" size="sm" onClick={addVariant}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Variant
+            </Button>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {variants.map((variant, index) => (
+              <div key={index} className="rounded-lg border border-border p-4 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-medium">Variant {index + 1}</h4>
+                  {variants.length > 1 && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removeVariant(index)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label>Variant Name</Label>
+                    <Input
+                      value={variant.name}
+                      onChange={(e) => updateVariant(index, "name", e.target.value)}
+                      placeholder="Small, Medium, Large..."
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>SKU</Label>
+                    <Input
+                      value={variant.sku}
+                      onChange={(e) => updateVariant(index, "sku", e.target.value)}
+                      placeholder="PROD-001-SM"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label>Price ($)</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={variant.price}
+                      onChange={(e) => updateVariant(index, "price", parseFloat(e.target.value) || 0)}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Stock</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      value={variant.stock}
+                      onChange={(e) => updateVariant(index, "stock", parseInt(e.target.value) || 0)}
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
 
         <div className="flex justify-end gap-4">
           <Button type="button" variant="outline" asChild>
