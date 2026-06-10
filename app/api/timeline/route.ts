@@ -24,8 +24,8 @@ export async function GET() {
         const item: any = {
           start_date: {
             year: event.startDate?.year ? String(event.startDate.year) : "",
-            month: event.start_date?.month || '',
-            day: event.start_date?.day || '',
+            month: event.start_date?.month ? String(event.startDate.month) : "",
+            day: event.start_date?.day ? String(event.startDate.day) : "",
           },
 
           text: {
