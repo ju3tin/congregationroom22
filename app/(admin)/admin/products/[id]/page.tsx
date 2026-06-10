@@ -16,7 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { updateProduct, getProduct } from "@/app/actions";
+import { updateProduct, getProduct } from "@/app/(admin)/admin/products/actions";
 import { toast } from "sonner";
 
 interface Variant {
