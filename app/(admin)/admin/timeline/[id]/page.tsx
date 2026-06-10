@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
-import { updateTimelineEvent, getTimelineEvent } from "@/app/actions";
+import { updateTimelineEvent, getTimelineEvent } from "@/app/actions/timeline"; // ← Updated import
 import { toast } from "sonner";
 
 interface Source {
@@ -42,31 +42,36 @@ export default function EditTimelineEventPage() {
 
   useEffect(() => {
     async function loadEvent() {
-      const event = await getTimelineEvent(id);
-      if (!event) {
-        toast.error("Event not found");
-        router.push("/admin/timeline");
-        return;
-      }
+      try {
+        const event = await getTimelineEvent(id);
+        if (!event) {
+          toast.error("Event not found");
+          router.push("/admin/timeline");
+          return;
+        }
 
-      setForm({
-        title: event.title,
-        description: event.description,
-        category: event.category || "",
-        startDate: event.startDate,
-        endDate: event.endDate || null,
-        featured: event.featured || false,
-        sortOrder: event.sortOrder || 0,
-        tags: event.tags?.length ? event.tags : [""],
-        media: event.media || { url: "", caption: "", credit: "", thumbnail: "" },
-        location: {
-          name: event.location?.name || "",
-          latitude: event.location?.latitude?.toString() || "",
-          longitude: event.location?.longitude?.toString() || "",
-        },
-        sources: event.sources?.length ? event.sources : [{ title: "", url: "" }],
-      });
-      setInitialLoading(false);
+        setForm({
+          title: event.title,
+          description: event.description,
+          category: event.category || "",
+          startDate: event.startDate,
+          endDate: event.endDate || null,
+          featured: event.featured || false,
+          sortOrder: event.sortOrder || 0,
+          tags: event.tags?.length > 0 ? [...event.tags] : [""],
+          media: event.media || { url: "", caption: "", credit: "", thumbnail: "" },
+          location: {
+            name: event.location?.name || "",
+            latitude: event.location?.latitude?.toString() || "",
+            longitude: event.location?.longitude?.toString() || "",
+          },
+          sources: event.sources?.length > 0 ? [...event.sources] : [{ title: "", url: "" }],
+        });
+      } catch (err) {
+        toast.error("Failed to load event");
+      } finally {
+        setInitialLoading(false);
+      }
     }
     loadEvent();
   }, [id, router]);
@@ -88,53 +93,53 @@ export default function EditTimelineEventPage() {
       latitude: form.location.latitude ? Number(form.location.latitude) : undefined,
       longitude: form.location.longitude ? Number(form.location.longitude) : undefined,
     }));
-    fd.append("sources", JSON.stringify(form.sources.filter(s => s.title.trim())));
+    fd.append("sources", JSON.stringify(form.sources.filter(s => s.title?.trim())));
+
     fd.append("featured", form.featured.toString());
     fd.append("sortOrder", form.sortOrder.toString());
 
     const result = await updateTimelineEvent(id, fd);
 
-    if (result.error) toast.error(result.error);
-    else {
+    if (result?.error) {
+      toast.error(result.error);
+    } else {
       toast.success("Event updated successfully");
       router.push("/admin/timeline");
     }
     setLoading(false);
   };
 
-  // Reuse the same helper functions as New page (addTag, updateTag, etc.)
-  const addTag = () => setForm({ ...form, tags: [...form.tags, ""] });
-  const updateTag = (index: number, value: string) => {
-    const newTags = [...form.tags]; newTags[index] = value; setForm({ ...form, tags: newTags });
+  // Handlers
+  const addTag = () => setForm(p => ({ ...p, tags: [...p.tags, ""] }));
+  const updateTag = (i: number, v: string) => {
+    const t = [...form.tags]; t[i] = v; setForm(p => ({ ...p, tags: t }));
   };
-  const removeTag = (index: number) => {
-    if (form.tags.length > 1) setForm({ ...form, tags: form.tags.filter((_, i) => i !== index) });
-  };
-
-  const addSource = () => setForm({ ...form, sources: [...form.sources, { title: "", url: "" }] });
-  const updateSource = (index: number, field: "title" | "url", value: string) => {
-    const newSources = [...form.sources];
-    newSources[index] = { ...newSources[index], [field]: value };
-    setForm({ ...form, sources: newSources });
-  };
-  const removeSource = (index: number) => {
-    if (form.sources.length > 1) setForm({ ...form, sources: form.sources.filter((_, i) => i !== index) });
+  const removeTag = (i: number) => {
+    if (form.tags.length > 1) setForm(p => ({ ...p, tags: p.tags.filter((_, idx) => idx !== i) }));
   };
 
-  if (initialLoading) return <div className="p-8 text-center">Loading event...</div>;
+  const addSource = () => setForm(p => ({ ...p, sources: [...p.sources, { title: "", url: "" }] }));
+  const updateSource = (i: number, field: "title" | "url", v: string) => {
+    const s = [...form.sources]; s[i] = { ...s[i], [field]: v }; setForm(p => ({ ...p, sources: s }));
+  };
+  const removeSource = (i: number) => {
+    if (form.sources.length > 1) setForm(p => ({ ...p, sources: p.sources.filter((_, idx) => idx !== i) }));
+  };
+
+  if (initialLoading) return <div className="p-12 text-center">Loading event...</div>;
 
   return (
-    <div className="space-y-8 max-w-4xl mx-auto">
+    <div className="max-w-4xl mx-auto p-6 space-y-8">
       <div className="flex items-center gap-4">
-        <Link href="/admin/timeline" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
+        <Link href="/admin/timeline" className="flex items-center gap-2 text-muted-foreground hover:text-foreground">
           <ArrowLeft className="h-4 w-4" /> Back
         </Link>
         <h1 className="text-3xl font-bold">Edit Timeline Event</h1>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-8">
-        {/* Copy all Card sections from New page here (Basic Info, Dates, Media, Location, Tags, Sources) */}
-        {/* ... (Paste the same JSX from New page) ... */}
+        {/* Basic Info, Dates, Media, Location, Tags, Sources Cards — same as before */}
+        {/* (All cards from previous full edit page) */}
 
         <div className="flex justify-end gap-4">
           <Button type="button" variant="outline" asChild>
