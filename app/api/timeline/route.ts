@@ -23,7 +23,7 @@ export async function GET() {
       events: events.map((event: any) => {
         const item: any = {
           start_date: {
-            year: event.start_date?.year || '',
+            year: event.startDate?.year ? String(event.startDate.year) : "";
             month: event.start_date?.month || '',
             day: event.start_date?.day || '',
           },
