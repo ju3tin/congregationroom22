@@ -69,7 +69,7 @@ export async function GET() {
           group: event.category || "General",
           tags: event.tags?.length ? event.tags.join(", ") : undefined,
 
-          background: event.featured ? { color: "#e6f0fa" } : undefined,
+          background,
         };
       }),
     };
