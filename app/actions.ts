@@ -50,6 +50,13 @@ const timelineSchema = z.object({
     .default([]),
   featured: z.boolean().default(false),
   sortOrder: z.number().default(0),
+  background: z
+    .object({
+      color: z.string().optional(),
+      url: z.string().optional(),
+    })
+    .optional()
+    .default({}),
 });
 
 // ====================== ACTIONS ======================
@@ -96,6 +103,7 @@ export async function createTimelineEvent(formData: FormData) {
     sources: JSON.parse(formData.get("sources") as string || "[]"),
     featured: formData.get("featured") === "true",
     sortOrder: Number(formData.get("sortOrder")) || 0,
+    background: JSON.parse(formData.get("background") as string || "{}"),
   };
 
   const result = timelineSchema.safeParse(rawData);
@@ -132,6 +140,7 @@ export async function updateTimelineEvent(id: string, formData: FormData) {
     sources: JSON.parse(formData.get("sources") as string || "[]"),
     featured: formData.get("featured") === "true",
     sortOrder: Number(formData.get("sortOrder")) || 0,
+    background: JSON.parse(formData.get("background") as string || "{}"),
   };
 
   const result = timelineSchema.safeParse(rawData);
