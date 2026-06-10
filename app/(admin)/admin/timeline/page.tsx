@@ -10,6 +10,9 @@ export default async function TimelinePage() {
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Timeline Events</h1>
         <Button asChild>
+          <Link href="/admin/timeline/front">First</Link>
+        </Button>
+        <Button asChild>
           <Link href="/admin/timeline/new">+ New Event</Link>
         </Button>
       </div>
