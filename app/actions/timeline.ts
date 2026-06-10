@@ -44,6 +44,13 @@ const timelineSchema = z.object({
   ).default([]),
   featured: z.boolean().default(false),
   sortOrder: z.number().default(0),
+  background: z
+    .object({
+      color: z.string().optional(),
+      url: z.string().optional(),
+    })
+    .optional()
+    .default({}),
 });
 
 // ====================== ACTIONS ======================
