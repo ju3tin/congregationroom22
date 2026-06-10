@@ -60,7 +60,6 @@ const OrderSchema = new Schema<IOrder>(
   { timestamps: true }
 )
 
-OrderSchema.index({ orderNumber: 1 })
 OrderSchema.index({ userId: 1 })
 OrderSchema.index({ status: 1 })
 
