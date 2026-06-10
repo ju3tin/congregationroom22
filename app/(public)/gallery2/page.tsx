@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
+import { Header } from "@/components/header"
 
 export default function RadioTimeline() {
   const timelineRef = useRef<HTMLDivElement>(null);
@@ -70,10 +71,13 @@ export default function RadioTimeline() {
   if (error) return <div className="text-center py-20 text-red-500 text-xl">{error}</div>;
 
   return (
+    <div>
+      <Header />    
       <div className="bg-gray-950">
       <div className="mx-auto">
         <div ref={timelineRef} style={{height: "100vh", width: "100%" }} />
       </div>
     </div>
+      </div>
   );
 }
