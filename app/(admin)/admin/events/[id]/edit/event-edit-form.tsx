@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -58,12 +59,13 @@ interface Event {
   doors: string;
   ticketTiers: TicketTier[];
   lineup: LineupItem[];
+  featured: boolean;
 }
 
 interface EventFormProps {
   djs: DJOption[];
-  event: Event;           // Required for edit form
-  action: (formData: FormData) => Promise<{ error?: string }>; // Pass updateEvent
+  event: Event;
+  action: (formData: FormData) => Promise<{ error?: string }>;
 }
 
 export default function EventForm({ djs, event, action }: EventFormProps) {
@@ -73,8 +75,9 @@ export default function EventForm({ djs, event, action }: EventFormProps) {
   const [tiers, setTiers] = useState<TicketTier[]>(event.ticketTiers || []);
   const [lineup, setLineup] = useState<LineupItem[]>(event.lineup || []);
   const [status, setStatus] = useState(event.status || "draft");
+  const [featured, setFeatured] = useState(event.featured || false);
 
-  // Fallback if no tiers/lineup exist
+  // Fallbacks
   useEffect(() => {
     if (tiers.length === 0) {
       setTiers([{
@@ -89,7 +92,7 @@ export default function EventForm({ djs, event, action }: EventFormProps) {
     if (lineup.length === 0) {
       setLineup([{ dj: "", headline: false }]);
     }
-  }, [tiers.length, lineup.length]);
+  }, []);
 
   const addTier = () => {
     setTiers([...tiers, {
@@ -128,12 +131,12 @@ export default function EventForm({ djs, event, action }: EventFormProps) {
 
   async function handleSubmit(formData: FormData) {
     setLoading(true);
-
     try {
-      formData.append("id", event._id); // Important for update
+      formData.append("id", event._id);
       formData.append("ticketTiers", JSON.stringify(tiers));
       formData.append("lineup", JSON.stringify(lineup));
       formData.append("status", status);
+      formData.append("featured", featured.toString());
 
       const result = await action(formData);
 
@@ -178,17 +181,14 @@ export default function EventForm({ djs, event, action }: EventFormProps) {
               <Input id="slug" name="slug" required defaultValue={event.slug} />
             </div>
           </div>
-
           <div className="space-y-2">
             <Label htmlFor="description">Description</Label>
             <Textarea id="description" name="description" rows={5} required defaultValue={event.description} />
           </div>
-
           <div className="space-y-2">
             <Label htmlFor="image">Image URL</Label>
             <Input id="image" name="image" type="url" required defaultValue={event.image} />
           </div>
-
           <div className="space-y-2">
             <Label htmlFor="status">Status</Label>
             <Select value={status} onValueChange={setStatus}>
@@ -245,6 +245,27 @@ export default function EventForm({ djs, event, action }: EventFormProps) {
         </CardContent>
       </Card>
 
+      {/* Featured Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Featured on Homepage</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center gap-3">
+            <Switch
+              checked={featured}
+              onCheckedChange={setFeatured}
+            />
+            <div>
+              <Label className="text-base">Mark as Featured Event</Label>
+              <p className="text-sm text-muted-foreground">
+                This event will appear in the Featured Events section on the front page
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* DJ Lineup */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
@@ -265,7 +286,6 @@ export default function EventForm({ djs, event, action }: EventFormProps) {
                   </Button>
                 )}
               </div>
-
               <div className="space-y-2">
                 <Label>DJ</Label>
                 <Select value={item.dj} onValueChange={(v) => updateLineupItem(index, "dj", v)}>
@@ -281,7 +301,6 @@ export default function EventForm({ djs, event, action }: EventFormProps) {
                   </SelectContent>
                 </Select>
               </div>
-
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label>Set Time</Label>
@@ -324,7 +343,6 @@ export default function EventForm({ djs, event, action }: EventFormProps) {
                   </Button>
                 )}
               </div>
-
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label>Tier Name</Label>
@@ -347,7 +365,6 @@ export default function EventForm({ djs, event, action }: EventFormProps) {
                   />
                 </div>
               </div>
-
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label>Total Quantity</Label>
@@ -371,7 +388,6 @@ export default function EventForm({ djs, event, action }: EventFormProps) {
                   />
                 </div>
               </div>
-
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label>Sales Start</Label>
