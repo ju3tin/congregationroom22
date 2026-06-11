@@ -44,7 +44,7 @@ export default async function AdminUsersPage() {
           Manage users and their roles
         </p>
         <Button asChild>
-          <Link href="/admin/users/new">+ New Event</Link>
+          <Link href="/admin/users/new">+ New User</Link>
         </Button>
       </div>
 
