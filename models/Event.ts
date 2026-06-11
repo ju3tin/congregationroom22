@@ -36,6 +36,7 @@ export interface IEvent extends Document {
   status: "draft" | "published" | "cancelled" | "completed"
   ticketTiers: ITicketTier[]
   lineup: ILineupItem[]
+  featured: boolean          // ← Main featured field
   createdAt: Date
   updatedAt: Date
 }
@@ -56,12 +57,10 @@ const LineupItemSchema = new Schema<ILineupItem>({
     ref: "DJ",
     required: true,
   },
-  setTime: {
-    type: Date,
-  },
-  headline: {
-    type: Boolean,
-    default: false,
+  setTime: { type: Date },
+  headline: { 
+    type: Boolean, 
+    default: false 
   },
 })
 
@@ -70,44 +69,43 @@ const EventSchema = new Schema<IEvent>(
     title: { type: String, required: true },
     slug: { type: String, required: true, unique: true },
     description: { type: String, required: true },
-
     venue: {
       name: { type: String, required: true },
       address: { type: String, required: true },
       city: { type: String, required: true },
     },
-
     date: { type: Date, required: true },
     doors: { type: Date, required: true },
     endDate: { type: Date },
-
     image: { type: String, required: true },
-
     organizerId: {
       type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
-
     status: {
       type: String,
       enum: ["draft", "published", "cancelled", "completed"],
       default: "draft",
     },
-
     ticketTiers: [TicketTierSchema],
-
-    lineup: {
-      type: [LineupItemSchema],
-      default: [],
+    lineup: [LineupItemSchema],
+    
+    // ✅ Featured field for front page
+    featured: { 
+      type: Boolean, 
+      default: false 
     },
   },
   { timestamps: true }
 )
 
+// Indexes
 EventSchema.index({ slug: 1 })
 EventSchema.index({ status: 1, date: 1 })
 EventSchema.index({ organizerId: 1 })
+EventSchema.index({ featured: 1 })        // Good for querying featured events
+EventSchema.index({ date: 1, featured: 1 })
 
 const Event: Model<IEvent> =
   mongoose.models.Event || mongoose.model<IEvent>("Event", EventSchema)
