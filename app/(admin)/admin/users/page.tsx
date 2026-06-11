@@ -43,6 +43,9 @@ export default async function AdminUsersPage() {
         <p className="mt-2 text-muted-foreground">
           Manage users and their roles
         </p>
+        <Button asChild>
+          <Link href="/admin/users/new">+ New Event</Link>
+        </Button>
       </div>
 
       {users.length > 0 ? (
