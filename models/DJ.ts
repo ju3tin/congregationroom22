@@ -12,6 +12,7 @@ export interface IDJ extends Document {
     soundcloud?: string
     twitter?: string
   }
+  featured: boolean          // ← NEW
   createdAt: Date
   updatedAt: Date
 }
@@ -28,12 +29,16 @@ const DJSchema = new Schema<IDJ>(
       soundcloud: String,
       twitter: String,
     },
+    featured: { 
+      type: Boolean, 
+      default: false 
+    },   // ← Added here
   },
   { timestamps: true }
 )
 
-
 DJSchema.index({ genre: 1 })
+DJSchema.index({ featured: 1 })   // ← Optional: Good for querying featured DJs
 
 const DJ: Model<IDJ> =
   mongoose.models.DJ || mongoose.model<IDJ>("DJ", DJSchema)
