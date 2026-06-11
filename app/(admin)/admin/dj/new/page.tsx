@@ -124,7 +124,28 @@ export default function NewDJPage() {
             </div>
           </CardContent>
         </Card>
-
+        {/* ==================== FEATURED SECTION ==================== */}
+<Card>
+  <CardHeader>
+    <CardTitle>Featured on Homepage</CardTitle>
+  </CardHeader>
+  <CardContent className="space-y-4">
+    <div className="flex items-center gap-3">
+      <Switch
+        checked={form.featured}
+        onCheckedChange={(checked) => 
+          setForm((prev) => ({ ...prev, featured: checked }))
+        }
+      />
+      <div>
+        <Label className="text-base">Mark as Featured</Label>
+        <p className="text-sm text-muted-foreground">
+          This DJ will appear in the featured section on the homepage
+        </p>
+      </div>
+    </div>
+  </CardContent>
+</Card>
         <Card>
           <CardHeader>
             <CardTitle>
