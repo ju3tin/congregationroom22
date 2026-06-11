@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation"
+import LogoutButton from "@/components/logout-button";
 import Link from "next/link"
 import { auth } from "@/lib/auth"
 import {
@@ -63,6 +64,7 @@ export default async function AdminLayout({
             </Link>
           ))}
         </nav>
+        <LogoutButton />
         <div className="absolute bottom-0 left-0 right-0 border-t border-sidebar-border p-4">
           <Link
             href="/"
