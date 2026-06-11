@@ -8,21 +8,21 @@ import { Footer } from "@/components/footer";
 import { LivePlayer } from "@/components/live-player";
 
 async function getFeaturedDJs() {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/djs?featured=true`, {
+  const res = await fetch(`/api/djs?featured=true`, {
     next: { revalidate: 3600 }, // Cache for 1 hour
   });
   return res.ok ? res.json() : [];
 }
 
 async function getFeaturedEvents() {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/events?featured=true`, {
+  const res = await fetch(`/api/events?featured=true`, {
     next: { revalidate: 1800 },
   });
   return res.ok ? res.json() : [];
 }
 
 async function getFeaturedMixes() {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/mixes?featured=true`, {
+  const res = await fetch(`/api/mixes?featured=true`, {
     next: { revalidate: 3600 },
   });
   return res.ok ? res.json() : [];
@@ -125,47 +125,7 @@ export default async function HomePage() {
         </section>
 
         {/* Featured DJs */}
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h2 className="text-2xl sm:text-3xl font-bold">Featured DJs</h2>
-              <p className="text-muted-foreground mt-1">Meet the artists behind the decks</p>
-            </div>
-            <Link href="/djs">
-              <Button variant="ghost" className="hidden sm:flex">
-                View All <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-            </Link>
-          </div>
-
-          {featuredDjs.length > 0 ? (
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-              {featuredDjs.map((dj: any) => (
-                <Link key={dj._id} href={`/djs/${dj.slug}`}>
-                  <Card className="group overflow-hidden bg-card hover:bg-secondary/50 transition-colors border-border">
-                    <CardContent className="p-0">
-                      <div className="relative aspect-square">
-                        <Image
-                          src={dj.image}
-                          alt={dj.name}
-                          fill
-                          className="object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
-                        <div className="absolute bottom-0 left-0 right-0 p-4">
-                          <h3 className="font-semibold text-foreground">{dj.name}</h3>
-                          <p className="text-sm text-muted-foreground">{dj.genre}</p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-              ))}
-            </div>
-          ) : (
-            <p className="text-center text-muted-foreground py-12">No featured DJs at the moment.</p>
-          )}
-        </section>
+     
 
         {/* Featured Mixes */}
         <section className="bg-card/50 border-y border-border">
