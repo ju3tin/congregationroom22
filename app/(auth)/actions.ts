@@ -81,7 +81,8 @@ export async function login(formData: FormData) {
       redirect: false,
     })
  
-    return { success: true }
+    return { success: true, 
+  role: user.role }
   } catch (error) {
     if (error instanceof AuthError) {
       switch (error.type) {
