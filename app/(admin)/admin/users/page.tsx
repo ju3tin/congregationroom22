@@ -81,7 +81,9 @@ export default async function AdminUsersPage() {
                     {format(new Date(user.createdAt), "MMM d, yyyy")}
                   </TableCell>
                   <TableCell>
-                  <Link>Edit</Link>
+                    <Button variant="outline" size="sm" asChild>
+                <Link href={`/admin/users/${user.id}`}>Edit</Link>
+              </Button>
                   </TableCell>
                 </TableRow>
               ))}
