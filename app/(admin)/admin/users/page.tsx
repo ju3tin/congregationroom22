@@ -82,7 +82,7 @@ export default async function AdminUsersPage() {
                   </TableCell>
                   <TableCell>
                     <Button variant="outline" size="sm" asChild>
-                <Link href={`/admin/users/${user.id}`}>Edit</Link>
+                <Link href={`/admin/users/${user._id}`}>Edit</Link>
               </Button>
                   </TableCell>
                 </TableRow>
