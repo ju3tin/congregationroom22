@@ -51,6 +51,7 @@ export default async function AdminUsersPage() {
                 <TableHead>User</TableHead>
                 <TableHead>Role</TableHead>
                 <TableHead>Joined</TableHead>
+                <TableHead>Edit</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -77,6 +78,9 @@ export default async function AdminUsersPage() {
                   </TableCell>
                   <TableCell>
                     {format(new Date(user.createdAt), "MMM d, yyyy")}
+                  </TableCell>
+                  <TableCell>
+                  <Link>Edit</Link>
                   </TableCell>
                 </TableRow>
               ))}
