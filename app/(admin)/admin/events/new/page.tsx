@@ -1,16 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+
 import { createEvent } from "../actions";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox"; // ← Added
+
 import {
   Select,
   SelectContent,
@@ -18,6 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+
 import {
   Card,
   CardContent,
@@ -32,6 +37,7 @@ interface DJOption {
 
 export default function NewEventPage({ djs }: { djs: DJOption[] }) {
   const router = useRouter();
+  const [isPending, startTransition] = useTransition();
   const [loading, setLoading] = useState(false);
 
   const [form, setForm] = useState({
@@ -49,7 +55,7 @@ export default function NewEventPage({ djs }: { djs: DJOption[] }) {
     },
   ]);
 
-  const [lineup, setLineup] = useState([{ dj: "", headline: false }]);
+  const [lineup, setLineup] = useState([{ dj: "", setTime: "", headline: false }]);
 
   // Ticket Tier Handlers
   const addTier = () => {
@@ -75,7 +81,7 @@ export default function NewEventPage({ djs }: { djs: DJOption[] }) {
 
   // Lineup Handlers
   const addLineupItem = () => {
-    setLineup([...lineup, { dj: "", headline: false }]);
+    setLineup([...lineup, { dj: "", setTime: "", headline: false }]);
   };
 
   const removeLineupItem = (index: number) => {
@@ -88,23 +94,34 @@ export default function NewEventPage({ djs }: { djs: DJOption[] }) {
     setLineup(updated);
   };
 
-  async function handleSubmit(formData: FormData) {
+  const handleSubmit = async (formData: FormData) => {
     setLoading(true);
 
+    // Append complex fields
     formData.append("ticketTiers", JSON.stringify(tiers));
     formData.append("lineup", JSON.stringify(lineup));
     formData.append("featured", form.featured.toString());
 
-    const result = await createEvent(formData);
+    // Venue object
+    formData.append("venue", JSON.stringify({
+      name: formData.get("venueName"),
+      address: formData.get("venueAddress"),
+      city: formData.get("venueCity"),
+    }));
 
-    if (result.error) {
-      toast.error(result.error);
-    } else {
-      toast.success("Event created successfully");
-      router.push("/admin/events");
-    }
-    setLoading(false);
-  }
+    startTransition(async () => {
+      const result = await createEvent(formData);
+
+      if (result?.error) {
+        toast.error(result.error);
+      } else {
+        toast.success("Event created successfully!");
+        router.push("/admin/events");
+        router.refresh(); // Refresh server data
+      }
+      setLoading(false);
+    });
+  };
 
   return (
     <form action={handleSubmit} className="space-y-8 max-w-5xl mx-auto p-6">
@@ -129,10 +146,12 @@ export default function NewEventPage({ djs }: { djs: DJOption[] }) {
               <Input id="slug" name="slug" required placeholder="summer-festival-2026" />
             </div>
           </div>
+
           <div className="space-y-2">
             <Label htmlFor="description">Description</Label>
             <Textarea id="description" name="description" rows={5} required />
           </div>
+
           <div className="space-y-2">
             <Label htmlFor="image">Image URL</Label>
             <Input id="image" name="image" type="url" required placeholder="https://..." />
@@ -165,7 +184,7 @@ export default function NewEventPage({ djs }: { djs: DJOption[] }) {
         <CardContent className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="date">Event Date & Time</Label>
+              <Label htmlFor="date">Event Start Date & Time</Label>
               <Input id="date" name="date" type="datetime-local" required />
             </div>
             <div className="space-y-2">
@@ -173,13 +192,17 @@ export default function NewEventPage({ djs }: { djs: DJOption[] }) {
               <Input id="doors" name="doors" type="datetime-local" required />
             </div>
           </div>
+          <div className="space-y-2">
+            <Label htmlFor="endDate">Event End Date (Optional)</Label>
+            <Input id="endDate" name="endDate" type="datetime-local" />
+          </div>
         </CardContent>
       </Card>
 
       {/* Featured */}
       <Card>
         <CardHeader><CardTitle>Featured on Homepage</CardTitle></CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent>
           <div className="flex items-center gap-3">
             <Switch
               checked={form.featured}
@@ -188,7 +211,7 @@ export default function NewEventPage({ djs }: { djs: DJOption[] }) {
             <div>
               <Label className="text-base">Mark as Featured Event</Label>
               <p className="text-sm text-muted-foreground">
-                This event will appear in the Featured Events section on the front page
+                This event will appear in the Featured Events section on the front page.
               </p>
             </div>
           </div>
@@ -214,6 +237,7 @@ export default function NewEventPage({ djs }: { djs: DJOption[] }) {
                   </Button>
                 )}
               </div>
+
               <div className="space-y-2">
                 <Label>DJ</Label>
                 <Select value={item.dj} onValueChange={(v) => updateLineupItem(index, "dj", v)}>
@@ -229,15 +253,17 @@ export default function NewEventPage({ djs }: { djs: DJOption[] }) {
                   </SelectContent>
                 </Select>
               </div>
+
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label>Set Time</Label>
                   <Input
                     type="datetime-local"
-                    value={item.setTime || ""}
+                    value={item.setTime}
                     onChange={(e) => updateLineupItem(index, "setTime", e.target.value)}
                   />
                 </div>
+
                 <div className="flex items-center gap-3 pt-8">
                   <Checkbox
                     checked={item.headline}
@@ -270,6 +296,7 @@ export default function NewEventPage({ djs }: { djs: DJOption[] }) {
                   </Button>
                 )}
               </div>
+
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label>Tier Name</Label>
@@ -291,6 +318,7 @@ export default function NewEventPage({ djs }: { djs: DJOption[] }) {
                   />
                 </div>
               </div>
+
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label>Total Quantity</Label>
@@ -314,6 +342,7 @@ export default function NewEventPage({ djs }: { djs: DJOption[] }) {
                   />
                 </div>
               </div>
+
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label>Sales Start</Label>
@@ -343,8 +372,8 @@ export default function NewEventPage({ djs }: { djs: DJOption[] }) {
         <Button type="button" variant="outline" asChild>
           <Link href="/admin/events">Cancel</Link>
         </Button>
-        <Button type="submit" disabled={loading}>
-          {loading ? "Creating..." : "Create Event"}
+        <Button type="submit" disabled={loading || isPending}>
+          {loading || isPending ? "Creating Event..." : "Create Event"}
         </Button>
       </div>
     </form>
