@@ -1,15 +1,26 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/lib/db";
 import DJ from "@/models/DJ";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     await dbConnect();
-    const djs = await DJ.find().sort({ name: 1 }).lean();
 
-    return NextResponse.json(djs);   // ← Return array directly (matches your current response)
+    const { searchParams } = new URL(request.url);
+    const featured = searchParams.get("featured") === "true";
+
+    let query = {};
+    if (featured) {
+      query = { featured: true };
+    }
+
+    const djs = await DJ.find(query)
+      .sort({ createdAt: -1 })
+      .lean();
+
+    return NextResponse.json(djs);
   } catch (error) {
-    console.error("DJ API error:", error);
-    return NextResponse.json([], { status: 500 });
+    console.error("DJ API Error:", error);
+    return NextResponse.json({ error: "Failed to fetch DJs" }, { status: 500 });
   }
 }
