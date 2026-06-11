@@ -8,8 +8,8 @@ import { z } from "zod";
 
 const ticketTierSchema = z.object({
   name: z.string().min(1, "Tier name is required"),
-  price: z.number().min(0, "Price must be 0 or greater"),
-  quantity: z.number().min(1, "Quantity must be at least 1"),
+  price: z.number().min(0),
+  quantity: z.number().min(1),
   maxPerOrder: z.number().min(1).max(20),
   salesStart: z.string().min(1),
   salesEnd: z.string().min(1),
@@ -18,21 +18,21 @@ const ticketTierSchema = z.object({
 const lineupSchema = z.object({
   dj: z.string().min(1, "DJ is required"),
   setTime: z.string().optional(),
-  headline: z.boolean().optional().default(false),
+  headline: z.boolean().default(false),
 });
 
 const eventSchema = z.object({
-  title: z.string().min(1, "Title is required"),
-  slug: z.string().min(1, "Slug is required"),
-  description: z.string().min(1, "Description is required"),
-  venueName: z.string().min(1, "Venue name is required"),
-  venueAddress: z.string().min(1, "Venue address is required"),
-  venueCity: z.string().min(1, "Venue city is required"),
-  date: z.string().min(1, "Event date is required"),
-  doors: z.string().min(1, "Doors time is required"),
+  title: z.string().min(1),
+  slug: z.string().min(1),
+  description: z.string().min(1),
+  venueName: z.string().min(1),
+  venueAddress: z.string().min(1),
+  venueCity: z.string().min(1),
+  date: z.string().min(1),
+  doors: z.string().min(1),
   endDate: z.string().optional(),
-  image: z.string().min(1, "Image URL is required"),
-  ticketTiers: z.array(ticketTierSchema).min(1, "At least one ticket tier is required"),
+  image: z.string().min(1),
+  ticketTiers: z.array(ticketTierSchema).min(1),
   lineup: z.array(lineupSchema).default([]),
   featured: z.boolean().default(false),
 });
@@ -50,16 +50,16 @@ function parseFormData(formData: FormData) {
   let lineup: any[] = [];
 
   try {
-    const ticketTiersJson = formData.get("ticketTiers") as string;
-    ticketTiers = ticketTiersJson ? JSON.parse(ticketTiersJson) : [];
-  } catch {
+    const tt = formData.get("ticketTiers") as string;
+    ticketTiers = tt ? JSON.parse(tt) : [];
+  } catch (e) {
     throw new Error("Invalid ticket tiers data");
   }
 
   try {
-    const lineupJson = formData.get("lineup") as string;
-    lineup = lineupJson ? JSON.parse(lineupJson) : [];
-  } catch {
+    const lu = formData.get("lineup") as string;
+    lineup = lu ? JSON.parse(lu) : [];
+  } catch (e) {
     throw new Error("Invalid lineup data");
   }
 
@@ -89,10 +89,13 @@ function parseFormData(formData: FormData) {
 
 function transformTicketTiers(tiers: any[]) {
   return tiers.map((tier) => ({
-    ...tier,
+    name: tier.name,
+    price: tier.price,
+    quantity: tier.quantity,
+    maxPerOrder: tier.maxPerOrder,
     salesStart: new Date(tier.salesStart),
     salesEnd: new Date(tier.salesEnd),
-    sold: 0, // New tier → sold starts at 0
+    sold: 0,
   }));
 }
 
@@ -109,14 +112,10 @@ export async function createEvent(formData: FormData) {
 
   try {
     const data = parseFormData(formData);
-
     await dbConnect();
 
-    // Check slug uniqueness
-    const existingEvent = await Event.findOne({ slug: data.slug });
-    if (existingEvent) {
-      return { error: "An event with this slug already exists" };
-    }
+    const existing = await Event.findOne({ slug: data.slug });
+    if (existing) return { error: "An event with this slug already exists" };
 
     await Event.create({
       title: data.title,
@@ -131,7 +130,7 @@ export async function createEvent(formData: FormData) {
       doors: new Date(data.doors),
       endDate: data.endDate ? new Date(data.endDate) : undefined,
       image: data.image,
-      status: "draft",           // Always start as draft
+      status: "draft",
       organizerId: session.user.id,
       ticketTiers: transformTicketTiers(data.ticketTiers),
       lineup: transformLineup(data.lineup),
@@ -143,11 +142,9 @@ export async function createEvent(formData: FormData) {
     revalidatePath("/");
 
     return { success: true };
-  } catch (error) {
+  } catch (error: any) {
     console.error("Create event error:", error);
-    return {
-      error: error instanceof Error ? error.message : "Failed to create event",
-    };
+    return { error: error.message || "Failed to create event" };
   }
 }
 
@@ -156,19 +153,15 @@ export async function updateEvent(eventId: string, formData: FormData) {
 
   try {
     const data = parseFormData(formData);
-
     await dbConnect();
 
-    // Check slug uniqueness (excluding current event)
-    const existingEvent = await Event.findOne({
+    const existing = await Event.findOne({
       slug: data.slug,
       _id: { $ne: eventId },
     });
-    if (existingEvent) {
-      return { error: "An event with this slug already exists" };
-    }
+    if (existing) return { error: "An event with this slug already exists" };
 
-    const updatedEvent = await Event.findByIdAndUpdate(
+    const updated = await Event.findByIdAndUpdate(
       eventId,
       {
         title: data.title,
@@ -186,23 +179,20 @@ export async function updateEvent(eventId: string, formData: FormData) {
         ticketTiers: transformTicketTiers(data.ticketTiers),
         lineup: transformLineup(data.lineup),
         featured: data.featured,
-        // status is not updated here unless you add it to the form
       },
       { new: true }
     );
 
-    if (!updatedEvent) return { error: "Event not found" };
+    if (!updated) return { error: "Event not found" };
 
     revalidatePath("/admin/events");
     revalidatePath("/events");
     revalidatePath(`/events/${data.slug}`);
 
     return { success: true };
-  } catch (error) {
+  } catch (error: any) {
     console.error("Update event error:", error);
-    return {
-      error: error instanceof Error ? error.message : "Failed to update event",
-    };
+    return { error: error.message || "Failed to update event" };
   }
 }
 
@@ -212,16 +202,13 @@ export async function deleteEvent(eventId: string) {
   try {
     await dbConnect();
     const event = await Event.findByIdAndDelete(eventId);
-
     if (!event) return { error: "Event not found" };
 
     revalidatePath("/admin/events");
     revalidatePath("/events");
-    revalidatePath(`/events/${event.slug}`);
 
     return { success: true };
-  } catch (error) {
-    console.error("Delete event error:", error);
+  } catch (error: any) {
     return { error: "Failed to delete event" };
   }
 }
