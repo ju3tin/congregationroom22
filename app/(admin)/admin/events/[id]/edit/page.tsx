@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import EventForm from "../EventForm";
-import { getEvent } from "@app/actions/events"; // adjust path if needed
+import { getEvent } from "@/app/actions/events"; // adjust path if needed
 import dbConnect from "@/lib/db";
 import DJ from "@/models/DJ";
 
