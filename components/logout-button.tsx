@@ -1,30 +1,22 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { signOut } from "next-auth/react";
 import { LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
 export default function LogoutButton() {
-  const router = useRouter();
-
-  async function handleLogout() {
+  const handleLogout = async () => {
     try {
-      const res = await fetch("/api/auth/logout", {
-        method: "POST",
+      await signOut({ 
+        callbackUrl: "/login",   // Redirect after logout
+        redirect: true 
       });
-
-      if (res.ok) {
-        toast.success("Logged out successfully");
-        router.push("/login"); // or wherever your login page is
-        router.refresh();
-      } else {
-        toast.error("Logout failed");
-      }
+      toast.success("Logged out successfully");
     } catch (error) {
-      toast.error("Something went wrong");
+      toast.error("Logout failed");
     }
-  }
+  };
 
   return (
     <Button
