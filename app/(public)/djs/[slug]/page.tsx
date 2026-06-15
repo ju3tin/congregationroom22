@@ -18,18 +18,23 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
   return {
     title: `${dj.name} - Congregation Room 22`,
-    description: dj.bio,
+    description: dj.bio || "DJ Profile",
   };
 }
 
 async function getDjBySlug(slug: string) {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/djs?slug=${slug}`, {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+    const url = `${apiUrl}/api/djs?slug=${encodeURIComponent(slug)}`;
+
+    console.log("🔍 Fetching DJ from:", url);
+
+    const res = await fetch(url, {
       cache: "no-store",
       next: { revalidate: 0 },
     });
 
-    console.log(`Fetching DJ with slug: ${slug}, Status: ${res.status}`);
+    console.log("📡 API Status:", res.status);
 
     if (!res.ok) {
       console.error("API Error:", res.statusText);
@@ -37,20 +42,19 @@ async function getDjBySlug(slug: string) {
     }
 
     const data = await res.json();
-    console.log("DJ API Response:", data);
+    console.log("✅ DJ Data Received:", data?.length ? data[0].name : "No data");
 
     return data[0] || null;
   } catch (error) {
-    console.error("Fetch error:", error);
+    console.error("❌ Fetch Error in getDjBySlug:", error);
     return null;
   }
 }
 
 async function getMixesByDj(djId: string) {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/mixes?djId=${djId}`, {
-      cache: "no-store",
-    });
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+    const res = await fetch(`${apiUrl}/api/mixes?djId=${djId}`, { cache: "no-store" });
     return res.ok ? await res.json() : [];
   } catch {
     return [];
@@ -59,9 +63,8 @@ async function getMixesByDj(djId: string) {
 
 async function getEventsByDj(djId: string) {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/events?djId=${djId}`, {
-      cache: "no-store",
-    });
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+    const res = await fetch(`${apiUrl}/api/events?djId=${djId}`, { cache: "no-store" });
     return res.ok ? await res.json() : [];
   } catch {
     return [];
@@ -70,12 +73,12 @@ async function getEventsByDj(djId: string) {
 
 export default async function DJProfilePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  console.log("Requested slug:", slug);
+  console.log("📄 Rendering page for slug:", slug);
 
   const dj = await getDjBySlug(slug);
 
   if (!dj) {
-    console.error(`DJ not found for slug: ${slug}`);
+    console.error("🚨 DJ not found for slug:", slug);
     notFound();
   }
 
@@ -84,7 +87,6 @@ export default async function DJProfilePage({ params }: { params: Promise<{ slug
     getEventsByDj(dj._id),
   ]);
 
-  // Rest of your JSX remains the same...
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -104,7 +106,13 @@ export default async function DJProfilePage({ params }: { params: Promise<{ slug
 
             <div className="flex flex-col md:flex-row gap-8 items-start">
               <div className="relative w-48 h-48 sm:w-64 sm:h-64 rounded-2xl overflow-hidden shrink-0 ring-4 ring-primary/20">
-                <Image src={dj.image} alt={dj.name} fill className="object-cover" priority />
+                <Image
+                  src={dj.image}
+                  alt={dj.name}
+                  fill
+                  className="object-cover"
+                  priority
+                />
               </div>
 
               <div className="flex-1">
@@ -120,15 +128,28 @@ export default async function DJProfilePage({ params }: { params: Promise<{ slug
                       </a>
                     </Button>
                   )}
-                  {/* Add SoundCloud & Twitter similarly */}
+                  {dj.socialLinks?.soundcloud && (
+                    <Button variant="outline" size="sm" asChild>
+                      <a href={`https://soundcloud.com/${dj.socialLinks.soundcloud}`} target="_blank" rel="noopener noreferrer">
+                        <Music2 className="w-4 h-4 mr-2" /> SoundCloud
+                      </a>
+                    </Button>
+                  )}
+                  {dj.socialLinks?.twitter && (
+                    <Button variant="outline" size="sm" asChild>
+                      <a href={`https://twitter.com/${dj.socialLinks.twitter}`} target="_blank" rel="noopener noreferrer">
+                        <Twitter className="w-4 h-4 mr-2" /> Twitter
+                      </a>
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>
           </div>
         </section>
 
-        {/* Other sections (Shows, Mixes, Events) ... */}
-        {/* (Keep the rest of your sections from previous version) */}
+        {/* Add your other sections (Upcoming Shows, Mixes, Events) here */}
+        {/* ... copy from previous version ... */}
 
       </main>
       <Footer />
