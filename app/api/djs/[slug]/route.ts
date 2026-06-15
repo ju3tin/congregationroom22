@@ -44,8 +44,8 @@ export async function GET(
     // Return everything together
     return NextResponse.json({
       ...dj,
-      mixes: mixes || [],
-      events: events || []
+      mixes: Array.isArray(mixes) ? mixes : [],
+      events: Array.isArray(events) ? events : [],
     });
 
   } catch (error) {
