@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Plus, Trash2 } from "lucide-react";
@@ -30,9 +30,10 @@ interface DJOption {
   name: string;
 }
 
-export default function NewEventPage({ djs }: { djs: DJOption[] }) {
+export default function NewEventPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [djs, setDjs] = useState<DJOption[]>([]);
 
   const [form, setForm] = useState({
     featured: false,
@@ -50,6 +51,20 @@ export default function NewEventPage({ djs }: { djs: DJOption[] }) {
   ]);
 
   const [lineup, setLineup] = useState([{ dj: "", headline: false }]);
+
+  // Fetch DJs
+  useEffect(() => {
+    async function fetchDJs() {
+      try {
+        const res = await fetch("/api/djs");
+        const data = await res.json();
+        setDjs(data);
+      } catch (error) {
+        toast.error("Failed to load DJs");
+      }
+    }
+    fetchDJs();
+  }, []);
 
   // Ticket Tier Handlers
   const addTier = () => {
