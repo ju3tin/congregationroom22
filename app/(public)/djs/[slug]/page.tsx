@@ -27,12 +27,27 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 async function getDjBySlug(slug: string) {
   try {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
-    const { data } = await axios.get(`${apiUrl}/api/djs/${slug}`);
+    const url = `${apiUrl}/api/djs/${slug}`;
 
-    console.log("✅ Full DJ Data Received:", data?.name);
+    console.log("🔍 [getDjBySlug] Fetching from:", url);
+
+    const { data } = await axios.get(url, {
+      timeout: 15000,
+      headers: {
+        "Cache-Control": "no-cache",
+      },
+    });
+
+    console.log("✅ [getDjBySlug] Success - DJ:", data?.name);
     return data;
   } catch (error: any) {
-    console.error("❌ Error fetching DJ:", error.response?.data || error.message);
+    console.error("❌ [getDjBySlug] Error for slug:", slug);
+    if (error.response) {
+      console.error("   Status:", error.response.status);
+      console.error("   Data:", error.response.data);
+    } else {
+      console.error("   Message:", error.message);
+    }
     return null;
   }
 }
@@ -40,14 +55,18 @@ async function getDjBySlug(slug: string) {
 export default async function DJProfilePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   
+  console.log("📄 [DJProfilePage] Rendering page for slug:", slug);
+
   const djData = await getDjBySlug(slug);
 
   if (!djData) {
+    console.error("🚨 [DJProfilePage] No DJ data - calling notFound() for slug:", slug);
     notFound();
   }
 
-  // Destructure the combined data
   const { mixes: djMixes = [], events: djEvents = [], ...dj } = djData;
+
+  console.log(`✅ Rendering ${dj.name} | Mixes: ${djMixes.length} | Events: ${djEvents.length}`);
 
   return (
     <div className="min-h-screen bg-background">
@@ -78,50 +97,29 @@ export default async function DJProfilePage({ params }: { params: Promise<{ slug
               </div>
              
               <div className="flex-1">
-                <Badge variant="secondary" className="mb-3">
-                  {dj.genre}
-                </Badge>
-                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
-                  {dj.name}
-                </h1>
-                <p className="text-lg text-muted-foreground max-w-2xl mb-6">
-                  {dj.bio}
-                </p>
+                <Badge variant="secondary" className="mb-3">{dj.genre}</Badge>
+                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">{dj.name}</h1>
+                <p className="text-lg text-muted-foreground max-w-2xl mb-6">{dj.bio}</p>
                
                 <div className="flex flex-wrap gap-3">
                   {dj.socialLinks?.instagram && (
                     <Button variant="outline" size="sm" asChild>
-                      <a 
-                        href={`https://instagram.com/${dj.socialLinks.instagram}`} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                      >
-                        <Instagram className="w-4 h-4 mr-2" />
-                        Instagram
+                      <a href={`https://instagram.com/${dj.socialLinks.instagram}`} target="_blank" rel="noopener noreferrer">
+                        <Instagram className="w-4 h-4 mr-2" /> Instagram
                       </a>
                     </Button>
                   )}
                   {dj.socialLinks?.soundcloud && (
                     <Button variant="outline" size="sm" asChild>
-                      <a 
-                        href={`https://soundcloud.com/${dj.socialLinks.soundcloud}`} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                      >
-                        <Music2 className="w-4 h-4 mr-2" />
-                        SoundCloud
+                      <a href={`https://soundcloud.com/${dj.socialLinks.soundcloud}`} target="_blank" rel="noopener noreferrer">
+                        <Music2 className="w-4 h-4 mr-2" /> SoundCloud
                       </a>
                     </Button>
                   )}
                   {dj.socialLinks?.twitter && (
                     <Button variant="outline" size="sm" asChild>
-                      <a 
-                        href={`https://twitter.com/${dj.socialLinks.twitter}`} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                      >
-                        <Twitter className="w-4 h-4 mr-2" />
-                        Twitter
+                      <a href={`https://twitter.com/${dj.socialLinks.twitter}`} target="_blank" rel="noopener noreferrer">
+                        <Twitter className="w-4 h-4 mr-2" /> Twitter
                       </a>
                     </Button>
                   )}
@@ -131,7 +129,7 @@ export default async function DJProfilePage({ params }: { params: Promise<{ slug
           </div>
         </section>
 
-        {/* Upcoming Shows / Events Section */}
+        {/* Events Section */}
         {djEvents.length > 0 && (
           <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
             <h2 className="text-2xl font-bold mb-6">Upcoming Events</h2>
@@ -143,26 +141,15 @@ export default async function DJProfilePage({ params }: { params: Promise<{ slug
                     <Card className="group overflow-hidden bg-card hover:bg-secondary/30 transition-colors border-border h-full">
                       <CardContent className="p-0">
                         <div className="relative aspect-[2/1]">
-                          <Image
-                            src={event.image}
-                            alt={event.title}
-                            fill
-                            className="object-cover group-hover:scale-105 transition-transform duration-300"
-                          />
+                          <Image src={event.image} alt={event.title} fill className="object-cover group-hover:scale-105 transition-transform duration-300" />
                           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
                           <div className="absolute bottom-0 left-0 right-0 p-6">
                             <div className="flex items-center gap-2 text-primary text-sm font-medium mb-2">
                               <Calendar className="w-4 h-4" />
-                              {eventDate.toLocaleDateString("en-US", {
-                                weekday: "short",
-                                month: "short",
-                                day: "numeric",
-                              })}
+                              {eventDate.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
                             </div>
                             <h3 className="text-xl font-bold">{event.title}</h3>
-                            <p className="text-sm text-muted-foreground">
-                              {event.venue?.name || event.venue}
-                            </p>
+                            <p className="text-sm text-muted-foreground">{event.venue?.name || event.venue}</p>
                           </div>
                         </div>
                       </CardContent>
@@ -184,27 +171,22 @@ export default async function DJProfilePage({ params }: { params: Promise<{ slug
                   <CardContent className="p-4">
                     <div className="flex items-center gap-4">
                       <div className="relative w-16 h-16 sm:w-20 sm:h-20 shrink-0 rounded-lg overflow-hidden">
-                        <Image
-                          src={mix.coverImage}
-                          alt={mix.title}
-                          fill
-                          className="object-cover"
-                        />
+                        <Image src={mix.coverImage} alt={mix.title} fill className="object-cover" />
                       </div>
                       <div className="min-w-0 flex-1">
                         <h3 className="font-semibold truncate">{mix.title}</h3>
                         <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground">
                           <span>{mix.duration}</span>
                           <span>{mix.genre}</span>
-                          <span>{mix.plays?.toLocaleString() || 0} plays</span>
+                          <span>{(mix.plays || 0).toLocaleString()} plays</span>
                         </div>
                       </div>
                       {mix.audioUrl && (
-                        <Button variant="outline" size="icon" className="shrink-0" asChild>
-                          <a href={mix.audioUrl} target="_blank" download>
+                        <a href={mix.audioUrl} target="_blank" download>
+                          <Button variant="outline" size="icon">
                             <Download className="w-4 h-4" />
-                          </a>
-                        </Button>
+                          </Button>
+                        </a>
                       )}
                     </div>
                   </CardContent>
