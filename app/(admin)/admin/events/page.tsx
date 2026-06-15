@@ -1,146 +1,104 @@
-import Link from "next/link"
-import { format } from "date-fns"
-import { Plus, Calendar } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import dbConnect from "@/lib/db"
-import Event from "@/models/Event"
-
-async function getEvents() {
-  await dbConnect()
-  const events = await Event.find()
-    .sort({ date: -1 })
-    .populate("organizerId", "name")
-    .lean()
-  return JSON.parse(JSON.stringify(events))
-}
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { getEvents } from "@/app/actions/events"; // Adjust path if needed
 
 export default async function AdminEventsPage() {
-  const events = await getEvents()
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "published":
-        return "bg-success/10 text-success"
-      case "draft":
-        return "bg-yellow-500/10 text-yellow-500"
-      case "cancelled":
-        return "bg-destructive/10 text-destructive"
-      case "completed":
-        return "bg-secondary text-secondary-foreground"
-      default:
-        return "bg-secondary text-secondary-foreground"
-    }
-  }
+  const events = await getEvents(); // Make sure this function exists in your actions
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
+      <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">Events</h1>
-          <p className="mt-2 text-muted-foreground">
-            Manage all events on the platform
-          </p>
+          <p className="text-muted-foreground mt-1">Manage your events</p>
         </div>
         <Button asChild>
-          <Link href="/admin/events/new">
-            <Plus className="mr-2 h-4 w-4" />
-            Add Event
-          </Link>
+          <Link href="/admin/events/new">+ New Event</Link>
         </Button>
       </div>
 
-      {events.length > 0 ? (
-        <div className="rounded-lg border border-border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Event</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Venue</TableHead>
-                <TableHead>Tickets</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {events.map((event: {
-                _id: string
-                title: string
-                slug: string
-                date: string
-                venue: { name: string; city: string }
-                status: string
-                ticketTiers: { quantity: number; sold: number }[]
-                organizerId?: { name: string }
-              }) => {
-                const totalTickets = event.ticketTiers.reduce(
-                  (sum, t) => sum + t.quantity,
-                  0
-                )
-                const soldTickets = event.ticketTiers.reduce(
-                  (sum, t) => sum + t.sold,
-                  0
-                )
+      <div className="grid gap-6">
+        {events.length > 0 ? (
+          events.map((event: any) => {
+            const eventDate = new Date(event.date);
+            const isUpcoming = eventDate > new Date();
 
-                return (
-                  <TableRow key={event._id}>
-                    <TableCell>
+            return (
+              <Card key={event._id} className="hover:shadow-md transition-shadow">
+                <CardContent className="p-6 flex gap-6">
+                  {/* Image */}
+                  <div className="relative w-32 h-32 rounded-lg overflow-hidden flex-shrink-0">
+                    <img
+                      src={event.image}
+                      alt={event.title}
+                      className="object-cover w-full h-full"
+                    />
+                  </div>
+
+                  {/* Content */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-4">
                       <div>
-                        <p className="font-medium">{event.title}</p>
-                        <p className="text-xs text-muted-foreground">
-                          by {event.organizerId?.name || "Unknown"}
+                        <h3 className="text-xl font-semibold line-clamp-2">{event.title}</h3>
+                        <p className="text-muted-foreground mt-1">
+                          {event.venue?.name} • {event.venue?.city}
                         </p>
                       </div>
-                    </TableCell>
-                    <TableCell>
-                      {format(new Date(event.date), "MMM d, yyyy")}
-                    </TableCell>
-                    <TableCell>
-                      {event.venue.name}, {event.venue.city}
-                    </TableCell>
-                    <TableCell>
-                      {soldTickets} / {totalTickets}
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={getStatusColor(event.status)}>
-                        {event.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button asChild variant="ghost" size="sm">
-                        <Link href={`/admin/events/${event._id}/edit`}>Edit</Link>
+
+                      <div className="flex flex-col items-end gap-2">
+                        <Badge variant={event.status === "published" ? "default" : "secondary"}>
+                          {event.status}
+                        </Badge>
+                        {event.featured && (
+                          <Badge variant="outline" className="text-amber-600 border-amber-600">
+                            Featured
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="mt-4 flex items-center gap-6 text-sm text-muted-foreground">
+                      <div className="flex items-center gap-2">
+                        <span>📅</span>
+                        {eventDate.toLocaleDateString("en-US", {
+                          weekday: "short",
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                        })}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span>⏰</span>
+                        {eventDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                      </div>
+                    </div>
+
+                    <div className="mt-6 flex gap-3">
+                      <Button variant="outline" size="sm" asChild>
+                        <Link href={`/admin/events/${event._id}`}>Edit</Link>
                       </Button>
-                    </TableCell>
-                  </TableRow>
-                )
-              })}
-            </TableBody>
-          </Table>
-        </div>
-      ) : (
-        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border py-16">
-          <Calendar className="h-12 w-12 text-muted-foreground" />
-          <h2 className="mt-4 text-xl font-semibold">No events yet</h2>
-          <p className="mt-2 text-muted-foreground">
-            Create your first event to get started
-          </p>
-          <Button asChild className="mt-4">
-            <Link href="/admin/events/new">
-              <Plus className="mr-2 h-4 w-4" />
-              Add Event
-            </Link>
-          </Button>
-        </div>
-      )}
+                      <Button variant="outline" size="sm" asChild>
+                        <Link href={`/events/${event.slug}`} target="_blank">
+                          View Public
+                        </Link>
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })
+        ) : (
+          <div className="text-center py-20 border rounded-xl">
+            <p className="text-muted-foreground text-lg">No events found.</p>
+            <Button asChild className="mt-4">
+              <Link href="/admin/events/new">Create Your First Event</Link>
+            </Button>
+          </div>
+        )}
+      </div>
     </div>
-  )
+  );
 }
