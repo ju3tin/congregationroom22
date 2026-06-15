@@ -1,0 +1,149 @@
+"use server";
+
+import { auth } from "@/lib/auth";
+import dbConnect from "@/lib/db";
+import Mix from "@/models/Mix";
+import { revalidatePath } from "next/cache";
+import { z } from "zod";
+
+const mixSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  slug: z.string().min(1, "Slug is required"),
+  djId: z.string().min(1, "DJ is required"),
+  genre: z.string().min(1, "Genre is required"),
+  description: z.string().optional(),
+  duration: z.number().min(1, "Duration is required"),
+  audioUrl: z.string().min(1, "Audio URL is required"),
+  coverImage: z.string().min(1, "Cover image is required"),
+  releaseDate: z.string().min(1, "Release date is required"),
+  featured: z.boolean().default(false),
+});
+
+// ====================== GET MIX ======================
+export async function getMix(id: string) {
+  try {
+    await dbConnect();
+    const mix = await Mix.findById(id)
+      .populate("djId", "name slug") // Optional: populate DJ info
+      .lean();
+
+    if (!mix) return null;
+
+    return {
+      ...mix,
+      _id: mix._id.toString(),
+      djId: mix.djId?._id?.toString() || mix.djId,
+      djName: mix.djId?.name || "",
+    };
+  } catch (error) {
+    console.error("Get mix error:", error);
+    return null;
+  }
+}
+
+// ====================== CREATE MIX ======================
+export async function createMix(formData: FormData) {
+  const session = await auth();
+  if (!session?.user?.id || session.user.role !== "admin") {
+    return { error: "Unauthorized" };
+  }
+
+  const rawData = {
+    title: formData.get("title"),
+    slug: (formData.get("slug") as string).toLowerCase().trim().replace(/\s+/g, "-"),
+    djId: formData.get("djId"),
+    genre: formData.get("genre"),
+    description: formData.get("description"),
+    duration: Number(formData.get("duration")),
+    audioUrl: formData.get("audioUrl"),
+    coverImage: formData.get("coverImage"),
+    releaseDate: formData.get("releaseDate"),
+    featured: formData.get("featured") === "true",
+  };
+
+  const result = mixSchema.safeParse(rawData);
+  if (!result.success) {
+    return { error: result.error.errors[0].message };
+  }
+
+  try {
+    await dbConnect();
+
+    const existingMix = await Mix.findOne({ slug: result.data.slug });
+    if (existingMix) return { error: "A mix with this slug already exists" };
+
+    await Mix.create(result.data);
+
+    revalidatePath("/admin/mixes");
+    revalidatePath("/mixes");
+    return { success: true };
+  } catch (error) {
+    console.error("Create mix error:", error);
+    return { error: "Failed to create mix" };
+  }
+}
+
+// ====================== UPDATE MIX ======================
+export async function updateMix(id: string, formData: FormData) {
+  const session = await auth();
+  if (!session?.user?.id || session.user.role !== "admin") {
+    return { error: "Unauthorized" };
+  }
+
+  const rawData = {
+    title: formData.get("title"),
+    slug: (formData.get("slug") as string).toLowerCase().trim().replace(/\s+/g, "-"),
+    djId: formData.get("djId"),
+    genre: formData.get("genre"),
+    description: formData.get("description"),
+    duration: Number(formData.get("duration")),
+    audioUrl: formData.get("audioUrl"),
+    coverImage: formData.get("coverImage"),
+    releaseDate: formData.get("releaseDate"),
+    featured: formData.get("featured") === "true",
+  };
+
+  const result = mixSchema.safeParse(rawData);
+  if (!result.success) {
+    return { error: result.error.errors[0].message };
+  }
+
+  try {
+    await dbConnect();
+
+    const existingMix = await Mix.findOne({
+      slug: result.data.slug,
+      _id: { $ne: id },
+    });
+    if (existingMix) return { error: "A mix with this slug already exists" };
+
+    await Mix.findByIdAndUpdate(id, result.data);
+
+    revalidatePath("/admin/mixes");
+    revalidatePath("/mixes");
+    revalidatePath(`/mixes/${result.data.slug}`);
+    return { success: true };
+  } catch (error) {
+    console.error("Update mix error:", error);
+    return { error: "Failed to update mix" };
+  }
+}
+
+// ====================== DELETE MIX ======================
+export async function deleteMix(id: string) {
+  const session = await auth();
+  if (!session?.user?.id || session.user.role !== "admin") {
+    return { error: "Unauthorized" };
+  }
+
+  try {
+    await dbConnect();
+    await Mix.findByIdAndDelete(id);
+    revalidatePath("/admin/mixes");
+    revalidatePath("/mixes");
+    return { success: true };
+  } catch (error) {
+    console.error("Delete mix error:", error);
+    return { error: "Failed to delete mix" };
+  }
+}
