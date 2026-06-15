@@ -5,12 +5,19 @@ import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
-import { updateMix, getMix } from "@/app/actions/mixes";
+import { updateMix, getMix } from "../actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function EditMixPage() {
@@ -20,6 +27,7 @@ export default function EditMixPage() {
 
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
+  const [djs, setDjs] = useState([]);
 
   const [form, setForm] = useState({
     title: "",
@@ -34,12 +42,14 @@ export default function EditMixPage() {
     featured: false,
   });
 
-  // Load mix data using getMix
   useEffect(() => {
-    async function loadMix() {
+    async function loadData() {
       try {
-        const mix = await getMix(id);
-        
+        const [mix, djList] = await Promise.all([
+          getMix(id),
+          fetch("/api/djs").then(r => r.json())
+        ]);
+
         if (!mix) {
           toast.error("Mix not found");
           router.push("/admin/mixes");
@@ -58,19 +68,18 @@ export default function EditMixPage() {
           releaseDate: new Date(mix.releaseDate).toISOString().slice(0, 10),
           featured: mix.featured || false,
         });
+        setDjs(djList);
       } catch (error) {
         toast.error("Failed to load mix");
       } finally {
         setInitialLoading(false);
       }
     }
-
-    loadMix();
+    loadData();
   }, [id, router]);
 
   async function handleSubmit(formData: FormData) {
     setLoading(true);
-
     formData.append("featured", form.featured.toString());
 
     const result = await updateMix(id, formData);
@@ -84,9 +93,7 @@ export default function EditMixPage() {
     setLoading(false);
   }
 
-  if (initialLoading) {
-    return <div className="p-12 text-center">Loading mix...</div>;
-  }
+  if (initialLoading) return <div className="p-12 text-center">Loading mix...</div>;
 
   return (
     <div className="max-w-3xl mx-auto p-6">
@@ -102,118 +109,54 @@ export default function EditMixPage() {
           <CardHeader><CardTitle>Mix Information</CardTitle></CardHeader>
           <CardContent className="space-y-6">
             <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <Label>Title</Label>
-                <Input 
-                  name="title" 
-                  value={form.title} 
-                  onChange={(e) => setForm({ ...form, title: e.target.value })} 
-                  required 
-                />
-              </div>
-              <div>
-                <Label>Slug</Label>
-                <Input 
-                  name="slug" 
-                  value={form.slug} 
-                  onChange={(e) => setForm({ ...form, slug: e.target.value })} 
-                  required 
-                />
-              </div>
+              <div><Label>Title</Label><Input name="title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required /></div>
+              <div><Label>Slug</Label><Input name="slug" value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} required /></div>
             </div>
 
             <div>
-              <Label>DJ ID</Label>
-              <Input 
-                name="djId" 
-                value={form.djId} 
-                onChange={(e) => setForm({ ...form, djId: e.target.value })} 
-                required 
-              />
+              <Label>DJ</Label>
+              <Select name="djId" defaultValue={form.djId} required>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select DJ" />
+                </SelectTrigger>
+                <SelectContent>
+                  {djs.map((dj: any) => (
+                    <SelectItem key={dj._id} value={dj._id}>
+                      {dj.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
-            <div>
-              <Label>Genre</Label>
-              <Input 
-                name="genre" 
-                value={form.genre} 
-                onChange={(e) => setForm({ ...form, genre: e.target.value })} 
-                required 
-              />
-            </div>
+            <div><Label>Genre</Label><Input name="genre" value={form.genre} onChange={(e) => setForm({ ...form, genre: e.target.value })} required /></div>
 
-            <div>
-              <Label>Description</Label>
-              <Textarea 
-                name="description" 
-                value={form.description} 
-                onChange={(e) => setForm({ ...form, description: e.target.value })} 
-                rows={4} 
-              />
-            </div>
+            <div><Label>Description</Label><Textarea name="description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={4} /></div>
 
             <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <Label>Duration (minutes)</Label>
-                <Input 
-                  name="duration" 
-                  type="number" 
-                  value={form.duration} 
-                  onChange={(e) => setForm({ ...form, duration: e.target.value })} 
-                  required 
-                />
-              </div>
-              <div>
-                <Label>Release Date</Label>
-                <Input 
-                  name="releaseDate" 
-                  type="date" 
-                  value={form.releaseDate} 
-                  onChange={(e) => setForm({ ...form, releaseDate: e.target.value })} 
-                  required 
-                />
-              </div>
+              <div><Label>Duration (minutes)</Label><Input name="duration" type="number" value={form.duration} onChange={(e) => setForm({ ...form, duration: e.target.value })} required /></div>
+              <div><Label>Release Date</Label><Input name="releaseDate" type="date" value={form.releaseDate} onChange={(e) => setForm({ ...form, releaseDate: e.target.value })} required /></div>
             </div>
 
             <div>
-              <Label>Audio URL</Label>
-              <Input 
-                name="audioUrl" 
-                type="url" 
-                value={form.audioUrl} 
-                onChange={(e) => setForm({ ...form, audioUrl: e.target.value })} 
-                required 
-              />
+              <Label>Audio URL (relative or full)</Label>
+              <Input name="audioUrl" value={form.audioUrl} onChange={(e) => setForm({ ...form, audioUrl: e.target.value })} required />
             </div>
 
             <div>
-              <Label>Cover Image URL</Label>
-              <Input 
-                name="coverImage" 
-                type="url" 
-                value={form.coverImage} 
-                onChange={(e) => setForm({ ...form, coverImage: e.target.value })} 
-                required 
-              />
+              <Label>Cover Image URL (relative or full)</Label>
+              <Input name="coverImage" value={form.coverImage} onChange={(e) => setForm({ ...form, coverImage: e.target.value })} required />
             </div>
           </CardContent>
         </Card>
 
-        {/* Featured Section */}
+        {/* Featured */}
         <Card>
           <CardHeader><CardTitle>Featured on Homepage</CardTitle></CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent>
             <div className="flex items-center gap-3">
-              <Switch
-                checked={form.featured}
-                onCheckedChange={(checked) => setForm({ ...form, featured: checked })}
-              />
-              <div>
-                <Label className="text-base">Mark as Featured Mix</Label>
-                <p className="text-sm text-muted-foreground">
-                  This mix will appear in the Featured Mixes section on the front page
-                </p>
-              </div>
+              <Switch checked={form.featured} onCheckedChange={(checked) => setForm({ ...form, featured: checked })} />
+              <Label>Feature this mix on homepage</Label>
             </div>
           </CardContent>
         </Card>
