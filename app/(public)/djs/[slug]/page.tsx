@@ -1,3 +1,6 @@
+'use client';
+
+import { useState, useEffect } from "react";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -10,63 +13,59 @@ import { Footer } from "@/components/footer";
 import { LivePlayer } from "@/components/live-player";
 import axios from "axios";
 
-// export const dynamic = 'force-dynamic';
+export default function DJProfilePage({ params }: { params: Promise<{ slug: string }> }) {
+  const [slug, setSlug] = useState<string>("");
+  const [dj, setDj] = useState<any>(null);
+  const [djMixes, setDjMixes] = useState<any[]>([]);
+  const [djEvents, setDjEvents] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params;
-  const djData = await getDjBySlug(slug);
-  
-  if (!djData) return { title: "DJ Not Found" };
+  // Get slug from params
+  useEffect(() => {
+    params.then(p => setSlug(p.slug));
+  }, [params]);
 
-  return {
-    title: `${djData.name} - Congregation Room 22`,
-    description: djData.bio || "DJ Profile",
-  };
-}
+  // Fetch data from API
+  useEffect(() => {
+    if (!slug) return;
 
-async function getDjBySlug(slug: string) {
-  try {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
-    const url = `${apiUrl}/api/djs/${slug}`;
+    const fetchDjData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
 
-    console.log("🔍 [getDjBySlug] Fetching from:", url);
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+        const { data } = await axios.get(`${apiUrl}/api/djs/${slug}`);
 
-    const { data } = await axios.get(url, {
-      timeout: 15000,
-      headers: {
-        "Cache-Control": "no-cache",
-      },
-    });
+        setDj(data);
+        setDjMixes(data.mixes || []);
+        setDjEvents(data.events || []);
+      } catch (err: any) {
+        console.error("Failed to fetch DJ:", err);
+        setError("Failed to load DJ profile");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    console.log("✅ [getDjBySlug] Success - DJ:", data?.name);
-    return data;
-  } catch (error: any) {
-    console.error("❌ [getDjBySlug] Error for slug:", slug);
-    if (error.response) {
-      console.error("   Status:", error.response.status);
-      console.error("   Data:", error.response.data);
-    } else {
-      console.error("   Message:", error.message);
-    }
-    return null;
+    fetchDjData();
+  }, [slug]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin w-12 h-12 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading DJ profile...</p>
+        </div>
+      </div>
+    );
   }
-}
 
-export default async function DJProfilePage({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params;
-  
-  console.log("📄 [DJProfilePage] Rendering page for slug:", slug);
-
-  const djData = await getDjBySlug(slug);
-
-  if (!djData) {
-    console.error("🚨 [DJProfilePage] No DJ data - calling notFound() for slug:", slug);
+  if (error || !dj) {
     notFound();
   }
-
-  const { mixes: djMixes = [], events: djEvents = [], ...dj } = djData;
-
-  console.log(`✅ Rendering ${dj.name} | Mixes: ${djMixes.length} | Events: ${djEvents.length}`);
 
   return (
     <div className="min-h-screen bg-background">
@@ -141,15 +140,26 @@ export default async function DJProfilePage({ params }: { params: Promise<{ slug
                     <Card className="group overflow-hidden bg-card hover:bg-secondary/30 transition-colors border-border h-full">
                       <CardContent className="p-0">
                         <div className="relative aspect-[2/1]">
-                          <Image src={event.image} alt={event.title} fill className="object-cover group-hover:scale-105 transition-transform duration-300" />
+                          <Image
+                            src={event.image}
+                            alt={event.title}
+                            fill
+                            className="object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
                           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
                           <div className="absolute bottom-0 left-0 right-0 p-6">
                             <div className="flex items-center gap-2 text-primary text-sm font-medium mb-2">
                               <Calendar className="w-4 h-4" />
-                              {eventDate.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
+                              {eventDate.toLocaleDateString("en-US", {
+                                weekday: "short",
+                                month: "short",
+                                day: "numeric",
+                              })}
                             </div>
                             <h3 className="text-xl font-bold">{event.title}</h3>
-                            <p className="text-sm text-muted-foreground">{event.venue?.name || event.venue}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {event.venue?.name || event.venue}
+                            </p>
                           </div>
                         </div>
                       </CardContent>
