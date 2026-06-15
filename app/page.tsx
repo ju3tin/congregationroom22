@@ -8,21 +8,21 @@ import { Footer } from "@/components/footer";
 import { LivePlayer } from "@/components/live-player";
 
 async function getFeaturedDJs() {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/djs?featured=true`, {
-    next: { revalidate: 3600 }, // Cache for 1 hour
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/api/djs?featured=true`, {
+    next: { revalidate: 3600 },
   });
   return res.ok ? res.json() : [];
 }
 
 async function getFeaturedEvents() {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/events?featured=true`, {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/api/events?featured=true`, {
     next: { revalidate: 1800 },
   });
   return res.ok ? res.json() : [];
 }
 
 async function getFeaturedMixes() {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/mixes?featured=true`, {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/api/mixes?featured=true`, {
     next: { revalidate: 3600 },
   });
   return res.ok ? res.json() : [];
@@ -40,10 +40,11 @@ export default async function HomePage() {
       <Header />
 
       <main className="pb-20">
-           <section className="relative overflow-hidden">
+        {/* Hero Section */}
+        <section className="relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-background to-background" />
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(var(--primary)/0.15),transparent_50%)]" />
-          
+         
           <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 sm:py-32">
             <div className="max-w-3xl">
               <div className="flex items-center gap-2 mb-6">
@@ -55,32 +56,31 @@ export default async function HomePage() {
                   Now Broadcasting
                 </span>
               </div>
-              
+             
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-tight mb-6 text-balance">
                 Underground Electronic Music,{" "}
                 <span className="text-primary">24/7</span>
               </h1>
-              
+             
               <p className="text-lg sm:text-xl text-muted-foreground mb-8 max-w-2xl">
-                Your home for the best house, techno, drum & bass, and more. Tune in to discover new sounds and connect with our global community of music lovers.
+                Your home for the best house, techno, drum & bass, and more. Tune in to discover new sounds and connect with our global community.
               </p>
-              
+             
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground">
                   <Radio className="w-5 h-5 mr-2" />
                   Listen Live
                 </Button>
-                <Link href="/schedule">                
+                <Link href="/schedule">
                   <Button size="lg" variant="outline">
-                  <Calendar className="w-5 h-5 mr-2" />
-                  View Schedule
-                </Button>
-                  </Link>
+                    <Calendar className="w-5 h-5 mr-2" />
+                    View Schedule
+                  </Button>
+                </Link>
               </div>
             </div>
           </div>
         </section>
-      
 
         {/* Featured DJs */}
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
@@ -95,7 +95,6 @@ export default async function HomePage() {
               </Button>
             </Link>
           </div>
-
           {featuredDjs.length > 0 ? (
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
               {featuredDjs.map((dj: any) => (
@@ -139,7 +138,6 @@ export default async function HomePage() {
                 </Button>
               </Link>
             </div>
-
             {featuredMixes.length > 0 ? (
               <div className="grid gap-4">
                 {featuredMixes.map((mix: any) => (
@@ -153,7 +151,7 @@ export default async function HomePage() {
                           <h3 className="font-semibold truncate">{mix.title}</h3>
                           <p className="text-sm text-muted-foreground">{mix.djName || "Unknown DJ"}</p>
                           <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
-                            <span>{mix.duration}</span>
+                            <span>{mix.duration} min</span>
                             <span>{mix.genre}</span>
                             <span>{mix.plays?.toLocaleString() || 0} plays</span>
                           </div>
@@ -185,13 +183,12 @@ export default async function HomePage() {
               </Button>
             </Link>
           </div>
-
           {featuredEvents.length > 0 ? (
             <div className="grid md:grid-cols-2 gap-6">
               {featuredEvents.map((event: any) => {
                 const eventDate = new Date(event.date);
                 return (
-                  <Link key={event._id} href={`/events/${event.slug || event._id}`}>
+                  <Link key={event._id} href={`/events/${event.slug}`}>
                     <Card className="group overflow-hidden bg-card hover:bg-secondary/30 transition-colors border-border h-full">
                       <CardContent className="p-0">
                         <div className="relative aspect-[2/1]">
