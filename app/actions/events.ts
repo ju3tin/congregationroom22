@@ -34,7 +34,7 @@ const eventSchema = z.object({
   status: z.enum(["draft", "published", "cancelled", "completed"]),
   ticketTiers: z.array(ticketTierSchema).min(1, "At least one ticket tier is required"),
   lineup: z.array(lineupSchema).default([]),
-  featured: z.boolean().default(false),
+  featured: z.boolean().default(false),     // ← Added
 });
 
 async function validateAdmin() {
@@ -65,7 +65,10 @@ function parseFormData(formData: FormData) {
 
   const rawData = {
     title: formData.get("title") as string,
-    slug: (formData.get("slug") as string).toLowerCase().trim().replace(/\s+/g, "-"),
+    slug: (formData.get("slug") as string)
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, "-"),
     description: formData.get("description") as string,
     venueName: formData.get("venueName") as string,
     venueAddress: formData.get("venueAddress") as string,
@@ -76,7 +79,7 @@ function parseFormData(formData: FormData) {
     status: formData.get("status") as "draft" | "published" | "cancelled" | "completed",
     ticketTiers,
     lineup,
-    featured: formData.get("featured") === "true",
+    featured: formData.get("featured") === "true",     // ← Added
   };
 
   const result = eventSchema.safeParse(rawData);
@@ -114,26 +117,26 @@ export async function createEvent(formData: FormData) {
       image: data.image,
       status: data.status,
       organizerId: session.user.id,
-      ticketTiers: data.ticketTiers.map((tier) => ({
+      ticketTiers: data.ticketTiers.map((tier: any) => ({
         ...tier,
         salesStart: new Date(tier.salesStart),
         salesEnd: new Date(tier.salesEnd),
         sold: 0,
       })),
-      lineup: data.lineup.map((item) => ({
+      lineup: data.lineup.map((item: any) => ({
         dj: item.dj,
         setTime: item.setTime ? new Date(item.setTime) : undefined,
         headline: item.headline,
       })),
-      featured: data.featured,
+      featured: data.featured,                    // ← Added
     });
 
     revalidatePath("/admin/events");
     revalidatePath("/events");
     return { success: true };
-  } catch (error) {
+  } catch (error: any) {
     console.error("Create event error:", error);
-    return { error: error instanceof Error ? error.message : "Failed to create event" };
+    return { error: error.message || "Failed to create event" };
   }
 }
 
@@ -157,8 +160,8 @@ export async function updateEvent(eventId: string, formData: FormData) {
     const event = await Event.findById(eventId);
     if (!event) return { error: "Event not found" };
 
-    const updatedTiers = data.ticketTiers.map((tier) => {
-      const existingTier = event.ticketTiers.find((t) => t.name === tier.name);
+    const updatedTiers = data.ticketTiers.map((tier: any) => {
+      const existingTier = event.ticketTiers.find((t: any) => t.name === tier.name);
       return {
         ...tier,
         salesStart: new Date(tier.salesStart),
@@ -181,21 +184,21 @@ export async function updateEvent(eventId: string, formData: FormData) {
       image: data.image,
       status: data.status,
       ticketTiers: updatedTiers,
-      lineup: data.lineup.map((item) => ({
+      lineup: data.lineup.map((item: any) => ({
         dj: item.dj,
         setTime: item.setTime ? new Date(item.setTime) : undefined,
         headline: item.headline,
       })),
-      featured: data.featured,
+      featured: data.featured,                    // ← Added
     });
 
     revalidatePath("/admin/events");
     revalidatePath("/events");
     revalidatePath(`/events/${data.slug}`);
     return { success: true };
-  } catch (error) {
+  } catch (error: any) {
     console.error("Update event error:", error);
-    return { error: error instanceof Error ? error.message : "Failed to update event" };
+    return { error: error.message || "Failed to update event" };
   }
 }
 
@@ -220,13 +223,13 @@ export async function deleteEvent(eventId: string) {
   }
 }
 
+// Helper to get all events (for admin list page)
 export async function getEvents() {
   try {
     await dbConnect();
     const events = await Event.find()
       .sort({ date: 1 })
       .lean();
-    
     return events.map((e: any) => ({
       ...e,
       _id: e._id.toString(),
@@ -234,5 +237,21 @@ export async function getEvents() {
   } catch (error) {
     console.error("Get events error:", error);
     return [];
+  }
+}
+
+// Helper to get single event
+export async function getEvent(id: string) {
+  try {
+    await dbConnect();
+    const event = await Event.findById(id).lean();
+    if (!event) return null;
+    return {
+      ...event,
+      _id: event._id.toString(),
+    };
+  } catch (error) {
+    console.error("Get event error:", error);
+    return null;
   }
 }
