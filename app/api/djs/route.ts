@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
     const slug = searchParams.get("slug");
     const featured = searchParams.get("featured") === "true";
 
-    let query: any = {};
+    let query: any = {}; 
 
     // Filter by slug if provided
     if (slug) {
