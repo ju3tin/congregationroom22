@@ -219,3 +219,20 @@ export async function deleteEvent(eventId: string) {
     return { error: "Failed to delete event" };
   }
 }
+
+export async function getEvents() {
+  try {
+    await dbConnect();
+    const events = await Event.find()
+      .sort({ date: 1 })
+      .lean();
+    
+    return events.map((e: any) => ({
+      ...e,
+      _id: e._id.toString(),
+    }));
+  } catch (error) {
+    console.error("Get events error:", error);
+    return [];
+  }
+}
