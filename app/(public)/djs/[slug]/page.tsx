@@ -10,7 +10,7 @@ import { Footer } from "@/components/footer";
 import { LivePlayer } from "@/components/live-player";
 import axios from "axios";
 
-export const dynamic = 'force-dynamic';
+// export const dynamic = 'force-dynamic';
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
