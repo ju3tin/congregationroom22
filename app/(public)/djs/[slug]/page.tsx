@@ -18,21 +18,21 @@ export default function DJProfilePage({ params }: { params: Promise<{ slug: stri
   const [djMixes, setDjMixes] = useState<any[]>([]);
   const [djEvents, setDjEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [notFound, setNotFound] = useState(false);
+  const [notFoundError, setNotFoundError] = useState(false);
 
-  // Extract slug from params
+  // Get slug from params
   useEffect(() => {
-    params.then(p => setSlug(p.slug));
+    params.then((p) => setSlug(p.slug));
   }, [params]);
 
-  // Fetch DJ data
+  // Load data from API
   useEffect(() => {
     if (!slug) return;
 
-    const fetchDjData = async () => {
+    const fetchDJ = async () => {
       try {
         setLoading(true);
-        setNotFound(false);
+        setNotFoundError(false);
 
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
         const { data } = await axios.get(`${apiUrl}/api/djs/${slug}`);
@@ -40,41 +40,41 @@ export default function DJProfilePage({ params }: { params: Promise<{ slug: stri
         setDj(data);
         setDjMixes(data.mixes || []);
         setDjEvents(data.events || []);
-      } catch (err: any) {
-        console.error("Failed to fetch DJ:", err);
-        if (err.response?.status === 404) {
-          setNotFound(true);
+      } catch (error: any) {
+        console.error("Error fetching DJ:", error);
+        if (error.response?.status === 404) {
+          setNotFoundError(true);
         }
       } finally {
         setLoading(false);
       }
     };
 
-    fetchDjData();
+    fetchDJ();
   }, [slug]);
 
-  // Loading Screen
+  // ==================== LOADING SCREEN ====================
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin w-16 h-16 border-4 border-primary border-t-transparent rounded-full mx-auto mb-6"></div>
-          <h2 className="text-2xl font-semibold mb-2">Loading DJ Profile</h2>
-          <p className="text-muted-foreground">Please wait...</p>
+          <h2 className="text-2xl font-semibold mb-2">Loading DJ Profile...</h2>
+          <p className="text-muted-foreground">Please wait while we fetch the data</p>
         </div>
       </div>
     );
   }
 
-  // DJ Not Found
-  if (notFound || !dj) {
+  // ==================== DJ NOT FOUND ====================
+  if (notFoundError || !dj) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center max-w-md px-6">
           <div className="text-8xl mb-6">😔</div>
           <h1 className="text-4xl font-bold mb-4">DJ Not Found</h1>
           <p className="text-muted-foreground mb-8 text-lg">
-            Sorry, we couldn&apos;t find a DJ with that name.
+            The DJ you are looking for doesn&apos;t exist or may have been moved.
           </p>
           <Link href="/djs">
             <Button size="lg">
@@ -87,16 +87,16 @@ export default function DJProfilePage({ params }: { params: Promise<{ slug: stri
     );
   }
 
-  // Main DJ Profile
+  // ==================== MAIN DJ PROFILE ====================
   return (
     <div className="min-h-screen bg-background">
       <Header />
-     
+
       <main className="pb-20">
         {/* Hero Section */}
         <section className="relative">
           <div className="absolute inset-0 h-80 bg-gradient-to-b from-primary/20 to-background" />
-         
+
           <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
             <Link href="/djs">
               <Button variant="ghost" size="sm" className="mb-6">
@@ -115,12 +115,12 @@ export default function DJProfilePage({ params }: { params: Promise<{ slug: stri
                   priority
                 />
               </div>
-             
+
               <div className="flex-1">
                 <Badge variant="secondary" className="mb-3">{dj.genre}</Badge>
                 <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">{dj.name}</h1>
                 <p className="text-lg text-muted-foreground max-w-2xl mb-6">{dj.bio}</p>
-               
+
                 <div className="flex flex-wrap gap-3">
                   {dj.socialLinks?.instagram && (
                     <Button variant="outline" size="sm" asChild>
@@ -161,26 +161,15 @@ export default function DJProfilePage({ params }: { params: Promise<{ slug: stri
                     <Card className="group overflow-hidden bg-card hover:bg-secondary/30 transition-colors border-border h-full">
                       <CardContent className="p-0">
                         <div className="relative aspect-[2/1]">
-                          <Image
-                            src={event.image}
-                            alt={event.title}
-                            fill
-                            className="object-cover group-hover:scale-105 transition-transform duration-300"
-                          />
+                          <Image src={event.image} alt={event.title} fill className="object-cover group-hover:scale-105 transition-transform duration-300" />
                           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
                           <div className="absolute bottom-0 left-0 right-0 p-6">
                             <div className="flex items-center gap-2 text-primary text-sm font-medium mb-2">
                               <Calendar className="w-4 h-4" />
-                              {eventDate.toLocaleDateString("en-US", {
-                                weekday: "short",
-                                month: "short",
-                                day: "numeric",
-                              })}
+                              {eventDate.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
                             </div>
                             <h3 className="text-xl font-bold">{event.title}</h3>
-                            <p className="text-sm text-muted-foreground">
-                              {event.venue?.name || event.venue}
-                            </p>
+                            <p className="text-sm text-muted-foreground">{event.venue?.name || event.venue}</p>
                           </div>
                         </div>
                       </CardContent>
