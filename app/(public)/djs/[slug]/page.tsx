@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 import { LivePlayer } from "@/components/live-player";
+import axios from "axios";
 
 export const dynamic = 'force-dynamic';
 
@@ -29,24 +30,16 @@ async function getDjBySlug(slug: string) {
 
     console.log("🔍 Fetching DJ from:", url);
 
-    const res = await fetch(url, {
-      cache: "no-store",
-      next: { revalidate: 0 },
+    const { data } = await axios.get(url, {
+      headers: {
+        "Cache-Control": "no-cache",
+      },
     });
 
-    console.log("📡 API Status:", res.status);
-
-    if (!res.ok) {
-      console.error("API Error:", res.statusText);
-      return null;
-    }
-
-    const data = await res.json();
     console.log("✅ DJ Data Received:", data?.length ? data[0].name : "No data");
-
     return data[0] || null;
   } catch (error) {
-    console.error("❌ Fetch Error in getDjBySlug:", error);
+    console.error("❌ Axios Error in getDjBySlug:", error);
     return null;
   }
 }
@@ -54,9 +47,10 @@ async function getDjBySlug(slug: string) {
 async function getMixesByDj(djId: string) {
   try {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
-    const res = await fetch(`${apiUrl}/api/mixes?djId=${djId}`, { cache: "no-store" });
-    return res.ok ? await res.json() : [];
-  } catch {
+    const { data } = await axios.get(`${apiUrl}/api/mixes?djId=${djId}`);
+    return data || [];
+  } catch (error) {
+    console.error("❌ Error fetching mixes:", error);
     return [];
   }
 }
@@ -64,9 +58,10 @@ async function getMixesByDj(djId: string) {
 async function getEventsByDj(djId: string) {
   try {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
-    const res = await fetch(`${apiUrl}/api/events?djId=${djId}`, { cache: "no-store" });
-    return res.ok ? await res.json() : [];
-  } catch {
+    const { data } = await axios.get(`${apiUrl}/api/events?djId=${djId}`);
+    return data || [];
+  } catch (error) {
+    console.error("❌ Error fetching events:", error);
     return [];
   }
 }
@@ -88,72 +83,80 @@ export default async function DJProfilePage({ params }: { params: Promise<{ slug
   ]);
 
   return (
-    <div className="min-h-screen bg-background">
+    <>
       <Header />
+      {/* Hero Section */}
+      <div className="relative min-h-[60vh] bg-black">
+        <div className="absolute inset-0">
+          <Image
+            src={dj.image}
+            alt={dj.name}
+            fill
+            className="object-cover"
+            priority
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/70 to-black" />
+        </div>
 
-      <main className="pb-20">
-        {/* Hero Section */}
-        <section className="relative">
-          <div className="absolute inset-0 h-80 bg-gradient-to-b from-primary/20 to-background" />
+        <div className="relative z-10 container mx-auto px-6 pt-20 pb-12">
+          <Link href="/djs">
+            <Button variant="ghost" size="sm" className="mb-6 text-white hover:bg-white/10">
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to DJs
+            </Button>
+          </Link>
 
-          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
-            <Link href="/djs">
-              <Button variant="ghost" size="sm" className="mb-6">
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to DJs
-              </Button>
-            </Link>
+          <div className="max-w-3xl">
+            <Badge variant="secondary" className="mb-3">{dj.genre}</Badge>
+            <h1 className="text-5xl md:text-6xl font-bold text-white mb-6">{dj.name}</h1>
+            <p className="text-xl text-gray-300 max-w-2xl">{dj.bio}</p>
 
-            <div className="flex flex-col md:flex-row gap-8 items-start">
-              <div className="relative w-48 h-48 sm:w-64 sm:h-64 rounded-2xl overflow-hidden shrink-0 ring-4 ring-primary/20">
-                <Image
-                  src={dj.image}
-                  alt={dj.name}
-                  fill
-                  className="object-cover"
-                  priority
-                />
-              </div>
+            <div className="flex flex-wrap gap-3 mt-8">
+              {dj.socialLinks?.instagram && (
+                <Button variant="outline" size="sm" asChild>
+                  <a
+                    href={`https://instagram.com/${dj.socialLinks.instagram}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Instagram className="w-4 h-4 mr-2" /> Instagram
+                  </a>
+                </Button>
+              )}
 
-              <div className="flex-1">
-                <Badge variant="secondary" className="mb-3">{dj.genre}</Badge>
-                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">{dj.name}</h1>
-                <p className="text-lg text-muted-foreground max-w-2xl mb-6">{dj.bio}</p>
+              {dj.socialLinks?.soundcloud && (
+                <Button variant="outline" size="sm" asChild>
+                  <a
+                    href={`https://soundcloud.com/${dj.socialLinks.soundcloud}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Music2 className="w-4 h-4 mr-2" /> SoundCloud
+                  </a>
+                </Button>
+              )}
 
-                <div className="flex flex-wrap gap-3">
-                  {dj.socialLinks?.instagram && (
-                    <Button variant="outline" size="sm" asChild>
-                      <a href={`https://instagram.com/${dj.socialLinks.instagram}`} target="_blank" rel="noopener noreferrer">
-                        <Instagram className="w-4 h-4 mr-2" /> Instagram
-                      </a>
-                    </Button>
-                  )}
-                  {dj.socialLinks?.soundcloud && (
-                    <Button variant="outline" size="sm" asChild>
-                      <a href={`https://soundcloud.com/${dj.socialLinks.soundcloud}`} target="_blank" rel="noopener noreferrer">
-                        <Music2 className="w-4 h-4 mr-2" /> SoundCloud
-                      </a>
-                    </Button>
-                  )}
-                  {dj.socialLinks?.twitter && (
-                    <Button variant="outline" size="sm" asChild>
-                      <a href={`https://twitter.com/${dj.socialLinks.twitter}`} target="_blank" rel="noopener noreferrer">
-                        <Twitter className="w-4 h-4 mr-2" /> Twitter
-                      </a>
-                    </Button>
-                  )}
-                </div>
-              </div>
+              {dj.socialLinks?.twitter && (
+                <Button variant="outline" size="sm" asChild>
+                  <a
+                    href={`https://twitter.com/${dj.socialLinks.twitter}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Twitter className="w-4 h-4 mr-2" /> Twitter
+                  </a>
+                </Button>
+              )}
             </div>
           </div>
-        </section>
+        </div>
+      </div>
 
-        {/* Add your other sections (Upcoming Shows, Mixes, Events) here */}
-        {/* ... copy from previous version ... */}
+      {/* Add your other sections (Upcoming Shows, Mixes, Events) here */}
+      {/* ... copy from previous version ... */}
 
-      </main>
-      <Footer />
       <LivePlayer />
-    </div>
+      <Footer />
+    </>
   );
 }
