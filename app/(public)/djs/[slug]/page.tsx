@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from "react";
-import { notFound } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowLeft, Calendar, Download, Instagram, Music2, Twitter } from "lucide-react";
@@ -19,21 +18,21 @@ export default function DJProfilePage({ params }: { params: Promise<{ slug: stri
   const [djMixes, setDjMixes] = useState<any[]>([]);
   const [djEvents, setDjEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [notFound, setNotFound] = useState(false);
 
-  // Get slug from params
+  // Extract slug from params
   useEffect(() => {
     params.then(p => setSlug(p.slug));
   }, [params]);
 
-  // Fetch data from API
+  // Fetch DJ data
   useEffect(() => {
     if (!slug) return;
 
     const fetchDjData = async () => {
       try {
         setLoading(true);
-        setError(null);
+        setNotFound(false);
 
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
         const { data } = await axios.get(`${apiUrl}/api/djs/${slug}`);
@@ -43,7 +42,9 @@ export default function DJProfilePage({ params }: { params: Promise<{ slug: stri
         setDjEvents(data.events || []);
       } catch (err: any) {
         console.error("Failed to fetch DJ:", err);
-        setError("Failed to load DJ profile");
+        if (err.response?.status === 404) {
+          setNotFound(true);
+        }
       } finally {
         setLoading(false);
       }
@@ -52,21 +53,41 @@ export default function DJProfilePage({ params }: { params: Promise<{ slug: stri
     fetchDjData();
   }, [slug]);
 
+  // Loading Screen
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin w-12 h-12 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading DJ profile...</p>
+          <div className="animate-spin w-16 h-16 border-4 border-primary border-t-transparent rounded-full mx-auto mb-6"></div>
+          <h2 className="text-2xl font-semibold mb-2">Loading DJ Profile</h2>
+          <p className="text-muted-foreground">Please wait...</p>
         </div>
       </div>
     );
   }
 
-  if (error || !dj) {
-    notFound();
+  // DJ Not Found
+  if (notFound || !dj) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center max-w-md px-6">
+          <div className="text-8xl mb-6">😔</div>
+          <h1 className="text-4xl font-bold mb-4">DJ Not Found</h1>
+          <p className="text-muted-foreground mb-8 text-lg">
+            Sorry, we couldn&apos;t find a DJ with that name.
+          </p>
+          <Link href="/djs">
+            <Button size="lg">
+              <ArrowLeft className="mr-2 w-5 h-5" />
+              Back to All DJs
+            </Button>
+          </Link>
+        </div>
+      </div>
+    );
   }
 
+  // Main DJ Profile
   return (
     <div className="min-h-screen bg-background">
       <Header />
