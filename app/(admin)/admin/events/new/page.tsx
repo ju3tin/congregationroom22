@@ -33,11 +33,9 @@ interface DJOption {
 export default function NewEventPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [djs, setDjs] = useState<DJOption[]>([]);
+  const [djs, setDjs] = useState<DJOption[]>([]);   // ← Fixed: local state
 
-  const [form, setForm] = useState({
-    featured: false,
-  });
+  const [form, setForm] = useState({ featured: false });
 
   const [tiers, setTiers] = useState([
     {
@@ -52,11 +50,12 @@ export default function NewEventPage() {
 
   const [lineup, setLineup] = useState([{ dj: "", headline: false }]);
 
-  // Fetch DJs
+  // Fetch DJs on mount
   useEffect(() => {
     async function fetchDJs() {
       try {
         const res = await fetch("/api/djs");
+        if (!res.ok) throw new Error("Failed to fetch DJs");
         const data = await res.json();
         setDjs(data);
       } catch (error) {
