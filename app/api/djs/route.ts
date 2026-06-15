@@ -7,11 +7,20 @@ export async function GET(request: NextRequest) {
     await dbConnect();
 
     const { searchParams } = new URL(request.url);
+    
+    const slug = searchParams.get("slug");
     const featured = searchParams.get("featured") === "true";
 
-    let query = {};
+    let query: any = {};
+
+    // Filter by slug if provided
+    if (slug) {
+      query.slug = slug.toLowerCase();   // case-insensitive match
+    }
+
+    // Keep existing featured filter
     if (featured) {
-      query = { featured: true };
+      query.featured = true;
     }
 
     const djs = await DJ.find(query)
