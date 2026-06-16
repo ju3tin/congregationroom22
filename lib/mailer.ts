@@ -1,5 +1,13 @@
 import nodemailer from "nodemailer";
 
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+  },
+});
+
 export async function sendTicketEmail({
   email,
   ticketCode,
@@ -9,33 +17,24 @@ export async function sendTicketEmail({
   ticketCode: string;
   qrCode: string;
 }) {
-  const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
-  });
+  console.log("📧 Sending email to:", email);
 
   await transporter.sendMail({
-    from: `"Event Tickets" <${process.env.EMAIL_USER}>`,
+    from: process.env.EMAIL_USER,
     to: email,
     subject: "🎟 Your Ticket",
     html: `
-      <div style="font-family: Arial; padding: 20px;">
-        <h2>🎉 Payment Successful</h2>
+      <div style="font-family:Arial">
+        <h2>Your Ticket</h2>
 
-        <p><strong>Your Ticket Code:</strong></p>
-        <h3>${ticketCode}</h3>
+        <p><b>Ticket Code:</b> ${ticketCode}</p>
 
-        <p>Scan this QR at entry:</p>
+        <img src="${qrCode}" width="200" />
 
-        <img src="${qrCode}" />
-
-        <p style="margin-top:20px;color:#666;font-size:12px;">
-          Please keep this email for entry.
-        </p>
+        <p>Please bring this QR code to entry.</p>
       </div>
     `,
   });
+
+  console.log("📧 Email sent");
 }
