@@ -19,36 +19,33 @@ export async function GET(
     }
 
     // Fetch DJ
-    const dj = await DJ.findOne({ 
-      slug: slug.toLowerCase() 
+    const dj = await DJ.findOne({
+      slug: slug.toLowerCase()
     }).lean();
 
     if (!dj) {
       return NextResponse.json({ error: "DJ not found" }, { status: 404 });
     }
 
-    // Fetch Mixes (easy - direct djId)
-    const mixes = await Mix.find({ 
-      djId: dj._id 
-    })
+    // Fetch Mixes
+    const mixes = await Mix.find({ djId: dj._id })
       .sort({ releaseDate: -1 })
       .lean();
 
-    const schedule = await Schedule.find({
-      djId: dj._id
-    })
-    .sort({ dayOfWeek: -1 })
-    .lean();
-
-    // Fetch Events where DJ is in the lineup
-    const events = await Event.find({
-      "lineup.dj": dj._id,
-      status: "published"   // Only show published events
-    })
-      .sort({ date: -1 })
+    // Fetch Schedule
+    const schedule = await Schedule.find({ djId: dj._id })
+      .sort({ dayOfWeek: 1 })           // Changed to ascending for better order
       .lean();
 
-    // Return everything together
+    // Fetch Events (DJ in lineup)
+    const events = await Event.find({
+      "lineup.dj": dj._id,
+      status: "published"
+    })
+      .sort({ date: 1 })                // Upcoming first (ascending)
+      .lean();
+
+    // Return combined data
     return NextResponse.json({
       ...dj,
       mixes: Array.isArray(mixes) ? mixes : [],
@@ -58,6 +55,8 @@ export async function GET(
 
   } catch (error) {
     console.error("Single DJ API Error:", error);
-    return NextResponse.json({ error: "Failed to fetch DJ data" }, { status: 500 });
+    return NextResponse.json({ 
+      error: "Failed to fetch DJ data" 
+    }, { status: 500 });
   }
 }
