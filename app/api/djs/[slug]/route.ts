@@ -4,6 +4,7 @@ import dbConnect from "@/lib/db";
 import DJ from "@/models/DJ";
 import Mix from "@/models/Mix";
 import Event from "@/models/Event";
+import Schedule from "@/models/Schedule"
 
 export async function GET(
   request: NextRequest,
@@ -32,6 +33,12 @@ export async function GET(
     })
       .sort({ releaseDate: -1 })
       .lean();
+
+    const schedule = await Schedule.find({
+      djId: dj._id
+    })
+    .sort({ dayOfWeek: -1 })
+    .lean();
 
     // Fetch Events where DJ is in the lineup
     const events = await Event.find({
