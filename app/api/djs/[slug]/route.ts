@@ -53,6 +53,7 @@ export async function GET(
       ...dj,
       mixes: Array.isArray(mixes) ? mixes : [],
       events: Array.isArray(events) ? events : [],
+      schedule: Array.isArray(schedule) ? schedule : [],
     });
 
   } catch (error) {
