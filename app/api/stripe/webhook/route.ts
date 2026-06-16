@@ -9,7 +9,14 @@ const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET as string;
 
 export async function POST(req: NextRequest) {
   const body = await req.text();
-  const signature = req.headers.get("stripe-signature") as string;
+  const signature = req.headers.get("stripe-signature");
+
+  console.log("🔥 WEBHOOK HIT");
+
+  if (!signature) {
+    console.log("❌ Missing stripe-signature header");
+    return NextResponse.json({ error: "Missing signature" }, { status: 400 });
+  }
 
   let event: Stripe.Event;
 
@@ -19,35 +26,44 @@ export async function POST(req: NextRequest) {
       signature,
       webhookSecret
     );
+
+    console.log("✅ Webhook verified");
+    console.log("📦 Event type:", event.type);
+    console.log("🆔 Event ID:", event.id);
   } catch (err: any) {
-    console.error("Webhook signature error:", err.message);
+    console.log("❌ Webhook signature failed:", err.message);
+
     return NextResponse.json(
-      { error: "Invalid signature" },
+      { error: "Invalid webhook signature" },
       { status: 400 }
     );
   }
 
   // =========================
-  // PAYMENT SUCCESS
+  // CHECKOUT SUCCESS EVENT
   // =========================
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
 
-    console.log("Payment successful:", session.id);
+    console.log("🎉 PAYMENT SUCCESS");
+    console.log("📧 Email:", session.customer_details?.email);
+    console.log("💰 Amount:", session.amount_total);
+    console.log("🧾 Session ID:", session.id);
 
-    const email = session.customer_details?.email;
-    const amount = session.amount_total;
+    // 👉 You will later:
+    // - save order to DB
+    // - generate ticket
+    // - send email
 
-    // 👉 HERE YOU WILL:
-    // 1. Save order to DB
-    // 2. Generate ticket
-    // 3. Send email
+    console.log("📦 FULL SESSION:");
+    console.log(JSON.stringify(session, null, 2));
+  }
 
-    console.log({
-      email,
-      amount,
-      sessionId: session.id,
-    });
+  // =========================
+  // OTHER EVENTS (optional debug)
+  // =========================
+  else {
+    console.log("ℹ️ Unhandled event type:", event.type);
   }
 
   return NextResponse.json({ received: true });
