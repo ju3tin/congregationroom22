@@ -12,14 +12,34 @@ export default function CheckoutForm() {
   };
 
   return (
-    <form action={formAction}>
+    <form action={formAction} className="space-y-4">
       <input
         type="hidden"
         name="uiMode"
         value="hosted"
       />
 
-      <button type="submit">
+      <div>
+        <label htmlFor="amount">
+          Donation Amount (£)
+        </label>
+
+        <input
+          id="amount"
+          name="amount"
+          type="number"
+          min="1"
+          step="1"
+          required
+          placeholder="10"
+          className="border rounded px-3 py-2 w-full"
+        />
+      </div>
+
+      <button
+        type="submit"
+        className="px-4 py-2 bg-blue-600 text-white rounded"
+      >
         Donate
       </button>
     </form>
