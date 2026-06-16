@@ -4,7 +4,7 @@ import dbConnect from "@/lib/db";
 import DJ from "@/models/DJ";
 import Mix from "@/models/Mix";
 import Event from "@/models/Event";
-import Schedule from "@/models/Schedule"
+import Schedule from "@/models/Schedule";
 
 export async function GET(
   request: NextRequest,
