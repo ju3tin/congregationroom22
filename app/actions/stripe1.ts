@@ -26,7 +26,7 @@ export async function createCheckoutSession(
           },
         },
       ],
-      success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/test01/result?session_id={CHECKOUT_SESSION_ID}`,
+      success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/result.html?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/test01`,
     });
 
