@@ -1,7 +1,7 @@
 // Partial of app/components/CheckoutForm.tsx
 "use client";
 
-import { createCheckoutSession } from "@/actions/stripe";
+import { createCheckoutSession } from "@/actions/stripe1";
 
 const formAction = async (data: FormData): Promise<void> => {
   const { url } = await createCheckoutSession(data);
