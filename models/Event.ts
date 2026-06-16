@@ -101,7 +101,6 @@ const EventSchema = new Schema<IEvent>(
 )
 
 // Indexes
-EventSchema.index({ slug: 1 })
 EventSchema.index({ status: 1, date: 1 })
 EventSchema.index({ organizerId: 1 })
 EventSchema.index({ featured: 1 })        // Good for querying featured events
