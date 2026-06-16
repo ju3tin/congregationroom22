@@ -1,17 +1,27 @@
-// Partial of app/components/CheckoutForm.tsx
 "use client";
 
 import { createCheckoutSession } from "@/actions/stripe1";
 
-const formAction = async (data: FormData): Promise<void> => {
-  const { url } = await createCheckoutSession(data);
-  window.location.assign(url as string);
-};
+export default function CheckoutForm() {
+  const formAction = async (data: FormData) => {
+    const { url } = await createCheckoutSession(data);
 
-return (
-  <form action={formAction}>
-    <input type="hidden" name="uiMode" value="hosted" />
-    {/* donation input */}
-    <button type="submit">Donate</button>
-  </form>
-);
+    if (url) {
+      window.location.assign(url);
+    }
+  };
+
+  return (
+    <form action={formAction}>
+      <input
+        type="hidden"
+        name="uiMode"
+        value="hosted"
+      />
+
+      <button type="submit">
+        Donate
+      </button>
+    </form>
+  );
+}
