@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
   try {
     const { eventId, ticketCount, price } = await request.json();
 
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL;
+    const baseUrl = "https://congregationroom22.vercel.app";
 
     if (!baseUrl) {
       throw new Error("Missing NEXT_PUBLIC_SITE_URL");
