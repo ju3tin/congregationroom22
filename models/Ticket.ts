@@ -39,7 +39,7 @@ const TicketSchema = new Schema<ITicket>(
   { timestamps: true }
 )
 
-TicketSchema.index({ ticketCode: 1 })
+
 TicketSchema.index({ userId: 1 })
 TicketSchema.index({ eventId: 1 })
 TicketSchema.index({ orderId: 1 })
