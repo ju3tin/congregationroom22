@@ -29,7 +29,7 @@ export default function EventDetailPage() {
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
         
         // Try both slug and id
-        const { data } = await axios.get(`${apiUrl}/api/events/${eventIdOrSlug}`);
+        const { data } = await axios.get(`${apiUrl}/api/event/${eventIdOrSlug}`);
         
         setEvent(data);
       } catch (error: any) {
