@@ -30,7 +30,7 @@ export async function sendTicketEmail({
 
         <p>Scan this QR at entry:</p>
 
-        <img src="${qrCode}" width="220" />
+        <img src="${qrCode}" />
 
         <p style="margin-top:20px;color:#666;font-size:12px;">
           Please keep this email for entry.
