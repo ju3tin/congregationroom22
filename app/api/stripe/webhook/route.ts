@@ -17,17 +17,11 @@ export async function POST(req: NextRequest) {
   const signature = req.headers.get("stripe-signature");
 
   if (!signature) {
-    console.log("❌ Missing stripe-signature header");
-
-    return NextResponse.json(
-      { error: "Missing signature" },
-      { status: 400 }
-    );
+    console.log("❌ Missing stripe-signature");
+    return NextResponse.json({ error: "No signature" }, { status: 400 });
   }
 
   const body = await req.text();
-
-  console.log("✅ Signature received");
 
   let event: Stripe.Event;
 
@@ -41,127 +35,102 @@ export async function POST(req: NextRequest) {
     console.log("✅ Webhook verified");
     console.log("📦 Event Type:", event.type);
     console.log("📦 Event ID:", event.id);
-  } catch (error: any) {
-    console.log("❌ Signature verification failed");
-    console.log(error);
+  } catch (err: any) {
+    console.log("❌ Stripe verification failed");
+    console.log(err.message);
 
     return NextResponse.json(
-      { error: error.message },
+      { error: "Invalid signature" },
       { status: 400 }
     );
   }
 
-  try {
-    await dbConnect();
-
-    console.log("✅ MongoDB Connected");
-  } catch (error) {
-    console.log("❌ MongoDB Connection Failed");
-    console.log(error);
-
-    return NextResponse.json(
-      { error: "Database error" },
-      { status: 500 }
-    );
+  // Only process checkout session
+  if (event.type !== "checkout.session.completed") {
+    console.log("⏭ Ignoring event:", event.type);
+    return NextResponse.json({ received: true });
   }
 
-  switch (event.type) {
-    case "checkout.session.completed": {
-      console.log("🎉 PAYMENT COMPLETED");
+  const session = event.data.object as Stripe.Checkout.Session;
 
-      const session = event.data.object as Stripe.Checkout.Session;
+  console.log("🎉 CHECKOUT COMPLETED");
+  console.log("📧 Email:", session.customer_details?.email);
+  console.log("📦 Metadata:", session.metadata);
 
-      console.log("📋 Session ID:", session.id);
-      console.log("📧 Customer Email:", session.customer_details?.email);
-      console.log("💰 Payment Status:", session.payment_status);
+  try {
+    await dbConnect();
+    console.log("✅ MongoDB connected");
 
-      console.log("📦 Metadata:");
-      console.log(session.metadata);
-
-      try {
-        const ticketCode = `TKT-${Date.now()}`;
-
-        console.log("🎟 Creating Ticket");
-        console.log("🎟 Ticket Code:", ticketCode);
-
-        const ticket = await Ticket.create({
-          ticketCode,
-
-          orderId: session.metadata?.orderId,
-          eventId: session.metadata?.eventId,
-          tierId: session.metadata?.tierId,
-          userId: session.metadata?.userId,
-
-          tierName:
-            session.metadata?.tierName ||
-            "General Admission",
-
-          eventTitle:
-            session.metadata?.eventTitle ||
-            "Untitled Event",
-
-          eventDate:
-            session.metadata?.eventDate
-              ? new Date(session.metadata.eventDate)
-              : new Date(),
-
-          venue:
-            session.metadata?.venue ||
-            "Unknown Venue",
-
-          status: "valid",
-        });
-
-        console.log("✅ Ticket Created");
-        console.log("🆔 Ticket ID:", ticket._id);
-
-        console.log("🔲 Generating QR");
-
-        const qrCode = await generateQR(ticketCode);
-
-        console.log("✅ QR Generated");
-
-        const email =
-          session.customer_details?.email;
-
-        if (email) {
-          console.log("📧 Sending Email");
-          console.log("📧 To:", email);
-
-          await sendTicketEmail({
-            email,
-            ticketCode,
-            qrCode,
-          });
-
-          console.log("✅ Email Sent");
-        } else {
-          console.log(
-            "⚠️ No customer email found"
-          );
-        }
-      } catch (error) {
-        console.log(
-          "❌ Failed During Ticket Creation"
-        );
-        console.log(error);
-      }
-
-      break;
+    // ==============================
+    // VALIDATION
+    // ==============================
+    if (!session.metadata?.eventId) {
+      console.log("❌ Missing eventId in metadata");
+      return NextResponse.json({ error: "Missing metadata" });
     }
 
-    default:
-      console.log(
-        "ℹ️ Unhandled Event:",
-        event.type
-      );
+    // ==============================
+    // CREATE TICKET
+    // ==============================
+    const ticketCode = `TKT-${Date.now()}`;
+
+    console.log("🎟 Creating ticket:", ticketCode);
+
+    const ticket = await Ticket.create({
+      ticketCode,
+
+      orderId: session.metadata.orderId,
+      eventId: session.metadata.eventId,
+      userId: session.metadata.userId,
+      tierId: session.metadata.tierId,
+
+      tierName: session.metadata.tierName || "General Admission",
+      eventTitle: session.metadata.eventTitle || "Event",
+      eventDate: session.metadata.eventDate
+        ? new Date(session.metadata.eventDate)
+        : new Date(),
+
+      venue: session.metadata.venue || "TBA",
+
+      status: "valid",
+    });
+
+    console.log("✅ Ticket saved:", ticket._id);
+
+    // ==============================
+    // QR CODE
+    // ==============================
+    console.log("🔲 Generating QR...");
+    const qrCode = await generateQR(ticketCode);
+    console.log("✅ QR generated");
+
+    // ==============================
+    // EMAIL
+    // ==============================
+    const email = session.customer_details?.email;
+
+    if (!email) {
+      console.log("⚠️ No email found");
+      return NextResponse.json({ received: true });
+    }
+
+    console.log("📧 Sending email to:", email);
+
+    await sendTicketEmail({
+      email,
+      ticketCode,
+      qrCode,
+    });
+
+    console.log("✅ Email sent");
+  } catch (err: any) {
+    console.log("❌ WEBHOOK ERROR");
+    console.log(err.message);
   }
 
   console.log("================================");
   console.log("✅ WEBHOOK COMPLETE");
   console.log("================================");
 
-  return NextResponse.json({
-    received: true,
-  });
+  return NextResponse.json({ received: true });
 }
