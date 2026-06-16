@@ -14,31 +14,42 @@ export default function TestPage() {
 
     const payload = {
       email: form.get("email"),
-      eventId: form.get("eventId"),
-      eventTitle: form.get("eventTitle"),
-      venue: form.get("venue"),
-      userId: "test-user-123",
+
+      // 🧠 IMPORTANT: we now use REAL ObjectIds for testing
+      eventId: crypto.randomUUID().replace(/-/g, "").slice(0, 24),
+      userId: crypto.randomUUID().replace(/-/g, "").slice(0, 24),
+      orderId: crypto.randomUUID().replace(/-/g, "").slice(0, 24),
+      tierId: crypto.randomUUID().replace(/-/g, "").slice(0, 24),
+
+      eventTitle: form.get("eventTitle") || "Test Event",
+      venue: form.get("venue") || "Test Venue",
     };
 
-    const res = await fetch("/api/test/order", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+    try {
+      const res = await fetch("/api/test/order", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
 
-    const data = await res.json();
+      const data = await res.json();
 
-    setResult(data);
+      setResult(data);
+    } catch (err: any) {
+      setResult({ error: err.message });
+    }
+
     setLoading(false);
   }
 
   return (
-    <div style={{ padding: 20 }}>
-      <h1>🧪 Ticket Test Form</h1>
+    <div style={{ padding: 20, maxWidth: 500 }}>
+      <h1>🧪 Ticket System Test</h1>
 
-      <form onSubmit={submit} style={{ display: "grid", gap: 10, maxWidth: 400 }}>
-        <input name="email" placeholder="Email" />
-        <input name="eventId" placeholder="Event ID" />
+      <form onSubmit={submit} style={{ display: "grid", gap: 10 }}>
+        <input name="email" placeholder="Email" required />
         <input name="eventTitle" placeholder="Event Title" />
         <input name="venue" placeholder="Venue" />
 
@@ -48,7 +59,15 @@ export default function TestPage() {
       </form>
 
       {result && (
-        <pre style={{ marginTop: 20 }}>
+        <pre
+          style={{
+            marginTop: 20,
+            background: "#111",
+            color: "#0f0",
+            padding: 10,
+            overflow: "auto",
+          }}
+        >
           {JSON.stringify(result, null, 2)}
         </pre>
       )}
