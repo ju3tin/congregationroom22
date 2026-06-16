@@ -12,13 +12,17 @@ export async function fetchClientSecret() {
 
     ui_mode: 'embedded_page',
     line_items: [
-      {
-        // Provide the exact Price ID (for example, price_1234) of
-        // the product you want to sell
-        price: '{{PRICE_ID}}',
-        quantity: 1
-      }
-    ],
+        {
+          price_data: {
+            currency: "usd",
+            product_data: {
+              name: "Event Ticket",
+            },
+            unit_amount: Math.round(price * 100),
+          },
+          quantity: 1,
+        },
+      ],
     mode: 'payment',
     return_url: `${origin}/return?session_id={CHECKOUT_SESSION_ID}`,
   })
