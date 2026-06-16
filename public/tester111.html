@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Payment Result</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 30px;
+      background: #0f0f0f;
+      color: white;
+    }
+
+    .card {
+      max-width: 600px;
+      margin: 0 auto;
+      background: #1a1a1a;
+      padding: 20px;
+      border-radius: 12px;
+    }
+
+    .error {
+      color: #ff4d4d;
+    }
+
+    .success {
+      color: #4dff88;
+    }
+
+    pre {
+      background: #111;
+      padding: 10px;
+      overflow-x: auto;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="card">
+    <h1>Payment Result</h1>
+
+    <div id="content">Loading...</div>
+  </div>
+
+  <script>
+    // =========================
+    // Get session_id from URL
+    // =========================
+    const params = new URLSearchParams(window.location.search);
+    const sessionId = params.get("session_id");
+
+    const content = document.getElementById("content");
+
+    if (!sessionId) {
+      content.innerHTML = `
+        <h2 class="error">No session found</h2>
+        <p>Missing session_id in URL</p>
+        <p>Example: ?session_id=cs_test_123</p>
+      `;
+    } else {
+      loadSession(sessionId);
+    }
+
+    // =========================
+    // Fetch Stripe session via API
+    // =========================
+    async function loadSession(id) {
+      try {
+        const res = await fetch("/api/stripe/session?session_id=" + id);
+
+        if (!res.ok) throw new Error("Failed to load session");
+
+        const session = await res.json();
+
+        content.innerHTML = `
+          <h2 class="success">Payment Successful 🎉</h2>
+
+          <p><strong>Status:</strong> ${session.payment_status}</p>
+
+          <p><strong>Amount:</strong> ${
+            (session.amount_total / 100).toFixed(2)
+          } ${session.currency.toUpperCase()}</p>
+
+          <h3>Full Response:</h3>
+          <pre>${JSON.stringify(session, null, 2)}</pre>
+        `;
+      } catch (err) {
+        content.innerHTML = `
+          <h2 class="error">Error loading session</h2>
+          <pre>${err.message}</pre>
+        `;
+      }
+    }
+  </script>
+</body>
+</html>
