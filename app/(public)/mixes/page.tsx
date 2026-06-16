@@ -1,39 +1,69 @@
-"use client"
+'use client';
 
-import { useState } from "react"
-import Link from "next/link"
-import Image from "next/image"
-import { Download, Play, Filter, Calendar, Clock, Headphones } from "lucide-react"
-import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Header } from "@/components/header"
-import { Footer } from "@/components/footer"
-import { LivePlayer } from "@/components/live-player"
-import { mixes, djs } from "@/data/radio-data"
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { Download, Play, Filter, Calendar, Clock, Headphones } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Header } from "@/components/header";
+import { Footer } from "@/components/footer";
+import { LivePlayer } from "@/components/live-player";
+import axios from "axios";
 
-const genres = ["All", "House", "Techno", "Drum & Bass", "Melodic House", "Disco", "Dubstep"]
+const genres = ["All", "House", "Techno", "Drum & Bass", "Melodic House", "Disco", "Dubstep"];
 
 export default function MixesPage() {
-  const [selectedGenre, setSelectedGenre] = useState("All")
-  const [sortBy, setSortBy] = useState<"date" | "plays">("date")
+  const [mixes, setMixes] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedGenre, setSelectedGenre] = useState("All");
+  const [sortBy, setSortBy] = useState<"date" | "plays">("date");
 
+  useEffect(() => {
+    const fetchMixes = async () => {
+      try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+        const { data } = await axios.get(`${apiUrl}/api/mixes`);
+        setMixes(data);
+      } catch (error) {
+        console.error("Failed to fetch mixes:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMixes();
+  }, []);
+
+  // Filter & Sort
   const filteredMixes = mixes
     .filter((mix) => {
-      if (selectedGenre === "All") return true
-      return mix.genre === selectedGenre
+      if (selectedGenre === "All") return true;
+      return mix.genre === selectedGenre;
     })
     .sort((a, b) => {
       if (sortBy === "plays") {
-        return b.plays - a.plays
+        return (b.plays || 0) - (a.plays || 0);
       }
-      return new Date(b.releaseDate).getTime() - new Date(a.releaseDate).getTime()
-    })
+      return new Date(b.releaseDate).getTime() - new Date(a.releaseDate).getTime();
+    });
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin w-16 h-16 border-4 border-primary border-t-transparent rounded-full mx-auto mb-6"></div>
+          <h2 className="text-2xl font-semibold">Loading Mixes...</h2>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      
+     
       <main className="pb-20">
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
           <div className="mb-12">
@@ -57,14 +87,13 @@ export default function MixesPage() {
                     variant={selectedGenre === genre ? "default" : "outline"}
                     size="sm"
                     onClick={() => setSelectedGenre(genre)}
-                    className={selectedGenre === genre ? "bg-primary hover:bg-primary/90" : ""}
                   >
                     {genre}
                   </Button>
                 ))}
               </div>
             </div>
-            
+           
             <div className="flex items-center gap-2">
               <span className="text-sm text-muted-foreground">Sort by:</span>
               <div className="flex gap-2">
@@ -72,7 +101,6 @@ export default function MixesPage() {
                   variant={sortBy === "date" ? "default" : "outline"}
                   size="sm"
                   onClick={() => setSortBy("date")}
-                  className={sortBy === "date" ? "bg-primary hover:bg-primary/90" : ""}
                 >
                   Latest
                 </Button>
@@ -80,7 +108,6 @@ export default function MixesPage() {
                   variant={sortBy === "plays" ? "default" : "outline"}
                   size="sm"
                   onClick={() => setSortBy("plays")}
-                  className={sortBy === "plays" ? "bg-primary hover:bg-primary/90" : ""}
                 >
                   Popular
                 </Button>
@@ -91,11 +118,10 @@ export default function MixesPage() {
           {/* Mixes Grid */}
           <div className="grid gap-4">
             {filteredMixes.map((mix) => {
-              const dj = djs.find((d) => d.id === mix.djId)
-              const releaseDate = new Date(mix.releaseDate)
+              const releaseDate = new Date(mix.releaseDate);
 
               return (
-                <Card key={mix.id} className="group overflow-hidden bg-card hover:bg-secondary/30 transition-colors border-border">
+                <Card key={mix._id} className="group overflow-hidden bg-card hover:bg-secondary/30 transition-colors border-border">
                   <CardContent className="p-0">
                     <div className="flex flex-col sm:flex-row">
                       <div className="relative w-full sm:w-48 h-48 sm:h-auto shrink-0">
@@ -111,14 +137,14 @@ export default function MixesPage() {
                           </div>
                         </button>
                       </div>
-                      
+                     
                       <div className="flex-1 p-5 sm:p-6 flex flex-col">
                         <div className="flex flex-wrap items-start justify-between gap-4 mb-3">
                           <div>
                             <h2 className="text-xl font-bold mb-1">{mix.title}</h2>
-                            {dj && (
-                              <Link 
-                                href={`/djs/${dj.slug}`}
+                            {mix.djName && (
+                              <Link
+                                href={`/djs/${mix.djSlug || '#'}`}
                                 className="text-primary hover:underline font-medium"
                               >
                                 {mix.djName}
@@ -127,7 +153,7 @@ export default function MixesPage() {
                           </div>
                           <Badge variant="secondary">{mix.genre}</Badge>
                         </div>
-                        
+                       
                         <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground mb-4">
                           <div className="flex items-center gap-1.5">
                             <Calendar className="w-4 h-4" />
@@ -143,17 +169,19 @@ export default function MixesPage() {
                           </div>
                           <div className="flex items-center gap-1.5">
                             <Headphones className="w-4 h-4" />
-                            {mix.plays.toLocaleString()} plays
+                            {(mix.plays || 0).toLocaleString()} plays
                           </div>
                         </div>
-                        
+                       
                         <div className="mt-auto flex items-center gap-3">
-                        <a href={`/api/download?file=${mix.downloadUrl}`} download>
-                          <Button className="bg-primary hover:bg-primary/90">
-                            <Download className="w-4 h-4 mr-2" />
-                            Download MP3
-                          </Button>
-                          </a>
+                          {mix.audioUrl && (
+                            <a href={mix.audioUrl} download target="_blank">
+                              <Button className="bg-primary hover:bg-primary/90">
+                                <Download className="w-4 h-4 mr-2" />
+                                Download MP3
+                              </Button>
+                            </a>
+                          )}
                           <Button variant="outline">
                             <Play className="w-4 h-4 mr-2" />
                             Preview
@@ -163,7 +191,7 @@ export default function MixesPage() {
                     </div>
                   </CardContent>
                 </Card>
-              )
+              );
             })}
           </div>
 
@@ -178,5 +206,5 @@ export default function MixesPage() {
       <Footer />
       <LivePlayer />
     </div>
-  )
+  );
 }
