@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/lib/db";
 import Event from "@/models/Event";
+import DJ from "@/models/DJ";   // ← Import DJ model
 
 export async function GET(
   request: NextRequest,
@@ -20,8 +21,8 @@ export async function GET(
     })
       .populate({
         path: 'lineup.dj',
-        model: 'DJ',
-        select: 'name slug image genre'
+        model: DJ,                    // ← Use imported model
+        select: 'name slug image genre bio'
       })
       .lean();
 
@@ -29,14 +30,13 @@ export async function GET(
       return NextResponse.json({ error: "Event not found" }, { status: 404 });
     }
 
-    // Only return published events (optional security)
     if (event.status !== "published") {
       return NextResponse.json({ error: "Event not found" }, { status: 404 });
     }
 
     return NextResponse.json(event);
 
-  } catch (error) {
+  } catch (error: any) {
     console.error("Single Event API Error:", error);
     return NextResponse.json({ 
       error: "Failed to fetch event" 
