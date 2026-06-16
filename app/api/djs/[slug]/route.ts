@@ -32,25 +32,27 @@ export async function GET(
       .sort({ releaseDate: -1 })
       .lean();
 
-    // Fetch Schedule
-    const schedule = await Schedule.find({ djId: dj._id })
-      .sort({ dayOfWeek: 1 })           // Changed to ascending for better order
-      .lean();
+    // Fetch Schedule - FIXED for your data structure
+    const scheduleDoc = await Schedule.findOne({
+      "slots.djId": dj._id
+    }).lean();
 
-    // Fetch Events (DJ in lineup)
+    const schedule = scheduleDoc?.slots || [];
+
+    // Fetch Events
     const events = await Event.find({
       "lineup.dj": dj._id,
       status: "published"
     })
-      .sort({ date: 1 })                // Upcoming first (ascending)
+      .sort({ date: 1 })
       .lean();
 
-    // Return combined data
+    // Return everything
     return NextResponse.json({
       ...dj,
       mixes: Array.isArray(mixes) ? mixes : [],
       events: Array.isArray(events) ? events : [],
-      schedule: Array.isArray(schedule) ? schedule : [],
+      schedule: Array.isArray(schedule) ? schedule : [],   // ← slots array
     });
 
   } catch (error) {
