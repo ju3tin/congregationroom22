@@ -1,6 +1,6 @@
 "use client";
 
-import { createCheckoutSession } from "@/actions/stripe1";
+import { createCheckoutSession } from "@/app/actions/stripe1";
 
 export default function CheckoutForm() {
   const formAction = async (data: FormData) => {
