@@ -9,15 +9,19 @@ import { Button } from "@/components/ui/button";
 import axios from "axios";
 
 interface TicketPurchaseProps {
-  event: any;
-  ticketPrice: number;
+   event: any;
   userId?: string;
+  tier: {
+    _id: string;
+    name: string;
+    price: number;
+  };
 }
 
 export default function TicketPurchase({
   event,
-  ticketPrice,
   userId,
+  tier,
 }: TicketPurchaseProps) {
   const [ticketCount, setTicketCount] = useState(1);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -31,12 +35,19 @@ export default function TicketPurchase({
     try {
       setIsProcessing(true);
 
-      const payload = {
+     const payload = {
         eventId: event._id,
+
+        // 🔥 CRITICAL FIX
+        tierId: tier._id,
+        tierName: tier.name,
+
         userId,
+
         ticketCount,
-        price: ticketPrice,
+        price: tier.price,
         total: totalAmount,
+
         eventTitle: event.title,
         eventDate: event.date,
         venue: event.venue,
