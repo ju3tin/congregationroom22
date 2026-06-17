@@ -74,6 +74,8 @@ export async function POST(req: NextRequest) {
 
       paymentProvider: "stripe",
 
+       paypalOrderId: session.id,
+
       paymentIntentId: session.payment_intent,
 
       type: "ticket",
