@@ -1,5 +1,3 @@
-// app/api/webhooks/stripe/route.ts
-
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import dbConnect from "@/lib/db";
@@ -53,8 +51,19 @@ export async function POST(req: NextRequest) {
     await dbConnect();
 
     // ----------------------------
-    // SAFE USER + EMAIL
+    // SAFE VALIDATION (IMPORTANT FIX)
     // ----------------------------
+    const eventId = safeObjectId(m.eventId);
+    const tierId = safeObjectId(m.tierId);
+
+    if (!eventId) {
+      throw new Error("Missing or invalid eventId in metadata");
+    }
+
+    if (!tierId) {
+      throw new Error("Missing or invalid tierId in metadata");
+    }
+
     const userId = safeObjectId(m.userId) || SYSTEM_USER_ID;
 
     const email =
@@ -65,33 +74,28 @@ export async function POST(req: NextRequest) {
     }
 
     // ----------------------------
-    // CREATE ORDER (FIXED)
+    // CREATE ORDER
     // ----------------------------
     const order = await Order.create({
       orderNumber: session.id,
 
       userId,
 
-      paymentProvider: "stripe",
+      type: "ticket",
 
-       paypalOrderId: session.id,
+      paymentProvider: "stripe",
 
       paymentIntentId: session.payment_intent,
 
-      type: "ticket",
+      paypalOrderId: session.id, // required schema workaround
 
       items: [
         {
           itemType: "ticket",
-
-          eventId: safeObjectId(m.eventId),
-
-          tierId: safeObjectId(m.tierId),
-
+          eventId,
+          tierId,
           quantity: Number(m.ticketCount || 1),
-
           unitPrice: (session.amount_total || 0) / 100,
-
           name: m.tierName || "General Admission",
         },
       ],
@@ -108,7 +112,6 @@ export async function POST(req: NextRequest) {
     // CREATE TICKETS
     // ----------------------------
     const tickets = [];
-
     const count = Number(m.ticketCount || 1);
 
     for (let i = 0; i < count; i++) {
@@ -117,9 +120,8 @@ export async function POST(req: NextRequest) {
 
         orderId: order._id,
 
-        eventId: safeObjectId(m.eventId),
-
-        tierId: safeObjectId(m.tierId),
+        eventId,
+        tierId,
 
         userId,
 
@@ -131,10 +133,7 @@ export async function POST(req: NextRequest) {
           ? new Date(m.eventDate)
           : new Date(),
 
-        venue:
-          typeof m.venue === "string"
-            ? m.venue
-            : "TBA",
+        venue: typeof m.venue === "string" ? m.venue : "TBA",
 
         status: "valid",
       });
@@ -154,8 +153,6 @@ export async function POST(req: NextRequest) {
     });
 
     console.log("📧 EMAIL SENT");
-
-    console.log("✅ WEBHOOK COMPLETE");
 
     return NextResponse.json({ received: true });
   } catch (err: any) {
