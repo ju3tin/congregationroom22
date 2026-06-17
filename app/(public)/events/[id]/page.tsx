@@ -200,7 +200,8 @@ export default function EventDetailPage() {
   <div className="sticky top-24">
     <TicketPurchase 
       event={event} 
-      ticketPrice={ticketPrice} 
+      ticketPrice={ticketPrice}
+      tier={event.ticketTiers[0]}
     />
 
     <div className="mt-4 p-4 bg-accent/10 rounded-lg border border-accent/20">
