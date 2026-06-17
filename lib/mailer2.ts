@@ -1,5 +1,3 @@
-// /lib/mailer.ts
-
 import nodemailer from "nodemailer";
 
 const transporter = nodemailer.createTransport({
@@ -12,61 +10,52 @@ const transporter = nodemailer.createTransport({
 
 export async function sendTicketEmail({
   email,
-  ticketCode,
-  eventTitle,
-  eventDate,
-  venue,
+  tickets,
 }: {
   email: string;
-  ticketCode: string;
-  eventTitle: string;
-  eventDate: Date;
-  venue: string;
+  tickets: {
+    ticketCode: string;
+    eventTitle: string;
+    eventDate: Date;
+    venue: string;
+  }[];
 }) {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
 
-  const ticketUrl = `${siteUrl}/tickets/${ticketCode}`;
-  const qrUrl = `${siteUrl}/api/tickets/${ticketCode}/qr`;
+  const htmlTickets = tickets
+    .map((ticket) => {
+      const ticketUrl = `${siteUrl}/tickets/${ticket.ticketCode}`;
+      const qrUrl = `${siteUrl}/api/tickets/${ticket.ticketCode}/qr`;
+
+      return `
+        <div style="border:1px solid #ddd;padding:16px;margin-bottom:16px;border-radius:8px;">
+          <h2>${ticket.eventTitle}</h2>
+
+          <p><strong>Ticket Code:</strong><br>${ticket.ticketCode}</p>
+
+          <p><strong>Date:</strong><br>
+          ${new Date(ticket.eventDate).toLocaleString()}</p>
+
+          <p><strong>Venue:</strong><br>${ticket.venue}</p>
+
+          <p>
+            <a href="${ticketUrl}">View Ticket</a>
+          </p>
+
+          <img src="${qrUrl}" width="220" height="220" />
+        </div>
+      `;
+    })
+    .join("");
 
   await transporter.sendMail({
     from: `"Tickets" <${process.env.EMAIL_USER}>`,
     to: email,
-    subject: `Your Ticket - ${eventTitle}`,
+    subject: `Your Tickets`,
     html: `
       <div style="font-family: Arial, sans-serif;">
-        <h1>${eventTitle}</h1>
-
-        <p>
-          <strong>Ticket Code:</strong><br />
-          ${ticketCode}
-        </p>
-
-        <p>
-          <strong>Date:</strong><br />
-          ${new Date(eventDate).toLocaleString()}
-        </p>
-
-        <p>
-          <strong>Venue:</strong><br />
-          ${venue}
-        </p>
-
-        <p>
-          <a href="${ticketUrl}">
-            View Ticket
-          </a>
-        </p>
-
-        <p>
-          Scan this QR code at the door:
-        </p>
-
-        <img
-          src="${qrUrl}"
-          width="250"
-          height="250"
-          alt="Ticket QR Code"
-        />
+        <h1>Your Event Tickets</h1>
+        ${htmlTickets}
       </div>
     `,
   });
