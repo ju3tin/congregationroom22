@@ -13,6 +13,8 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2024-06-20",
 });
 
+const SYSTEM_USER_ID = "6a18669c5d6662e81cfb373f";
+
 const safeObjectId = (id: any) => {
   return mongoose.Types.ObjectId.isValid(id) ? id : undefined;
 };
@@ -25,9 +27,9 @@ export async function POST(req: NextRequest) {
 
   let event: Stripe.Event;
 
-  // -------------------------
-  // 1. VERIFY STRIPE SIGNATURE
-  // -------------------------
+  // -----------------------------
+  // VERIFY STRIPE SIGNATURE
+  // -----------------------------
   try {
     event = stripe.webhooks.constructEvent(
       body,
@@ -39,7 +41,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
 
-  console.log("📦 EVENT:", event.type);
+  console.log("📦 EVENT TYPE:", event.type);
 
   if (event.type !== "checkout.session.completed") {
     return NextResponse.json({ received: true });
@@ -53,13 +55,25 @@ export async function POST(req: NextRequest) {
   try {
     await dbConnect();
 
-    // -------------------------
-    // 2. CREATE ORDER (SAFE)
-    // -------------------------
+    // -----------------------------
+    // SAFE USER HANDLING
+    // -----------------------------
+    const userId = safeObjectId(m.userId) || SYSTEM_USER_ID;
+
+    const email =
+      session.customer_details?.email || m.email;
+
+    if (!email) {
+      throw new Error("Missing customer email");
+    }
+
+    // -----------------------------
+    // CREATE ORDER
+    // -----------------------------
     const order = await Order.create({
       orderNumber: session.id,
 
-      userId: safeObjectId(m.userId) || undefined,
+      userId,
 
       type: "ticket",
 
@@ -82,20 +96,19 @@ export async function POST(req: NextRequest) {
       subtotal: (session.amount_total || 0) / 100,
       total: (session.amount_total || 0) / 100,
 
-      paypalOrderId: session.id,
       status: "paid",
     });
 
     console.log("🧾 ORDER CREATED:", order._id);
 
-    // -------------------------
-    // 3. CREATE TICKETS
-    // -------------------------
+    // -----------------------------
+    // CREATE TICKETS
+    // -----------------------------
     const tickets = [];
 
-    const ticketCount = Number(m.ticketCount || 1);
+    const count = Number(m.ticketCount || 1);
 
-    for (let i = 0; i < ticketCount; i++) {
+    for (let i = 0; i < count; i++) {
       const ticket = await Ticket.create({
         ticketCode: uuidv4(),
 
@@ -105,7 +118,7 @@ export async function POST(req: NextRequest) {
 
         tierId: safeObjectId(m.tierId),
 
-        userId: safeObjectId(m.userId),
+        userId,
 
         tierName: m.tierName || "General Admission",
 
@@ -115,9 +128,10 @@ export async function POST(req: NextRequest) {
           ? new Date(m.eventDate)
           : new Date(),
 
-        venue: typeof m.venue === "string"
-          ? m.venue
-          : "TBA",
+        venue:
+          typeof m.venue === "string"
+            ? m.venue
+            : "TBA",
 
         status: "valid",
       });
@@ -127,20 +141,16 @@ export async function POST(req: NextRequest) {
 
     console.log("🎟 TICKETS CREATED:", tickets.length);
 
-    // -------------------------
-    // 4. EMAIL USER
-    // -------------------------
-    const email = session.customer_details?.email;
+    // -----------------------------
+    // SEND EMAIL
+    // -----------------------------
+    await sendTicketEmail({
+      email,
+      order,
+      tickets,
+    });
 
-    if (email) {
-      await sendTicketEmail({
-        email,
-        order,
-        tickets,
-      });
-
-      console.log("📧 EMAIL SENT");
-    }
+    console.log("📧 EMAIL SENT");
 
     console.log("✅ WEBHOOK COMPLETE");
 
