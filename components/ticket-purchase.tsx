@@ -1,40 +1,66 @@
-'use client';
+// /components/ticket-purchase.tsx
+
+"use client";
 
 import { useState } from "react";
 import { Ticket, Minus, Plus } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import axios from "axios";
 
 interface TicketPurchaseProps {
   event: any;
   ticketPrice: number;
+  userId?: string;
 }
 
-export default function TicketPurchase({ event, ticketPrice }: TicketPurchaseProps) {
+export default function TicketPurchase({
+  event,
+  ticketPrice,
+  userId,
+}: TicketPurchaseProps) {
   const [ticketCount, setTicketCount] = useState(1);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [selectedPayment, setSelectedPayment] = useState<"stripe" | "paypal">("stripe");
+  const [selectedPayment, setSelectedPayment] = useState<
+    "stripe" | "paypal"
+  >("stripe");
 
   const totalAmount = ticketPrice * ticketCount;
 
-  const handleStripePayment = async () => {
+  const handleCheckout = async () => {
     try {
       setIsProcessing(true);
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 
-      const res = await axios.post(`${apiUrl}/api/payments/stripe`, {
-        eventId: event._id || event.id,
+      const payload = {
+        eventId: event._id,
+        userId,
         ticketCount,
         price: ticketPrice,
-      });
+        total: totalAmount,
+        eventTitle: event.title,
+        eventDate: event.date,
+        venue: event.venue,
+      };
 
-      if (res.data.url) {
-        window.location.href = res.data.url;
+      const endpoint =
+        selectedPayment === "stripe"
+          ? "/api/payments/stripe"
+          : "/api/payments/paypal";
+
+      const response = await axios.post(endpoint, payload);
+
+      if (response.data.url) {
+        window.location.href = response.data.url;
+        return;
       }
-    } catch (error) {
-      alert("Payment initialization failed. Please try again.");
+
+      alert("Checkout URL not returned.");
+    } catch (error: any) {
+      console.error(error);
+      alert(
+        error?.response?.data?.error ||
+          "Failed to start checkout."
+      );
     } finally {
       setIsProcessing(false);
     }
@@ -43,76 +69,121 @@ export default function TicketPurchase({ event, ticketPrice }: TicketPurchasePro
   return (
     <Card className="bg-card border-border">
       <CardContent className="p-6">
-        <h2 className="text-xl font-bold mb-2">Get Tickets</h2>
+        <h2 className="text-xl font-bold mb-2">
+          Get Tickets
+        </h2>
+
         <p className="text-muted-foreground text-sm mb-6">
           Secure your spot at this event
         </p>
 
-        {/* Payment Method Toggle */}
-        <div className="flex gap-2 mb-6">
+        {/* Payment Method */}
+
+        <div className="grid grid-cols-2 gap-2 mb-6">
           <Button
-            variant={selectedPayment === "stripe" ? "default" : "outline"}
-            onClick={() => setSelectedPayment("stripe")}
-            className="flex-1"
+            type="button"
+            variant={
+              selectedPayment === "stripe"
+                ? "default"
+                : "outline"
+            }
+            onClick={() =>
+              setSelectedPayment("stripe")
+            }
           >
             Stripe
           </Button>
+
           <Button
-            variant={selectedPayment === "paypal" ? "default" : "outline"}
-            onClick={() => setSelectedPayment("paypal")}
-            className="flex-1"
+            type="button"
+            variant={
+              selectedPayment === "paypal"
+                ? "default"
+                : "outline"
+            }
+            onClick={() =>
+              setSelectedPayment("paypal")
+            }
           >
             PayPal
           </Button>
         </div>
 
-        <div className="flex items-center justify-between mb-6">
-          <span className="font-medium">Ticket Price</span>
-          <span className="text-2xl font-bold text-primary">${ticketPrice}</span>
+        {/* Price */}
+
+        <div className="flex justify-between items-center mb-6">
+          <span className="font-medium">
+            Ticket Price
+          </span>
+
+          <span className="text-2xl font-bold text-primary">
+            ${ticketPrice.toFixed(2)}
+          </span>
         </div>
 
-        {/* Quantity Selector */}
-        <div className="flex items-center justify-between mb-6 p-4 bg-secondary rounded-lg">
-          <span className="font-medium">Quantity</span>
+        {/* Quantity */}
+
+        <div className="flex items-center justify-between p-4 rounded-lg bg-secondary mb-6">
+          <span className="font-medium">
+            Quantity
+          </span>
+
           <div className="flex items-center gap-3">
             <Button
               variant="outline"
               size="icon"
-              className="h-8 w-8"
-              onClick={() => setTicketCount(Math.max(1, ticketCount - 1))}
-              disabled={ticketCount <= 1}
+              onClick={() =>
+                setTicketCount(
+                  Math.max(1, ticketCount - 1)
+                )
+              }
+              disabled={ticketCount === 1}
             >
               <Minus className="w-4 h-4" />
             </Button>
-            <span className="w-8 text-center font-semibold">{ticketCount}</span>
+
+            <span className="font-semibold w-8 text-center">
+              {ticketCount}
+            </span>
+
             <Button
               variant="outline"
               size="icon"
-              className="h-8 w-8"
-              onClick={() => setTicketCount(Math.min(10, ticketCount + 1))}
-              disabled={ticketCount >= 10}
+              onClick={() =>
+                setTicketCount(
+                  Math.min(10, ticketCount + 1)
+                )
+              }
+              disabled={ticketCount === 10}
             >
               <Plus className="w-4 h-4" />
             </Button>
           </div>
         </div>
 
-        {/* Total */}
-        <div className="border-t border-border pt-4 mb-6">
-          <div className="flex items-center justify-between text-lg font-bold">
+        {/* Summary */}
+
+        <div className="border-t pt-4 mb-6">
+          <div className="flex justify-between font-bold text-lg">
             <span>Total</span>
-            <span className="text-primary">${totalAmount.toFixed(2)}</span>
+
+            <span className="text-primary">
+              ${totalAmount.toFixed(2)}
+            </span>
           </div>
+
           <p className="text-xs text-muted-foreground mt-1">
-            Including all fees and taxes
+            {ticketCount} ticket
+            {ticketCount > 1 ? "s" : ""}
           </p>
         </div>
 
-        {/* Pay Button */}
+        {/* Checkout */}
+
         <Button
-          className="w-full bg-primary hover:bg-primary/90"
+          className="w-full"
           size="lg"
-          onClick={handleStripePayment}
+          onClick={handleCheckout}
           disabled={isProcessing}
         >
           {isProcessing ? (
@@ -120,13 +191,17 @@ export default function TicketPurchase({ event, ticketPrice }: TicketPurchasePro
           ) : (
             <>
               <Ticket className="w-4 h-4 mr-2" />
-              Pay ${totalAmount.toFixed(2)} with {selectedPayment === "stripe" ? "Stripe" : "PayPal"}
+              Pay ${totalAmount.toFixed(2)} with{" "}
+              {selectedPayment === "stripe"
+                ? "Stripe"
+                : "PayPal"}
             </>
           )}
         </Button>
 
         <p className="text-xs text-muted-foreground text-center mt-4">
-          By purchasing, you agree to our Terms & Conditions
+          Tickets are emailed instantly after successful
+          payment.
         </p>
       </CardContent>
     </Card>
