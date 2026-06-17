@@ -1,14 +1,21 @@
+// app/api/webhooks/stripe/route.ts
+
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import dbConnect from "@/lib/db";
 import Order from "@/models/Order";
 import Ticket from "@/models/Ticket";
 import { v4 as uuidv4 } from "uuid";
+import mongoose from "mongoose";
 import { sendTicketEmail } from "@/lib/mailer";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2024-06-20",
 });
+
+const safeObjectId = (id: any) => {
+  return mongoose.Types.ObjectId.isValid(id) ? id : undefined;
+};
 
 export async function POST(req: NextRequest) {
   console.log("🔥 STRIPE WEBHOOK START");
@@ -18,6 +25,9 @@ export async function POST(req: NextRequest) {
 
   let event: Stripe.Event;
 
+  // -------------------------
+  // 1. VERIFY STRIPE SIGNATURE
+  // -------------------------
   try {
     event = stripe.webhooks.constructEvent(
       body,
@@ -38,26 +48,33 @@ export async function POST(req: NextRequest) {
   const session = event.data.object as Stripe.Checkout.Session;
   const m = session.metadata || {};
 
+  console.log("📊 METADATA:", m);
+
   try {
     await dbConnect();
 
-    console.log("📊 METADATA:", m);
-
     // -------------------------
-    // 1. CREATE ORDER (AUTO)
+    // 2. CREATE ORDER (SAFE)
     // -------------------------
     const order = await Order.create({
       orderNumber: session.id,
-      userId: m.userId || "guest",
+
+      userId: safeObjectId(m.userId) || undefined,
+
       type: "ticket",
 
       items: [
         {
           itemType: "ticket",
-          eventId: m.eventId,
-          tierId: m.tierId,
+
+          eventId: safeObjectId(m.eventId),
+
+          tierId: safeObjectId(m.tierId),
+
           quantity: Number(m.ticketCount || 1),
+
           unitPrice: (session.amount_total || 0) / 100,
+
           name: m.tierName || "General Admission",
         },
       ],
@@ -72,25 +89,36 @@ export async function POST(req: NextRequest) {
     console.log("🧾 ORDER CREATED:", order._id);
 
     // -------------------------
-    // 2. CREATE TICKETS
+    // 3. CREATE TICKETS
     // -------------------------
     const tickets = [];
 
-    const count = Number(m.ticketCount || 1);
+    const ticketCount = Number(m.ticketCount || 1);
 
-    for (let i = 0; i < count; i++) {
+    for (let i = 0; i < ticketCount; i++) {
       const ticket = await Ticket.create({
         ticketCode: uuidv4(),
+
         orderId: order._id,
-        eventId: m.eventId,
-        tierId: m.tierId,
-        userId: m.userId || "guest",
-        tierName: m.tierName,
-        eventTitle: m.eventTitle,
-        eventDate: m.eventDate,
+
+        eventId: safeObjectId(m.eventId),
+
+        tierId: safeObjectId(m.tierId),
+
+        userId: safeObjectId(m.userId),
+
+        tierName: m.tierName || "General Admission",
+
+        eventTitle: m.eventTitle || "Event",
+
+        eventDate: m.eventDate
+          ? new Date(m.eventDate)
+          : new Date(),
+
         venue: typeof m.venue === "string"
           ? m.venue
           : "TBA",
+
         status: "valid",
       });
 
@@ -100,7 +128,7 @@ export async function POST(req: NextRequest) {
     console.log("🎟 TICKETS CREATED:", tickets.length);
 
     // -------------------------
-    // 3. EMAIL (SINGLE EMAIL)
+    // 4. EMAIL USER
     // -------------------------
     const email = session.customer_details?.email;
 
