@@ -29,7 +29,7 @@ export default function TicketPurchase({
     "stripe" | "paypal"
   >("stripe");
 
-  const totalAmount = ticketPrice * ticketCount;
+  const totalAmount = tier.price * ticketCount;
 
   const handleCheckout = async () => {
     try {
@@ -128,7 +128,7 @@ export default function TicketPurchase({
           </span>
 
           <span className="text-2xl font-bold text-primary">
-            ${ticketPrice.toFixed(2)}
+            ${tier.price.toFixed(2)}
           </span>
         </div>
 
