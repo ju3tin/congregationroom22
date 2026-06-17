@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
           <br/>
 
           <img
-            src="https://congregationroom22.vercel.app/api/tickets/${qrCode}/qr"
+            src="https://congregationroom22.vercel.app/api/tickets/${ticketCode}/qr"
             width="250"
             height="250"
           />
