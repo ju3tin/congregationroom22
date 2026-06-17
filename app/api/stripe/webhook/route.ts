@@ -5,8 +5,8 @@ import Stripe from "stripe";
 import dbConnect from "@/lib/db";
 import Order from "@/models/Order";
 import Ticket from "@/models/Ticket";
-import { v4 as uuidv4 } from "uuid";
 import mongoose from "mongoose";
+import { v4 as uuidv4 } from "uuid";
 import { sendTicketEmail } from "@/lib/mailer";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -15,9 +15,8 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
 const SYSTEM_USER_ID = "6a18669c5d6662e81cfb373f";
 
-const safeObjectId = (id: any) => {
-  return mongoose.Types.ObjectId.isValid(id) ? id : undefined;
-};
+const safeObjectId = (id: any) =>
+  mongoose.Types.ObjectId.isValid(id) ? id : undefined;
 
 export async function POST(req: NextRequest) {
   console.log("🔥 STRIPE WEBHOOK START");
@@ -27,9 +26,9 @@ export async function POST(req: NextRequest) {
 
   let event: Stripe.Event;
 
-  // -----------------------------
+  // ----------------------------
   // VERIFY STRIPE SIGNATURE
-  // -----------------------------
+  // ----------------------------
   try {
     event = stripe.webhooks.constructEvent(
       body,
@@ -41,8 +40,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
 
-  console.log("📦 EVENT TYPE:", event.type);
-
   if (event.type !== "checkout.session.completed") {
     return NextResponse.json({ received: true });
   }
@@ -50,14 +47,14 @@ export async function POST(req: NextRequest) {
   const session = event.data.object as Stripe.Checkout.Session;
   const m = session.metadata || {};
 
-  console.log("📊 METADATA:", m);
+  console.log("📦 METADATA:", m);
 
   try {
     await dbConnect();
 
-    // -----------------------------
-    // SAFE USER HANDLING
-    // -----------------------------
+    // ----------------------------
+    // SAFE USER + EMAIL
+    // ----------------------------
     const userId = safeObjectId(m.userId) || SYSTEM_USER_ID;
 
     const email =
@@ -67,13 +64,17 @@ export async function POST(req: NextRequest) {
       throw new Error("Missing customer email");
     }
 
-    // -----------------------------
-    // CREATE ORDER
-    // -----------------------------
+    // ----------------------------
+    // CREATE ORDER (FIXED)
+    // ----------------------------
     const order = await Order.create({
       orderNumber: session.id,
 
       userId,
+
+      paymentProvider: "stripe",
+
+      paymentIntentId: session.payment_intent,
 
       type: "ticket",
 
@@ -101,9 +102,9 @@ export async function POST(req: NextRequest) {
 
     console.log("🧾 ORDER CREATED:", order._id);
 
-    // -----------------------------
+    // ----------------------------
     // CREATE TICKETS
-    // -----------------------------
+    // ----------------------------
     const tickets = [];
 
     const count = Number(m.ticketCount || 1);
@@ -141,9 +142,9 @@ export async function POST(req: NextRequest) {
 
     console.log("🎟 TICKETS CREATED:", tickets.length);
 
-    // -----------------------------
-    // SEND EMAIL
-    // -----------------------------
+    // ----------------------------
+    // EMAIL
+    // ----------------------------
     await sendTicketEmail({
       email,
       order,
