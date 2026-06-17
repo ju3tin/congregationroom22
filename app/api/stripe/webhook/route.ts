@@ -5,7 +5,7 @@ import Order from "@/models/Order";
 import Ticket from "@/models/Ticket";
 import mongoose from "mongoose";
 import { v4 as uuidv4 } from "uuid";
-import { sendTicketEmail } from "@/lib/mailer";
+import { sendTicketEmail } from "@/lib/mailer2";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2024-06-20",
