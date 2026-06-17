@@ -10,7 +10,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 });
 
 export async function POST(req: NextRequest) {
-  console.log("🔥 WEBHOOK START");
+  console.log("🔥 STRIPE WEBHOOK START");
 
   const sig = req.headers.get("stripe-signature");
   const body = await req.text();
@@ -24,11 +24,11 @@ export async function POST(req: NextRequest) {
       process.env.STRIPE_WEBHOOK_SECRET!
     );
   } catch (err: any) {
-    console.log("❌ INVALID SIGNATURE");
-    return NextResponse.json({ error: err.message }, { status: 400 });
+    console.log("❌ INVALID SIGNATURE:", err.message);
+    return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
 
-  console.log("📦 EVENT:", event.type);
+  console.log("📦 EVENT TYPE:", event.type);
 
   if (event.type !== "checkout.session.completed") {
     console.log("⏭ Ignored event");
@@ -37,49 +37,64 @@ export async function POST(req: NextRequest) {
 
   const session = event.data.object as Stripe.Checkout.Session;
 
+  const metadata = session.metadata;
+
+  console.log("📊 METADATA:", metadata);
+
   try {
     await dbConnect();
 
-    const orderId = session.metadata?.orderId;
-
-    if (!orderId) {
-      throw new Error("Missing orderId in metadata");
+    if (!metadata?.orderId) {
+      console.log("❌ Missing orderId in metadata");
+      return NextResponse.json({ error: "Missing orderId" }, { status: 400 });
     }
 
-    console.log("🧾 Order:", orderId);
+    const orderId = metadata.orderId;
 
-    // 1. update order
-    await Order.findByIdAndUpdate(orderId, {
-      status: "paid",
-      paypalCaptureId: session.payment_intent,
-    });
+    console.log("🧾 Processing order:", orderId);
 
-    console.log("✅ Order updated");
+    // 1. Update order safely
+    const order = await Order.findByIdAndUpdate(
+      orderId,
+      {
+        status: "paid",
+        stripeSessionId: session.id,
+      },
+      { new: true }
+    );
 
-    // 2. create tickets
+    if (!order) {
+      throw new Error("Order not found");
+    }
+
+    console.log("✅ Order marked as paid");
+
+    // 2. Create tickets
     const tickets = await createTicketsFromOrder(orderId);
 
-    console.log("🎟 Tickets:", tickets.length);
+    console.log("🎟 Tickets created:", tickets.length);
 
-    // 3. send emails
+    // 3. Send email
     const email = session.customer_details?.email;
 
-    if (email) {
-      for (const t of tickets) {
-        await sendTicketEmail({
-          email,
-          ticketCode: t.ticket.ticketCode,
-          qrCode: t.qrCode,
-        });
-      }
+    if (email && tickets.length > 0) {
+      await sendTicketEmail({
+        email,
+        tickets,
+      });
 
-      console.log("📧 Emails sent");
+      console.log("📧 Email sent");
     }
 
-    console.log("✅ WEBHOOK DONE");
+    console.log("✅ WEBHOOK COMPLETE");
+
+    return NextResponse.json({ received: true });
   } catch (err: any) {
     console.log("❌ WEBHOOK ERROR:", err.message);
-  }
 
-  return NextResponse.json({ received: true });
+    return NextResponse.json(
+      { error: err.message },
+      { status: 500 }
+    );
+  }
 }
