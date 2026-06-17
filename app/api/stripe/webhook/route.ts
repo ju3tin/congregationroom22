@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import dbConnect from "@/lib/db";
 import Order from "@/models/Order";
-import { createTicketsFromOrder } from "@/services/ticketService";
+import Ticket from "@/models/Ticket";
+import { v4 as uuidv4 } from "uuid";
 import { sendTicketEmail } from "@/lib/mailer";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -28,62 +29,89 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
 
-  console.log("📦 EVENT TYPE:", event.type);
+  console.log("📦 EVENT:", event.type);
 
   if (event.type !== "checkout.session.completed") {
-    console.log("⏭ Ignored event");
     return NextResponse.json({ received: true });
   }
 
   const session = event.data.object as Stripe.Checkout.Session;
-
-  const metadata = session.metadata;
-
-  console.log("📊 METADATA:", metadata);
+  const m = session.metadata || {};
 
   try {
     await dbConnect();
 
-    if (!metadata?.orderId) {
-      console.log("❌ Missing orderId in metadata");
-      return NextResponse.json({ error: "Missing orderId" }, { status: 400 });
+    console.log("📊 METADATA:", m);
+
+    // -------------------------
+    // 1. CREATE ORDER (AUTO)
+    // -------------------------
+    const order = await Order.create({
+      orderNumber: session.id,
+      userId: m.userId || "guest",
+      type: "ticket",
+
+      items: [
+        {
+          itemType: "ticket",
+          eventId: m.eventId,
+          tierId: m.tierId,
+          quantity: Number(m.ticketCount || 1),
+          unitPrice: (session.amount_total || 0) / 100,
+          name: m.tierName || "General Admission",
+        },
+      ],
+
+      subtotal: (session.amount_total || 0) / 100,
+      total: (session.amount_total || 0) / 100,
+
+      paypalOrderId: session.id,
+      status: "paid",
+    });
+
+    console.log("🧾 ORDER CREATED:", order._id);
+
+    // -------------------------
+    // 2. CREATE TICKETS
+    // -------------------------
+    const tickets = [];
+
+    const count = Number(m.ticketCount || 1);
+
+    for (let i = 0; i < count; i++) {
+      const ticket = await Ticket.create({
+        ticketCode: uuidv4(),
+        orderId: order._id,
+        eventId: m.eventId,
+        tierId: m.tierId,
+        userId: m.userId || "guest",
+        tierName: m.tierName,
+        eventTitle: m.eventTitle,
+        eventDate: m.eventDate,
+        venue: typeof m.venue === "string"
+          ? m.venue
+          : "TBA",
+        status: "valid",
+      });
+
+      tickets.push(ticket);
     }
 
-    const orderId = metadata.orderId;
+    console.log("🎟 TICKETS CREATED:", tickets.length);
 
-    console.log("🧾 Processing order:", orderId);
-
-    // 1. Update order safely
-    const order = await Order.findByIdAndUpdate(
-      orderId,
-      {
-        status: "paid",
-        stripeSessionId: session.id,
-      },
-      { new: true }
-    );
-
-    if (!order) {
-      throw new Error("Order not found");
-    }
-
-    console.log("✅ Order marked as paid");
-
-    // 2. Create tickets
-    const tickets = await createTicketsFromOrder(orderId);
-
-    console.log("🎟 Tickets created:", tickets.length);
-
-    // 3. Send email
+    // -------------------------
+    // 3. EMAIL (SINGLE EMAIL)
+    // -------------------------
     const email = session.customer_details?.email;
 
-    if (email && tickets.length > 0) {
+    if (email) {
       await sendTicketEmail({
         email,
+        order,
         tickets,
       });
 
-      console.log("📧 Email sent");
+      console.log("📧 EMAIL SENT");
     }
 
     console.log("✅ WEBHOOK COMPLETE");
