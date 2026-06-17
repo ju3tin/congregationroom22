@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import QRCode from "qrcode";
-import { transporter } from "@/lib/mailer";
+import { transporter } from "@/lib/mailer1";
 
 export async function POST(req: NextRequest) {
   try {
