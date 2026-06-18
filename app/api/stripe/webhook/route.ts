@@ -133,7 +133,20 @@ export async function POST(req: NextRequest) {
           ? new Date(m.eventDate)
           : new Date(),
 
-        venue: typeof m.venue === "string" ? m.venue : "TBA",
+       let venue;
+
+        try {
+          venue =
+            typeof m.venue === "string"
+              ? JSON.parse(m.venue)
+              : m.venue;
+        } catch {
+          venue = {
+            name: "TBA",
+            address: "",
+            city: "",
+          };
+        }
 
         status: "valid",
       });
