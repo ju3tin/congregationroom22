@@ -87,7 +87,7 @@ export async function POST(req: NextRequest) {
           eventDate || new Date().toISOString()
         ),
 
-        venue: String(venue || "TBA"),
+       venue: JSON.stringify(event.venue || "TBA"),
       },
     });
 
