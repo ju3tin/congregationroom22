@@ -6,7 +6,7 @@ import { v4 as uuidv4 } from "uuid";
 import dbConnect from "@/lib/db";
 import Order from "@/models/Order";
 import Ticket from "@/models/Ticket";
-import { sendTicketEmail } from "@/lib/mailer2";
+import { sendTicketEmail } from "@/lib/mailer4";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2024-06-20",
