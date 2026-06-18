@@ -43,137 +43,192 @@ export async function POST(req: NextRequest) {
   }
 
   const session = event.data.object as Stripe.Checkout.Session;
-  const m = session.metadata || {};
+const m = session.metadata || {};
 
-  console.log("📦 METADATA:", m);
+console.log("📦 METADATA:", m);
 
-  try {
-    await dbConnect();
+try {
+await dbConnect();
 
-    // ----------------------------
-    // SAFE VALIDATION (IMPORTANT FIX)
-    // ----------------------------
-    const eventId = safeObjectId(m.eventId);
-    const tierId = safeObjectId(m.tierId);
+const eventId = safeObjectId(m.eventId);
+const tierId = safeObjectId(m.tierId);
 
-    if (!eventId) {
-      throw new Error("Missing or invalid eventId in metadata");
-    }
-
-    if (!tierId) {
-      throw new Error("Missing or invalid tierId in metadata");
-    }
-
-    const userId = safeObjectId(m.userId) || SYSTEM_USER_ID;
-
-    const email =
-      session.customer_details?.email || m.email;
-
-    if (!email) {
-      throw new Error("Missing customer email");
-    }
-
-    // ----------------------------
-    // CREATE ORDER
-    // ----------------------------
-    const order = await Order.create({
-      orderNumber: session.id,
-
-      userId,
-
-      type: "ticket",
-
-      paymentProvider: "stripe",
-
-      paymentIntentId: session.payment_intent,
-
-      paypalOrderId: session.id, // required schema workaround
-
-      items: [
-        {
-          itemType: "ticket",
-          eventId,
-          tierId,
-          quantity: Number(m.ticketCount || 1),
-          unitPrice: (session.amount_total || 0) / 100,
-          name: m.tierName || "General Admission",
-        },
-      ],
-
-      subtotal: (session.amount_total || 0) / 100,
-      total: (session.amount_total || 0) / 100,
-
-      status: "paid",
-    });
-
-    console.log("🧾 ORDER CREATED:", order._id);
-
-    // ----------------------------
-    // CREATE TICKETS
-    // ----------------------------
-    const tickets = [];
-    const count = Number(m.ticketCount || 1);
-
-    for (let i = 0; i < count; i++) {
-      const ticket = await Ticket.create({
-        ticketCode: uuidv4(),
-
-        orderId: order._id,
-
-        eventId,
-        tierId,
-
-        userId,
-
-        tierName: m.tierName || "General Admission",
-
-        eventTitle: m.eventTitle || "Event",
-
-        eventDate: m.eventDate
-          ? new Date(m.eventDate)
-          : new Date(),
-
-       let venue;
-
-        try {
-          venue =
-            typeof m.venue === "string"
-              ? JSON.parse(m.venue)
-              : m.venue;
-        } catch {
-          venue = {
-            name: "TBA",
-            address: "",
-            city: "",
-          };
-        }
-
-        status: "valid",
-      });
-
-      tickets.push(ticket);
-    }
-
-    console.log("🎟 TICKETS CREATED:", tickets.length);
-
-    // ----------------------------
-    // EMAIL
-    // ----------------------------
-    await sendTicketEmail({
-      email,
-      order,
-      tickets,
-    });
-
-    console.log("📧 EMAIL SENT");
-
-    return NextResponse.json({ received: true });
-  } catch (err: any) {
-    console.log("❌ WEBHOOK ERROR:", err.message);
-
-    return NextResponse.json(
-      { error: err.message },
-      { status: 500 }
-    );
-  }
+if (!eventId) {
+throw new Error("Missing or invalid eventId in metadata");
 }
+
+if (!tierId) {
+throw new Error("Missing or invalid tierId in metadata");
+}
+
+const userId = safeObjectId(m.userId) || SYSTEM_USER_ID;
+
+const email =
+session.customer_details?.email || m.email;
+
+if (!email) {
+throw new Error("Missing customer email");
+}
+
+// ----------------------------
+// PARSE VENUE
+// ----------------------------
+
+let venue: any;
+
+try {
+venue =
+typeof m.venue === "string"
+? JSON.parse(m.venue)
+: m.venue;
+} catch {
+venue = {
+name: "TBA",
+address: "",
+city: "",
+};
+}
+
+// ----------------------------
+// EVENT DATE
+// ----------------------------
+
+const eventDate = m.eventDate
+? new Date(m.eventDate)
+: new Date();
+
+// ----------------------------
+// CREATE ORDER
+// ----------------------------
+
+const order = await Order.create({
+orderNumber: session.id,
+
+```
+userId,
+
+type: "ticket",
+
+paymentProvider: "stripe",
+
+paymentIntentId: session.payment_intent,
+
+// required by your schema
+paypalOrderId: session.id,
+
+items: [
+  {
+    itemType: "ticket",
+    eventId,
+    tierId,
+    quantity: Number(m.ticketCount || 1),
+    unitPrice:
+      (session.amount_total || 0) / 100,
+    name:
+      m.tierName ||
+      "General Admission",
+  },
+],
+
+subtotal:
+  (session.amount_total || 0) / 100,
+
+total:
+  (session.amount_total || 0) / 100,
+
+status: "paid",
+```
+
+});
+
+console.log(
+"🧾 ORDER CREATED:",
+order._id
+);
+
+// ----------------------------
+// CREATE TICKETS
+// ----------------------------
+
+const tickets = [];
+const count = Number(
+m.ticketCount || 1
+);
+
+for (let i = 0; i < count; i++) {
+const ticket = await Ticket.create({
+ticketCode: uuidv4(),
+
+```
+  orderId: order._id,
+
+  eventId,
+  tierId,
+
+  userId,
+
+  tierName:
+    m.tierName ||
+    "General Admission",
+
+  eventTitle:
+    m.eventTitle || "Event",
+
+  eventDate,
+
+  venue,
+
+  status: "valid",
+});
+
+tickets.push(ticket);
+```
+
+}
+
+console.log(
+"🎟 TICKETS CREATED:",
+tickets.length
+);
+
+// ----------------------------
+// SEND EMAILS
+// ----------------------------
+
+for (const ticket of tickets) {
+await sendTicketEmail({
+email,
+ticketCode: ticket.ticketCode,
+eventTitle:
+ticket.eventTitle,
+eventDate:
+ticket.eventDate,
+venue:
+typeof ticket.venue ===
+"object"
+? `${ticket.venue.name}, ${ticket.venue.address}, ${ticket.venue.city}`
+: ticket.venue,
+});
+}
+
+console.log("📧 EMAIL SENT");
+
+return NextResponse.json({
+received: true,
+});
+} catch (err: any) {
+console.log(
+"❌ WEBHOOK ERROR:",
+err.message
+);
+
+return NextResponse.json(
+{
+error: err.message,
+},
+{
+status: 500,
+}
+);
+}
+
