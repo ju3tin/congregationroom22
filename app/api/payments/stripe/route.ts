@@ -1,5 +1,3 @@
-// app/api/payments/stripe/route.ts
-
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 
@@ -36,9 +34,16 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // ✅ FIX: safely handle venue (NO "event.venue")
+    const safeVenue =
+      typeof venue === "string"
+        ? venue
+        : venue
+        ? JSON.stringify(venue)
+        : "TBA";
+
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
-
       payment_method_types: ["card"],
 
       customer_email: email,
@@ -49,21 +54,17 @@ export async function POST(req: NextRequest) {
         {
           price_data: {
             currency: "usd",
-
             product_data: {
               name: eventTitle || "Event Ticket",
               description: `${ticketCount} Ticket(s)`,
             },
-
             unit_amount: Math.round(price * 100),
           },
-
           quantity: ticketCount || 1,
         },
       ],
 
       success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/events/success?session_id={CHECKOUT_SESSION_ID}`,
-
       cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/events/${eventId}`,
 
       metadata: {
@@ -75,30 +76,17 @@ export async function POST(req: NextRequest) {
         ticketCount: String(ticketCount || 1),
 
         tierId: String(tierId || ""),
-        tierName: String(
-          tierName || "General Admission"
-        ),
+        tierName: String(tierName || "General Admission"),
 
-        eventTitle: String(
-          eventTitle || "Event"
-        ),
+        eventTitle: String(eventTitle || "Event"),
+        eventDate: String(eventDate || new Date().toISOString()),
 
-        eventDate: String(
-          eventDate || new Date().toISOString()
-        ),
-
-       venue: JSON.stringify(event.venue || "TBA"),
+        // ✅ FIXED
+        venue: safeVenue,
       },
     });
 
-    console.log("================================");
-    console.log("🧾 STRIPE SESSION CREATED");
-    console.log("Session:", session.id);
-    console.log("Event:", eventTitle);
-    console.log("Tickets:", ticketCount);
-    console.log("Amount:", price);
-    console.log("User:", userId);
-    console.log("================================");
+    console.log("🧾 STRIPE SESSION CREATED:", session.id);
 
     return NextResponse.json({
       success: true,
@@ -106,8 +94,7 @@ export async function POST(req: NextRequest) {
       url: session.url,
     });
   } catch (err: any) {
-    console.error("❌ Stripe Checkout Error");
-    console.error(err);
+    console.error("❌ Stripe Checkout Error:", err);
 
     return NextResponse.json(
       {
