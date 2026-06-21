@@ -72,7 +72,7 @@ export default function HomePage() {
 
           <div className="relative max-w-7xl mx-auto px-4 py-24">
             <h1 className="text-5xl font-bold mb-6">
-              Music for the People{" "}
+              Music For The People{" "}
               <span className="text-primary">24/7</span>
             </h1>
 
