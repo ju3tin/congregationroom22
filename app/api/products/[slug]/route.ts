@@ -10,8 +10,7 @@ export async function GET(
     await dbConnect();
 
     const product = await Product.findOne({ 
-      slug: params.slug,
-      status: "active" 
+      slug: params.slug 
     }).lean();
 
     if (!product) {
