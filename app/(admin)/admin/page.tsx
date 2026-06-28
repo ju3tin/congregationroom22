@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Calendar, DollarSign, ShoppingBag, Ticket, Users } from "lucide-react"
+import { Calendar, DollarSign, ShoppingBag, Ticket, Users, PoundSterling } from "lucide-react"
 import dbConnect from "@/lib/db"
 import { Event, Order, User, Ticket as TicketModel, Product } from "@/models"
 
@@ -148,7 +148,7 @@ export default async function AdminDashboard() {
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="font-semibold">${order.total.toFixed(2)}</p>
+                    <p className="font-semibold">£{order.total.toFixed(2)}</p>
                     <p className="text-xs text-muted-foreground">
                       {new Date(order.createdAt).toLocaleDateString()}
                     </p>
