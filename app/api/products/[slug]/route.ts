@@ -26,8 +26,8 @@ export async function GET(
       slug: product.slug,
       description: product.description,
       images: product.images || [],
-      variants: product.variants || [],
       category: product.category,
+      variants: product.variants || [],
       status: product.status,
     });
   } catch (error) {
