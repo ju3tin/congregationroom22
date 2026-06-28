@@ -11,7 +11,9 @@ async function getProduct(slug: string) {
   const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/api/products/${slug}`, {
     next: { revalidate: 3600 },
   });
-  return res.ok ? res.json() : null;
+
+  if (!res.ok) return null;
+  return res.json();
 }
 
 export default async function ProductPage({ params }: { params: { slug: string } }) {
@@ -43,45 +45,44 @@ export default async function ProductPage({ params }: { params: { slug: string }
                   priority
                 />
               </div>
+
               {product.images?.length > 1 && (
                 <div className="grid grid-cols-4 gap-3">
                   {product.images.slice(1).map((img: string, i: number) => (
-                    <div key={i} className="relative aspect-square rounded-xl overflow-hidden border cursor-pointer hover:border-primary transition-colors">
-                      <Image src={img} alt={`${product.name} ${i + 2}`} fill className="object-cover" />
+                    <div key={i} className="relative aspect-square rounded-xl overflow-hidden border">
+                      <Image src={img} alt={product.name} fill className="object-cover" />
                     </div>
                   ))}
                 </div>
               )}
             </div>
 
-            {/* Product Info */}
+            {/* Info */}
             <div>
-              <div className="mb-6">
-                <h1 className="text-4xl font-bold mb-2">{product.name}</h1>
-                <p className="text-3xl font-semibold text-primary">
-                  ${product.variants?.[0]?.price?.toFixed(2) || "0.00"}
-                </p>
-              </div>
+              <h1 className="text-4xl font-bold mb-2">{product.name}</h1>
+              <p className="text-3xl font-semibold text-primary mb-6">
+                ${product.variants?.[0]?.price?.toFixed(2) || "0.00"}
+              </p>
 
-              <div className="prose text-muted-foreground mb-8">
+              <div className="prose mb-8">
                 <p>{product.description}</p>
               </div>
 
               {/* Variants */}
-              {product.variants && product.variants.length > 0 && (
+              {product.variants?.length > 0 && (
                 <div className="mb-8">
-                  <h3 className="font-medium mb-3">Variants</h3>
+                  <h3 className="font-medium mb-3">Available Sizes</h3>
                   <div className="grid gap-3">
                     {product.variants.map((variant: any, index: number) => (
                       <Card key={index} className="p-4">
-                        <div className="flex justify-between items-center">
+                        <div className="flex justify-between">
                           <div>
                             <p className="font-medium">{variant.name}</p>
                             <p className="text-sm text-muted-foreground">SKU: {variant.sku}</p>
                           </div>
                           <div className="text-right">
                             <p className="font-semibold">${variant.price}</p>
-                            <p className="text-sm text-muted-foreground">{variant.stock} in stock</p>
+                            <p className="text-sm text-green-600">{variant.stock} in stock</p>
                           </div>
                         </div>
                       </Card>
@@ -90,15 +91,10 @@ export default async function ProductPage({ params }: { params: { slug: string }
                 </div>
               )}
 
-              {/* Add to Cart */}
-              <Button size="lg" className="w-full mb-4 text-lg py-7">
+              <Button size="lg" className="w-full text-lg py-7">
                 <ShoppingCart className="mr-3 h-5 w-5" />
                 Add to Cart
               </Button>
-
-              <p className="text-center text-sm text-muted-foreground">
-                Free shipping on orders over $50
-              </p>
             </div>
           </div>
         </div>
