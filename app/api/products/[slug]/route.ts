@@ -9,9 +9,8 @@ export async function GET(
   try {
     await dbConnect();
 
-    const product = await Product.findOne({ 
-      slug: params.slug 
-    }).lean();
+    const product = await Product.findOne({ slug: params.slug })
+      .lean();
 
     if (!product) {
       return NextResponse.json(
