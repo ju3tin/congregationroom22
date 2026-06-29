@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { ShoppingCart, ArrowLeft, Package } from "lucide-react";
+import { ShoppingCart, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Header } from "@/components/header";
@@ -9,12 +9,13 @@ import { Footer } from "@/components/footer";
 import { LivePlayer } from "@/components/live-player";
 
 async function getProduct(slug: string) {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/api/merch/${slug}`, {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/api/products/${slug}`, {
     next: { revalidate: 3600 },
   });
 
   if (!res.ok) return null;
-  return res.json();
+  const data = await res.json();
+  return data.product || data; // Handle both {success, product} and direct product
 }
 
 export default async function ProductPage({ params }: { params: { slug: string } }) {
@@ -26,7 +27,9 @@ export default async function ProductPage({ params }: { params: { slug: string }
         <Header />
         <main className="pt-20 pb-16">
           <div className="max-w-md mx-auto px-4 text-center py-20">
-            <Package className="mx-auto h-16 w-16 text-muted-foreground mb-6" />
+            <div className="mx-auto w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-6">
+              📦
+            </div>
             <h1 className="text-3xl font-bold mb-3">Product Not Found</h1>
             <p className="text-muted-foreground mb-8">
               Sorry, we couldn't find the product you're looking for.
