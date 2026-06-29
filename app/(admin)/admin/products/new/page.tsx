@@ -37,9 +37,7 @@ export default function NewProductPage() {
 
   const addImage = () => setImages([...images, ""]);
   const removeImage = (index: number) => {
-    if (images.length > 1) {
-      setImages(images.filter((_, i) => i !== index));
-    }
+    if (images.length > 1) setImages(images.filter((_, i) => i !== index));
   };
   const updateImage = (index: number, value: string) => {
     const updated = [...images];
@@ -51,9 +49,7 @@ export default function NewProductPage() {
     setVariants([...variants, { name: "", sku: "", price: 0, stock: 0 }]);
   };
   const removeVariant = (index: number) => {
-    if (variants.length > 1) {
-      setVariants(variants.filter((_, i) => i !== index));
-    }
+    if (variants.length > 1) setVariants(variants.filter((_, i) => i !== index));
   };
   const updateVariant = (index: number, field: keyof Variant, value: string | number) => {
     const updated = [...variants];
@@ -63,14 +59,26 @@ export default function NewProductPage() {
 
   async function handleSubmit(formData: FormData) {
     setLoading(true);
+    console.log("=== SUBMIT STARTED ===");
 
-    formData.append("images", JSON.stringify(images.filter((i) => i.trim() !== "")));
-    formData.append("variants", JSON.stringify(variants));
+    const imageData = images.filter((i) => i.trim() !== "");
+    const variantData = variants;
+
+    console.log("Images:", imageData);
+    console.log("Variants:", variantData);
+
+    formData.append("images", JSON.stringify(imageData));
+    formData.append("variants", JSON.stringify(variantData));
+
+    console.log("FormData prepared. Calling createProduct...");
 
     const result = await createProduct(formData);
 
+    console.log("Result from createProduct:", result);
+
     if (result.error) {
       toast.error(result.error);
+      console.error("Error:", result.error);
     } else {
       toast.success("Product created successfully");
       router.push("/admin/products");
@@ -81,10 +89,7 @@ export default function NewProductPage() {
   return (
     <div className="space-y-8">
       <div className="flex items-center gap-4">
-        <Link
-          href="/admin/products"
-          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
-        >
+        <Link href="/admin/products" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className="h-4 w-4" />
           Back
         </Link>
@@ -139,8 +144,7 @@ export default function NewProductPage() {
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Images</CardTitle>
             <Button type="button" variant="outline" size="sm" onClick={addImage}>
-              <Plus className="mr-2 h-4 w-4" />
-              Add Image
+              <Plus className="mr-2 h-4 w-4" /> Add Image
             </Button>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -172,8 +176,7 @@ export default function NewProductPage() {
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Variants</CardTitle>
             <Button type="button" variant="outline" size="sm" onClick={addVariant}>
-              <Plus className="mr-2 h-4 w-4" />
-              Add Variant
+              <Plus className="mr-2 h-4 w-4" /> Add Variant
             </Button>
           </CardHeader>
           <CardContent className="space-y-6">
