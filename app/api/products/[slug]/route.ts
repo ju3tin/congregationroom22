@@ -9,19 +9,17 @@ export async function GET(
   try {
     await dbConnect();
 
-    console.log("Looking for product with slug:", params.slug); // Debugging
+    const slug = params.slug.trim().toLowerCase(); // Extra safety
 
     const product = await Product.findOne({ 
-      slug: params.slug 
+      slug: slug 
     }).lean();
 
     if (!product) {
-      // Show all products for debugging
-      const allProducts = await Product.find().select("name slug").lean();
       return NextResponse.json({
         error: "Product not found",
-        requestedSlug: params.slug,
-        availableSlugs: allProducts.map(p => ({ name: p.name, slug: p.slug }))
+        requestedSlug: slug,
+        note: "Make sure the URL slug matches exactly"
       }, { status: 404 });
     }
 
