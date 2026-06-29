@@ -58,7 +58,7 @@ export default async function ProductPage({
               Sorry, we couldn't find that product.
             </p>
 
-            <Link href="/products">
+            <Link href="/merch">
               <Button>
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Back to Shop
