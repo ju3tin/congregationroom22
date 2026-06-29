@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { ShoppingCart, ArrowLeft } from "lucide-react";
+import { ShoppingCart, ArrowLeft, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Header } from "@/components/header";
@@ -9,7 +9,7 @@ import { Footer } from "@/components/footer";
 import { LivePlayer } from "@/components/live-player";
 
 async function getProduct(slug: string) {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/api/products/${slug}`, {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/api/merch/${slug}`, {
     next: { revalidate: 3600 },
   });
 
@@ -21,7 +21,28 @@ export default async function ProductPage({ params }: { params: { slug: string }
   const product = await getProduct(params.slug);
 
   if (!product) {
-    notFound();
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="pt-20 pb-16">
+          <div className="max-w-md mx-auto px-4 text-center py-20">
+            <Package className="mx-auto h-16 w-16 text-muted-foreground mb-6" />
+            <h1 className="text-3xl font-bold mb-3">Product Not Found</h1>
+            <p className="text-muted-foreground mb-8">
+              Sorry, we couldn't find the product you're looking for.
+            </p>
+            <Link href="/products">
+              <Button size="lg">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to Shop
+              </Button>
+            </Link>
+          </div>
+        </main>
+        <Footer />
+        <LivePlayer />
+      </div>
+    );
   }
 
   return (
