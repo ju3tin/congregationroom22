@@ -1,47 +1,72 @@
-import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { ShoppingCart, ArrowLeft } from "lucide-react";
+import { ArrowLeft, Package, ShoppingCart } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 import { LivePlayer } from "@/components/live-player";
 
 async function getProduct(slug: string) {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/api/products/${slug}`, {
-    next: { revalidate: 3600 },
-  });
+  const baseUrl =
+    process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
 
-  if (!res.ok) return null;
-  const data = await res.json();
-  return data.product || data; // Handle both {success, product} and direct product
+  try {
+    const res = await fetch(`${baseUrl}/api/merch/${slug}`, {
+      next: { revalidate: 3600 },
+    });
+
+    if (!res.ok) {
+      return null;
+    }
+
+    const data = await res.json();
+
+    // If your API returns:
+    // { success: true, product: {...} }
+    return data.product ?? data;
+  } catch (error) {
+    console.error("Failed to fetch product:", error);
+    return null;
+  }
 }
 
-export default async function ProductPage({ params }: { params: { slug: string } }) {
-  const product = await getProduct(params.slug);
+export default async function ProductPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+
+  const product = await getProduct(slug);
 
   if (!product) {
     return (
       <div className="min-h-screen bg-background">
         <Header />
+
         <main className="pt-20 pb-16">
-          <div className="max-w-md mx-auto px-4 text-center py-20">
-            <div className="mx-auto w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-6">
-              📦
-            </div>
-            <h1 className="text-3xl font-bold mb-3">Product Not Found</h1>
+          <div className="max-w-md mx-auto px-4 py-20 text-center">
+            <Package className="mx-auto h-16 w-16 text-muted-foreground mb-6" />
+
+            <h1 className="text-3xl font-bold mb-3">
+              Product Not Found
+            </h1>
+
             <p className="text-muted-foreground mb-8">
-              Sorry, we couldn't find the product you're looking for.
+              Sorry, we couldn't find that product.
             </p>
+
             <Link href="/products">
-              <Button size="lg">
+              <Button>
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Back to Shop
               </Button>
             </Link>
           </div>
         </main>
+
         <Footer />
         <LivePlayer />
       </div>
@@ -54,60 +79,88 @@ export default async function ProductPage({ params }: { params: { slug: string }
 
       <main className="pt-20 pb-16">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <Link href="/products" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-8">
-            <ArrowLeft className="h-4 w-4" /> Back to Shop
+
+          <Link
+            href="/products"
+            className="inline-flex items-center gap-2 mb-8 text-sm hover:text-primary"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to Shop
           </Link>
 
-          <div className="grid lg:grid-cols-2 gap-12">
+          <div className="grid gap-12 lg:grid-cols-2">
+
             {/* Images */}
-            <div className="space-y-4">
-              <div className="relative aspect-square rounded-2xl overflow-hidden border">
+            <div>
+              <div className="relative aspect-square overflow-hidden rounded-xl border">
                 <Image
                   src={product.images?.[0] || "/placeholder.jpg"}
                   alt={product.name}
                   fill
-                  className="object-cover"
                   priority
+                  className="object-cover"
                 />
               </div>
 
               {product.images?.length > 1 && (
-                <div className="grid grid-cols-4 gap-3">
-                  {product.images.slice(1).map((img: string, i: number) => (
-                    <div key={i} className="relative aspect-square rounded-xl overflow-hidden border">
-                      <Image src={img} alt={product.name} fill className="object-cover" />
+                <div className="grid grid-cols-4 gap-3 mt-4">
+                  {product.images.slice(1).map((image: string, index: number) => (
+                    <div
+                      key={index}
+                      className="relative aspect-square overflow-hidden rounded-lg border"
+                    >
+                      <Image
+                        src={image}
+                        alt={product.name}
+                        fill
+                        className="object-cover"
+                      />
                     </div>
                   ))}
                 </div>
               )}
             </div>
 
-            {/* Product Info */}
+            {/* Details */}
             <div>
-              <h1 className="text-4xl font-bold mb-2">{product.name}</h1>
-              <p className="text-3xl font-semibold text-primary mb-6">
-                ${product.variants?.[0]?.price?.toFixed(2) || "0.00"}
+
+              <h1 className="text-4xl font-bold">
+                {product.name}
+              </h1>
+
+              <p className="mt-4 text-3xl font-bold text-primary">
+                £{product.variants?.[0]?.price?.toFixed(2) ?? "0.00"}
               </p>
 
-              <div className="prose text-muted-foreground mb-8">
-                <p>{product.description}</p>
-              </div>
+              <p className="mt-6 text-muted-foreground">
+                {product.description}
+              </p>
 
-              {/* Variants */}
-              {product.variants && product.variants.length > 0 && (
-                <div className="mb-8">
-                  <h3 className="font-medium mb-3">Variants</h3>
-                  <div className="grid gap-3">
-                    {product.variants.map((variant: any, index: number) => (
-                      <Card key={index} className="p-4">
-                        <div className="flex justify-between items-center">
+              {product.variants?.length > 0 && (
+                <div className="mt-8">
+                  <h2 className="mb-4 text-lg font-semibold">
+                    Available Variants
+                  </h2>
+
+                  <div className="space-y-3">
+                    {product.variants.map((variant: any) => (
+                      <Card key={variant.sku} className="p-4">
+                        <div className="flex items-center justify-between">
                           <div>
                             <p className="font-medium">{variant.name}</p>
-                            <p className="text-sm text-muted-foreground">SKU: {variant.sku}</p>
+                            <p className="text-sm text-muted-foreground">
+                              SKU: {variant.sku}
+                            </p>
                           </div>
+
                           <div className="text-right">
-                            <p className="font-semibold">${variant.price}</p>
-                            <p className="text-sm text-green-600">{variant.stock} in stock</p>
+                            <p className="font-semibold">
+                              £{variant.price.toFixed(2)}
+                            </p>
+
+                            <p className="text-sm text-green-600">
+                              {variant.stock} in stock
+                            </p>
                           </div>
                         </div>
                       </Card>
@@ -116,11 +169,13 @@ export default async function ProductPage({ params }: { params: { slug: string }
                 </div>
               )}
 
-              <Button size="lg" className="w-full text-lg py-7">
-                <ShoppingCart className="mr-3 h-5 w-5" />
+              <Button className="w-full h-14 mt-8">
+                <ShoppingCart className="mr-2 h-5 w-5" />
                 Add to Cart
               </Button>
+
             </div>
+
           </div>
         </div>
       </main>
