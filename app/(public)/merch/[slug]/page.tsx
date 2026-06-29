@@ -81,7 +81,7 @@ export default async function ProductPage({
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
 
           <Link
-            href="/products"
+            href="/merch"
             className="inline-flex items-center gap-2 mb-8 text-sm hover:text-primary"
           >
             <ArrowLeft className="h-4 w-4" />
