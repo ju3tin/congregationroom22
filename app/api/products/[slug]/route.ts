@@ -9,35 +9,18 @@ export async function GET(
   try {
     await dbConnect();
 
-    const slug = params.slug.trim().toLowerCase(); // Extra safety
-
-    const product = await Product.findOne({ 
-      slug: slug 
-    }).lean();
+    const product = await Product.findOne({ slug: params.slug }).lean();
 
     if (!product) {
-      return NextResponse.json({
+      return NextResponse.json({ 
         error: "Product not found",
-        requestedSlug: slug,
-        note: "Make sure the URL slug matches exactly"
+        slug: params.slug 
       }, { status: 404 });
     }
 
-    return NextResponse.json({
-      _id: product._id.toString(),
-      name: product.name,
-      slug: product.slug,
-      description: product.description,
-      images: product.images || [],
-      category: product.category,
-      status: product.status,
-      variants: product.variants || [],
-    });
+    return NextResponse.json(product);
   } catch (error) {
-    console.error("Product API Error:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch product" }, 
-      { status: 500 }
-    );
+    console.error(error);
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }
