@@ -34,7 +34,7 @@ export default async function ProductsPage() {
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {products.length > 0 ? (
               products.map((product: any) => (
-                <Link key={product._id} href={`/products/${product.slug}`}>
+                <Link key={product._id} href={`/merch/${product.slug}`}>
                   <Card className="group overflow-hidden bg-card hover:bg-secondary/30 transition-colors border-border h-full flex flex-col">
                     <CardContent className="p-0 flex flex-col h-full">
                       <div className="relative aspect-square overflow-hidden">
