@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
+import { LivePlayer } from "@/components/live-player";
 
 async function getProduct(slug: string) {
   const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/api/products/${slug}`, {
@@ -57,25 +58,25 @@ export default async function ProductPage({ params }: { params: { slug: string }
               )}
             </div>
 
-            {/* Info */}
+            {/* Product Info */}
             <div>
               <h1 className="text-4xl font-bold mb-2">{product.name}</h1>
               <p className="text-3xl font-semibold text-primary mb-6">
                 ${product.variants?.[0]?.price?.toFixed(2) || "0.00"}
               </p>
 
-              <div className="prose mb-8">
+              <div className="prose text-muted-foreground mb-8">
                 <p>{product.description}</p>
               </div>
 
               {/* Variants */}
-              {product.variants?.length > 0 && (
+              {product.variants && product.variants.length > 0 && (
                 <div className="mb-8">
-                  <h3 className="font-medium mb-3">Available Sizes</h3>
+                  <h3 className="font-medium mb-3">Variants</h3>
                   <div className="grid gap-3">
                     {product.variants.map((variant: any, index: number) => (
                       <Card key={index} className="p-4">
-                        <div className="flex justify-between">
+                        <div className="flex justify-between items-center">
                           <div>
                             <p className="font-medium">{variant.name}</p>
                             <p className="text-sm text-muted-foreground">SKU: {variant.sku}</p>
@@ -101,6 +102,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
       </main>
 
       <Footer />
+      <LivePlayer />
     </div>
   );
 }
