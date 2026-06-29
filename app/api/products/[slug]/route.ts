@@ -9,18 +9,33 @@ export async function GET(
   try {
     await dbConnect();
 
-    const product = await Product.findOne({ slug: params.slug }).lean();
+    const product = await Product.findOne({ 
+      slug: params.slug,
+      status: "active" 
+    }).lean();
 
     if (!product) {
-      return NextResponse.json({ 
-        error: "Product not found",
-        slug: params.slug 
-      }, { status: 404 });
+      return NextResponse.json(
+        { error: "Product not found" }, 
+        { status: 404 }
+      );
     }
 
-    return NextResponse.json(product);
+    return NextResponse.json({
+      _id: product._id.toString(),
+      name: product.name,
+      slug: product.slug,
+      description: product.description,
+      images: product.images || [],
+      category: product.category,
+      status: product.status,
+      variants: product.variants || [],
+    });
   } catch (error) {
-    console.error(error);
-    return NextResponse.json({ error: "Server error" }, { status: 500 });
+    console.error("Product API Error:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch product" }, 
+      { status: 500 }
+    );
   }
 }
