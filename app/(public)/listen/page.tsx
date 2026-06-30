@@ -22,21 +22,13 @@ export default function ListenPage() {
         <section className="relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-background to-background" />
           
-          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
-            <div className="max-w-3xl">
-              <Badge variant="secondary" className="mb-4">DAB Digital Radio</Badge>
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
-                Listen to Congregation Room 22
-              </h1>
-              <p className="text-lg text-muted-foreground mb-8">
-                Tune in anywhere, anytime. Find us on DAB digital radio across major cities, 
-                stream online, or use our mobile apps.
-              </p>
-              <Button size="lg" className="bg-primary hover:bg-primary/90">
-                <Radio className="w-5 h-5 mr-2" />
-                Start Listening Now
-              </Button>
-            </div>
+       <iframe
+        src="https://reductions-roommate-junction-removable.trycloudflare.com"
+        title="Embedded App"
+        className="w-full h-full border-0"
+        allow="clipboard-read; clipboard-write; fullscreen"
+        loading="lazy"
+      />
           </div>
         </section>
 
