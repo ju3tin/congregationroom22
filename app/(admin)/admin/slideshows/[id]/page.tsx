@@ -5,7 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { updateSlideshow, getSlideshow } from "@/app/actions/slideshows";
+import { updateSlideshow, getSlideshow, deleteSlideshow } from "@/app/actions/slideshows";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,6 +19,7 @@ export default function EditSlideshowPage() {
   const id = params.id as string;
 
   const [loading, setLoading] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
 
   const [form, setForm] = useState({
@@ -79,10 +80,25 @@ export default function EditSlideshowPage() {
     if (result.error) {
       toast.error(result.error);
     } else {
-      toast.success("Slideshow updated");
+      toast.success("Slideshow updated successfully");
       router.push("/admin/slideshows");
     }
     setLoading(false);
+  }
+
+  async function handleDelete() {
+    if (!confirm("Are you sure you want to delete this slideshow?")) return;
+
+    setDeleting(true);
+    const result = await deleteSlideshow(id);
+
+    if (result.error) {
+      toast.error(result.error);
+    } else {
+      toast.success("Slideshow deleted");
+      router.push("/admin/slideshows");
+    }
+    setDeleting(false);
   }
 
   if (initialLoading) return <div className="p-12 text-center">Loading...</div>;
@@ -162,13 +178,24 @@ export default function EditSlideshowPage() {
         </CardContent>
       </Card>
 
-      <div className="flex justify-end gap-4">
-        <Button type="button" variant="outline" asChild>
-          <Link href="/admin/slideshows">Cancel</Link>
+      <div className="flex justify-between">
+        <Button 
+          type="button" 
+          variant="destructive" 
+          onClick={handleDelete}
+          disabled={deleting}
+        >
+          {deleting ? "Deleting..." : "Delete Slideshow"}
         </Button>
-        <Button type="submit" disabled={loading}>
-          {loading ? "Saving..." : "Update Slideshow"}
-        </Button>
+
+        <div className="flex gap-4">
+          <Button type="button" variant="outline" asChild>
+            <Link href="/admin/slideshows">Cancel</Link>
+          </Button>
+          <Button type="submit" disabled={loading}>
+            {loading ? "Saving..." : "Update Slideshow"}
+          </Button>
+        </div>
       </div>
     </form>
   );
