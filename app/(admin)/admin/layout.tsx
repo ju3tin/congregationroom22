@@ -26,6 +26,7 @@ const adminNav = [
   { name: "Settings", href: "/admin/settings", icon: Settings },
   { name: "DJ's", href: "/admin/dj", icon: Music2 },
   { name: "Mixes", href: "/admin/mixes", icon: Music2 },
+  { name: "Slideshows", href: "/admin/slideshows", icon: Tag },
   { name: "Schedule", href: "/admin/schedule", icon: Settings },
 ]
 
