@@ -5,7 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
-import { updateMix, getMix, deleteMix } from "@/actions/mixes";   // ← Make sure path is correct
+import { updateMix, getMix, deleteMix } from "@/app/actions/mixes";   // ← Make sure path is correct
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
