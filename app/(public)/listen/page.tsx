@@ -46,7 +46,7 @@ export default function ListenPage() {
       <main className="pb-20">
         {/* Hero */}
         <section className="relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-background to-background" />
+        
            <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
        <iframe
         src="https://reductions-roommate-junction-removable.trycloudflare.com"
