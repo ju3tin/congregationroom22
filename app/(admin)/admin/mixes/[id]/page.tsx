@@ -5,7 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
-import { updateMix, getMix } from "@/app/actions/mixes";
+import { updateMix, getMix, deleteMix } from "@/actions/mixes";   // ← Make sure path is correct
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,9 +26,9 @@ export default function EditMixPage() {
   const id = params.id as string;
 
   const [loading, setLoading] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [djs, setDjs] = useState([]);
-
   const [form, setForm] = useState({
     title: "",
     slug: "",
@@ -81,16 +81,32 @@ export default function EditMixPage() {
   async function handleSubmit(formData: FormData) {
     setLoading(true);
     formData.append("featured", form.featured.toString());
-
     const result = await updateMix(id, formData);
 
     if (result.error) {
       toast.error(result.error);
     } else {
       toast.success("Mix updated successfully");
-      router.push("/admin/mixes");
+      router.refresh();
     }
     setLoading(false);
+  }
+
+  async function handleDelete() {
+    if (!confirm("Are you sure you want to delete this mix? This action cannot be undone.")) {
+      return;
+    }
+
+    setDeleting(true);
+    const result = await deleteMix(id);
+
+    if (result.error) {
+      toast.error(result.error);
+    } else {
+      toast.success("Mix deleted successfully");
+      router.push("/admin/mixes");
+    }
+    setDeleting(false);
   }
 
   if (initialLoading) return <div className="p-12 text-center">Loading mix...</div>;
@@ -142,7 +158,6 @@ export default function EditMixPage() {
               <Label>Audio URL (relative or full)</Label>
               <Input name="audioUrl" value={form.audioUrl} onChange={(e) => setForm({ ...form, audioUrl: e.target.value })} required />
             </div>
-
             <div>
               <Label>Cover Image URL (relative or full)</Label>
               <Input name="coverImage" value={form.coverImage} onChange={(e) => setForm({ ...form, coverImage: e.target.value })} required />
@@ -155,19 +170,33 @@ export default function EditMixPage() {
           <CardHeader><CardTitle>Featured on Homepage</CardTitle></CardHeader>
           <CardContent>
             <div className="flex items-center gap-3">
-              <Switch checked={form.featured} onCheckedChange={(checked) => setForm({ ...form, featured: checked })} />
+              <Switch 
+                checked={form.featured} 
+                onCheckedChange={(checked) => setForm({ ...form, featured: checked })} 
+              />
               <Label>Feature this mix on homepage</Label>
             </div>
           </CardContent>
         </Card>
 
-        <div className="flex justify-end gap-4">
-          <Button type="button" variant="outline" asChild>
-            <Link href="/admin/mixes">Cancel</Link>
+        <div className="flex justify-between">
+          <Button 
+            type="button" 
+            variant="destructive" 
+            onClick={handleDelete}
+            disabled={deleting}
+          >
+            {deleting ? "Deleting..." : "Delete Mix"}
           </Button>
-          <Button type="submit" disabled={loading}>
-            {loading ? "Updating..." : "Update Mix"}
-          </Button>
+
+          <div className="flex gap-4">
+            <Button type="button" variant="outline" asChild>
+              <Link href="/admin/mixes">Cancel</Link>
+            </Button>
+            <Button type="submit" disabled={loading}>
+              {loading ? "Updating..." : "Update Mix"}
+            </Button>
+          </div>
         </div>
       </form>
     </div>
