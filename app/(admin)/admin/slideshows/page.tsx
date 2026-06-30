@@ -3,7 +3,7 @@ import { Plus, Edit, Trash2, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { getSlideshows, deleteSlideshow } from "@/actions/slideshows";
+import { getSlideshows, deleteSlideshow } from "@/app/actions/slideshows";
 
 export default async function AdminSlideshowsPage() {
   const slideshows = await getSlideshows();
