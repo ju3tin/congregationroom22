@@ -9,9 +9,11 @@ import { Footer } from "@/components/footer";
 import { LivePlayer } from "@/components/live-player";
 
 async function getProducts() {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/api/products`, {
-    next: { revalidate: 3600 }, // Cache for 1 hour
-  });
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/api/products`, 
+                         // {
+    //next: { revalidate: 3600 }, // Cache for 1 hour
+  //}
+                         );
   return res.ok ? res.json() : [];
 }
 
