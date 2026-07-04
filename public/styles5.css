@@ -1,0 +1,101 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #2c3e50, #3498db);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.container {
+    width: 100%;
+    max-width: 600px;
+    padding: 20px;
+}
+
+.maintenance-box {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 40px;
+    border-radius: 15px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.maintenance-icon {
+    position: relative;
+    width: 100px;
+    height: 100px;
+    margin: 0 auto 30px;
+}
+
+.hammer {
+    position: absolute;
+    width: 50px;
+    height: 50px;
+    background: #e74c3c;
+    border-radius: 50% 0 50% 50%;
+    transform: rotate(-45deg);
+    animation: hammer 2s infinite;
+}
+
+.wrench {
+    position: absolute;
+    width: 50px;
+    height: 50px;
+    background: #3498db;
+    border-radius: 50% 0 50% 50%;
+    transform: rotate(45deg);
+    animation: wrench 2s infinite;
+}
+
+h1 {
+    color: #2c3e50;
+    margin-bottom: 20px;
+    font-size: 2.5em;
+}
+
+p {
+    color: #34495e;
+    font-size: 1.2em;
+    margin-bottom: 20px;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 10px;
+    background: #ecf0f1;
+    border-radius: 5px;
+    overflow: hidden;
+    margin-bottom: 20px;
+}
+
+.progress {
+    width: 0%;
+    height: 100%;
+    background: linear-gradient(90deg, #3498db, #2ecc71);
+    border-radius: 5px;
+    transition: width 1s ease-in-out;
+}
+
+.estimated-time {
+    color: #7f8c8d;
+    font-size: 1.1em;
+}
+
+@keyframes hammer {
+    0% { transform: rotate(-45deg) translate(0, 0); }
+    50% { transform: rotate(-45deg) translate(20px, -20px); }
+    100% { transform: rotate(-45deg) translate(0, 0); }
+}
+
+@keyframes wrench {
+    0% { transform: rotate(45deg) translate(0, 0); }
+    50% { transform: rotate(45deg) translate(-20px, -20px); }
+    100% { transform: rotate(45deg) translate(0, 0); }
+}
