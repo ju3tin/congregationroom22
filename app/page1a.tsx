@@ -10,7 +10,7 @@ import { djs, events, mixes } from "@/data/radio-data"
  
 export default function HomePage() {
   const featuredDjs = djs.slice(0, 4)
-  const upcomingEvents = events.slice(0, 2)
+  const upcomingEvents = events.slice(0, 2) 
   const latestMixes = mixes.slice(0, 3)
 
   return (
