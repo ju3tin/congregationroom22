@@ -15,7 +15,7 @@ export async function GET() {
         { status: 500 }
       );
     }
-
+ 
     const path = "public/images";
 
     const response = await fetch(
