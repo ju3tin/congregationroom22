@@ -35,7 +35,7 @@ export async function GET() {
       .filter((file: any) => file.type === "file")
       .map((file: any) => ({
         name: file.name,
-        url: `https://congregationroom22.com/images/${file.name}`,
+        url: `https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/${GITHUB_BRANCH}/public/images/${file.name}`,
         githubUrl: file.html_url,
         downloadUrl: file.download_url,
         size: file.size,
