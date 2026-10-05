@@ -44,6 +44,46 @@ export default function GitHubImagesPage() {
     }
   }
 
+  async function deleteFile(file: GitHubFile) {
+    const confirmed = window.confirm(
+      `Are you sure you want to delete "${file.name}"?\n\nThis will permanently delete the image from GitHub.`
+    );
+  
+    if (!confirmed) {
+      return;
+    }
+  
+    setError("");
+    setMessage("");
+  
+    try {
+      const response = await fetch("/api/github/images", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          path: file.path,
+          sha: file.sha,
+        }),
+      });
+  
+      const data = await response.json();
+  
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to delete image");
+      }
+  
+      setMessage(`Deleted ${file.name} successfully.`);
+  
+      await loadFiles();
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Failed to delete image"
+      );
+    }
+  }
+
   useEffect(() => {
     loadFiles();
   }, []);
@@ -263,25 +303,33 @@ export default function GitHubImagesPage() {
                     {formatBytes(file.size)}
                   </p>
 
-                  <div className="mt-4 flex gap-2">
-                    <a
-                      href={file.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-center text-xs font-semibold text-gray-700 hover:bg-gray-50"
-                    >
-                      GitHub
-                    </a>
+                  <div className="mt-4 grid grid-cols-3 gap-2">
+  <a
+    href={file.url}
+    target="_blank"
+    rel="noopener noreferrer"
+    className="rounded-lg border border-gray-300 px-3 py-2 text-center text-xs font-semibold text-gray-700 hover:bg-gray-50"
+  >
+    GitHub
+  </a>
 
-                    <a
-                      href={file.download_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex-1 rounded-lg bg-black px-3 py-2 text-center text-xs font-semibold text-white hover:bg-gray-800"
-                    >
-                      View
-                    </a>
-                  </div>
+  <a
+    href={file.url}
+    target="_blank"
+    rel="noopener noreferrer"
+    className="rounded-lg bg-black px-3 py-2 text-center text-xs font-semibold text-white hover:bg-gray-800"
+  >
+    View
+  </a>
+
+  <button
+    type="button"
+    onClick={() => deleteFile(file)}
+    className="rounded-lg bg-red-600 px-3 py-2 text-xs font-semibold text-white hover:bg-red-700"
+  >
+    Delete
+  </button>
+</div>
                 </div>
               </div>
             ))}
