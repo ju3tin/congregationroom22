@@ -179,14 +179,14 @@ export default function HeroSlider() {
               {slide.content}
             </p>
           )}
-
-          <button
+{/* */}
+          {/* <button
             type="button"
             className="inline-flex items-center rounded-lg bg-primary px-6 py-3 text-lg font-semibold text-white transition hover:opacity-90"
-          >
-            <Radio className="mr-2 h-5 w-5" />
-            Listen Live
-          </button>
+          > */}
+            {/* <Radio className="mr-2 h-5 w-5" /> */}
+            {/* Listen Live */}
+            {/* </button> */}
         </div>
       </div>
 
