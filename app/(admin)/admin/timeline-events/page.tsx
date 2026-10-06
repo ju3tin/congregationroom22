@@ -191,7 +191,7 @@ export default function TimelineEventsPage() {
           <div className="overflow-hidden rounded-xl border  shadow-sm">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
-                <thead className="border-b bg-gray-50">
+                <thead className="border-b">
                   <tr>
                     <th className="px-5 py-4 font-semibold">
                       Date
