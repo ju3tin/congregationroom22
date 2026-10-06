@@ -1,24 +1,36 @@
 import Link from "next/link";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { getEvents } from "@/app/actions/events"; // Adjust path if needed
+
+import DeleteEventButton from "@/components/admin/DeleteEventButton";
+
+import { getEvents } from "@/app/actions/events";
 
 export default async function AdminEventsPage() {
-  const events = await getEvents(); // Make sure this function exists in your actions
+  const events = await getEvents();
 
   return (
     <div className="space-y-8">
-      <div className="flex justify-between items-center">
+      {/* Header */}
+      <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Events</h1>
-          <p className="text-muted-foreground mt-1">Manage your events</p>
+
+          <p className="mt-1 text-muted-foreground">
+            Manage your events
+          </p>
         </div>
+
         <Button asChild>
-          <Link href="/admin/events/new">+ New Event</Link>
+          <Link href="/admin/events/new">
+            + New Event
+          </Link>
         </Button>
       </div>
 
+      {/* Events */}
       <div className="grid gap-6">
         {events.length > 0 ? (
           events.map((event: any) => {
@@ -26,42 +38,70 @@ export default async function AdminEventsPage() {
             const isUpcoming = eventDate > new Date();
 
             return (
-              <Card key={event._id} className="hover:shadow-md transition-shadow">
-                <CardContent className="p-6 flex gap-6">
+              <Card
+                key={event._id}
+                className="transition-shadow hover:shadow-md"
+              >
+                <CardContent className="flex gap-6 p-6">
                   {/* Image */}
-                  <div className="relative w-32 h-32 rounded-lg overflow-hidden flex-shrink-0">
-                    <img
-                      src={event.image}
-                      alt={event.title}
-                      className="object-cover w-full h-full"
-                    />
+                  <div className="relative h-32 w-32 flex-shrink-0 overflow-hidden rounded-lg">
+                    {event.image ? (
+                      <img
+                        src={event.image}
+                        alt={event.title}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center bg-muted text-sm text-muted-foreground">
+                        No image
+                      </div>
+                    )}
                   </div>
 
                   {/* Content */}
-                  <div className="flex-1 min-w-0">
+                  <div className="min-w-0 flex-1">
                     <div className="flex items-start justify-between gap-4">
+                      {/* Event details */}
                       <div>
-                        <h3 className="text-xl font-semibold line-clamp-2">{event.title}</h3>
-                        <p className="text-muted-foreground mt-1">
-                          {event.venue?.name} • {event.venue?.city}
+                        <h3 className="line-clamp-2 text-xl font-semibold">
+                          {event.title}
+                        </h3>
+
+                        <p className="mt-1 text-muted-foreground">
+                          {event.venue?.name}{" "}
+                          •{" "}
+                          {event.venue?.city}
                         </p>
                       </div>
 
+                      {/* Status */}
                       <div className="flex flex-col items-end gap-2">
-                        <Badge variant={event.status === "published" ? "default" : "secondary"}>
+                        <Badge
+                          variant={
+                            event.status === "published"
+                              ? "default"
+                              : "secondary"
+                          }
+                        >
                           {event.status}
                         </Badge>
+
                         {event.featured && (
-                          <Badge variant="outline" className="text-amber-600 border-amber-600">
+                          <Badge
+                            variant="outline"
+                            className="border-amber-600 text-amber-600"
+                          >
                             Featured
                           </Badge>
                         )}
                       </div>
                     </div>
 
+                    {/* Date / Time */}
                     <div className="mt-4 flex items-center gap-6 text-sm text-muted-foreground">
                       <div className="flex items-center gap-2">
                         <span>📅</span>
+
                         {eventDate.toLocaleDateString("en-US", {
                           weekday: "short",
                           month: "short",
@@ -69,21 +109,57 @@ export default async function AdminEventsPage() {
                           year: "numeric",
                         })}
                       </div>
+
                       <div className="flex items-center gap-2">
                         <span>⏰</span>
-                        {eventDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+
+                        {eventDate.toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
                       </div>
+
+                      {isUpcoming && (
+                        <Badge variant="outline">
+                          Upcoming
+                        </Badge>
+                      )}
                     </div>
 
+                    {/* Actions */}
                     <div className="mt-6 flex gap-3">
-                      <Button variant="outline" size="sm" asChild>
-                        <Link href={`/admin/events/${event._id}`}>Edit</Link>
+                      {/* Edit */}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        asChild
+                      >
+                        <Link
+                          href={`/admin/events/${event._id}`}
+                        >
+                          Edit
+                        </Link>
                       </Button>
-                      <Button variant="outline" size="sm" asChild>
-                        <Link href={`/events/${event.slug}`} target="_blank">
+
+                      {/* Public event */}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        asChild
+                      >
+                        <Link
+                          href={`/events/${event.slug}`}
+                          target="_blank"
+                        >
                           View Public
                         </Link>
                       </Button>
+
+                      {/* Delete */}
+                      <DeleteEventButton
+                        eventId={String(event._id)}
+                        eventTitle={event.title}
+                      />
                     </div>
                   </div>
                 </CardContent>
@@ -91,10 +167,16 @@ export default async function AdminEventsPage() {
             );
           })
         ) : (
-          <div className="text-center py-20 border rounded-xl">
-            <p className="text-muted-foreground text-lg">No events found.</p>
+          /* No events */
+          <div className="rounded-xl border py-20 text-center">
+            <p className="text-lg text-muted-foreground">
+              No events found.
+            </p>
+
             <Button asChild className="mt-4">
-              <Link href="/admin/events/new">Create Your First Event</Link>
+              <Link href="/admin/events/new">
+                Create Your First Event
+              </Link>
             </Button>
           </div>
         )}
