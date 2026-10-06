@@ -138,13 +138,43 @@ export default function HeroSlider() {
               : "pointer-events-none opacity-0"
           }`}
         >
-          {item.image && (
-            <img
-              src={item.image}
-              alt={item.title}
-              className="absolute inset-0 h-full w-full object-cover"
-            />
-          )}
+          {slideshow.slides.map((item, index) => (
+  <div
+    key={item._id || index}
+    className={`absolute inset-0 transition-opacity duration-700 ${
+      index === current
+        ? "opacity-100"
+        : "pointer-events-none opacity-0"
+    }`}
+  >
+    {/* FULL IMAGE - NO CROPPING */}
+    {item.image && (
+      <div className="absolute inset-0 flex items-center justify-center bg-black">
+        <img
+          src={item.image}
+          alt={item.title}
+          className="h-full w-full object-contain"
+        />
+      </div>
+    )}
+
+    {/* Optional background */}
+    {item.background && (
+      <div
+        className="absolute inset-0"
+        style={{
+          background: item.background,
+        }}
+      />
+    )}
+
+    {/* Dark overlay */}
+    <div className="absolute inset-0 bg-black/30" />
+
+    {/* Gradient */}
+    <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/20 to-transparent" />
+  </div>
+))}
 
           {/* Optional background */}
           {item.background && (
