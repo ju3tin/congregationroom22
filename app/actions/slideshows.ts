@@ -108,6 +108,7 @@ export async function createSlideshow(formData: FormData) {
 // ====================== UPDATE ======================
 export async function updateSlideshow(id: string, formData: FormData) {
   const session = await auth();
+
   if (!session?.user?.id || session.user.role !== "admin") {
     return { error: "Unauthorized" };
   }
@@ -115,45 +116,117 @@ export async function updateSlideshow(id: string, formData: FormData) {
   const slidesJson = formData.get("slides") as string;
 
   let slides;
+
   try {
     slides = JSON.parse(slidesJson || "[]");
   } catch {
     return { error: "Invalid slides data" };
   }
 
+  const title = String(formData.get("title") || "").trim();
+
+  const slug = String(formData.get("slug") || "")
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, "-");
+
+  const description = String(formData.get("description") || "");
+
+  const theme = String(formData.get("theme") || "black");
+
+  // IMPORTANT:
+  // FormData values are strings, so explicitly convert them to booleans.
+  const isPublic = formData.get("isPublic") === "true";
+  const featured = formData.get("featured") === "true";
+
+  console.log("Updating slideshow:", {
+    id,
+    title,
+    slug,
+    isPublic,
+    featured,
+  });
+
   const rawData = {
-    title: formData.get("title") as string,
-    slug: (formData.get("slug") as string).toLowerCase().trim().replace(/\s+/g, "-"),
-    description: formData.get("description") as string,
+    title,
+    slug,
+    description,
     slides,
-    theme: formData.get("theme") as string || "black",
-    isPublic: formData.get("isPublic") === "true",
-    featured: formData.get("featured") === "true",
+    theme,
+    isPublic,
+    featured,
   };
 
   const result = slideshowSchema.safeParse(rawData);
+
   if (!result.success) {
-    return { error: result.error.errors[0].message };
+    console.error("Slideshow validation error:", result.error);
+
+    return {
+      error: result.error.errors[0].message,
+    };
   }
 
   try {
     await dbConnect();
 
+    // Make sure another slideshow isn't using this slug
     const existing = await Slideshow.findOne({
       slug: result.data.slug,
       _id: { $ne: id },
     });
-    if (existing) return { error: "A slideshow with this slug already exists" };
 
-    await Slideshow.findByIdAndUpdate(id, result.data);
+    if (existing) {
+      return {
+        error: "A slideshow with this slug already exists",
+      };
+    }
+
+    // Explicitly update the fields
+    const updated = await Slideshow.findByIdAndUpdate(
+      id,
+      {
+        $set: {
+          title: result.data.title,
+          slug: result.data.slug,
+          description: result.data.description,
+          slides: result.data.slides,
+          theme: result.data.theme,
+          isPublic: result.data.isPublic,
+          featured: result.data.featured,
+        },
+      },
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
+
+    if (!updated) {
+      return {
+        error: "Slideshow not found",
+      };
+    }
+
+    console.log("Slideshow updated:", {
+      id: updated._id.toString(),
+      isPublic: updated.isPublic,
+      featured: updated.featured,
+    });
 
     revalidatePath("/admin/slideshows");
     revalidatePath("/slideshows");
-    revalidatePath(`/slideshows/${result.data.slug}`);
-    return { success: true };
+    revalidatePath(`/slideshows/${updated.slug}`);
+
+    return {
+      success: true,
+    };
   } catch (error) {
     console.error("Update slideshow error:", error);
-    return { error: "Failed to update slideshow" };
+
+    return {
+      error: "Failed to update slideshow",
+    };
   }
 }
 
