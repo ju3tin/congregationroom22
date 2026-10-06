@@ -62,12 +62,6 @@ declare global {
   interface Window {
     TL?: any;
 
-    instgrm?: {
-      Embeds?: {
-        process?: () => void;
-      };
-    };
-
     tiktokEmbed?: {
       lib?: {
         render?: () => void;
@@ -76,31 +70,60 @@ declare global {
   }
 }
 
+const TIMELINE_JS =
+  "https://cdn.knightlab.com/libs/timeline3/latest/js/timeline.js";
+
+const TIMELINE_CSS =
+  "https://cdn.knightlab.com/libs/timeline3/latest/css/timeline.css";
+
+const TIKTOK_JS =
+  "https://www.tiktok.com/embed.js";
+
+/* -------------------------------------------------------------------------- */
+/* Script loader                                                               */
+/* -------------------------------------------------------------------------- */
+
 function loadScript(
   id: string,
   src: string
 ): Promise<void> {
   return new Promise((resolve, reject) => {
-    const existing = document.getElementById(id);
+    const existing =
+      document.getElementById(id);
 
     if (existing) {
-      if ((existing as HTMLScriptElement).dataset.loaded === "true") {
+      const script =
+        existing as HTMLScriptElement;
+
+      if (
+        script.dataset.loaded === "true"
+      ) {
         resolve();
         return;
       }
 
-      existing.addEventListener("load", () => resolve(), {
-        once: true,
-      });
+      script.addEventListener(
+        "load",
+        () => resolve(),
+        { once: true }
+      );
 
-      existing.addEventListener("error", () => reject(), {
-        once: true,
-      });
+      script.addEventListener(
+        "error",
+        () =>
+          reject(
+            new Error(
+              `Failed to load ${src}`
+            )
+          ),
+        { once: true }
+      );
 
       return;
     }
 
-    const script = document.createElement("script");
+    const script =
+      document.createElement("script");
 
     script.id = id;
     script.src = src;
@@ -113,7 +136,9 @@ function loadScript(
 
     script.onerror = () => {
       reject(
-        new Error(`Failed to load ${src}`)
+        new Error(
+          `Failed to load ${src}`
+        )
       );
     };
 
@@ -121,15 +146,22 @@ function loadScript(
   });
 }
 
+/* -------------------------------------------------------------------------- */
+/* Stylesheet                                                                  */
+/* -------------------------------------------------------------------------- */
+
 function loadStylesheet(
   id: string,
   href: string
 ) {
-  if (document.getElementById(id)) {
+  if (
+    document.getElementById(id)
+  ) {
     return;
   }
 
-  const link = document.createElement("link");
+  const link =
+    document.createElement("link");
 
   link.id = id;
   link.rel = "stylesheet";
@@ -138,30 +170,78 @@ function loadStylesheet(
   document.head.appendChild(link);
 }
 
-function getYouTubeId(url: string): string | null {
-  try {
-    const parsed = new URL(url);
+/* -------------------------------------------------------------------------- */
+/* YouTube                                                                     */
+/* -------------------------------------------------------------------------- */
 
-    if (parsed.hostname === "youtu.be") {
-      return parsed.pathname
-        .replace("/", "")
-        .split("?")[0];
+function getYouTubeId(
+  url: string
+): string | null {
+  try {
+    const parsed =
+      new URL(url);
+
+    const hostname =
+      parsed.hostname.toLowerCase();
+
+    if (
+      hostname === "youtu.be" ||
+      hostname === "www.youtu.be"
+    ) {
+      return (
+        parsed.pathname
+          .replace(/^\/+/, "")
+          .split("/")[0]
+          .split("?")[0] || null
+      );
     }
 
     if (
-      parsed.hostname === "youtube.com" ||
-      parsed.hostname === "www.youtube.com"
+      hostname === "youtube.com" ||
+      hostname === "www.youtube.com" ||
+      hostname === "m.youtube.com"
     ) {
-      if (parsed.pathname === "/watch") {
-        return parsed.searchParams.get("v");
+      if (
+        parsed.pathname === "/watch"
+      ) {
+        return (
+          parsed.searchParams.get(
+            "v"
+          ) || null
+        );
       }
 
-      if (parsed.pathname.startsWith("/embed/")) {
-        return parsed.pathname.split("/")[2];
+      if (
+        parsed.pathname.startsWith(
+          "/embed/"
+        )
+      ) {
+        return (
+          parsed.pathname
+            .split("/")[2] || null
+        );
       }
 
-      if (parsed.pathname.startsWith("/shorts/")) {
-        return parsed.pathname.split("/")[2];
+      if (
+        parsed.pathname.startsWith(
+          "/shorts/"
+        )
+      ) {
+        return (
+          parsed.pathname
+            .split("/")[2] || null
+        );
+      }
+
+      if (
+        parsed.pathname.startsWith(
+          "/live/"
+        )
+      ) {
+        return (
+          parsed.pathname
+            .split("/")[2] || null
+        );
       }
     }
 
@@ -171,50 +251,223 @@ function getYouTubeId(url: string): string | null {
   }
 }
 
-function getInstagramUrl(url: string) {
-  return (
-    url
-      .split("?")[0]
-      .replace(/\/$/, "") + "/"
-  );
-}
+/* -------------------------------------------------------------------------- */
+/* Instagram URL                                                               */
+/* -------------------------------------------------------------------------- */
 
-function getTikTokId(url: string): string | null {
+function getInstagramEmbedUrl(
+  url: string
+): string | null {
   try {
-    const parsed = new URL(url);
+    const parsed =
+      new URL(url);
+
+    const hostname =
+      parsed.hostname
+        .toLowerCase()
+        .replace(/^www\./, "");
+
+    if (
+      hostname !==
+      "instagram.com"
+    ) {
+      return null;
+    }
 
     const match =
-      parsed.pathname.match(/\/video\/(\d+)/);
+      parsed.pathname.match(
+        /^\/(p|reel|tv)\/([^/]+)/
+      );
 
-    return match?.[1] || null;
+    if (!match) {
+      return null;
+    }
+
+    const type =
+      match[1];
+
+    const shortcode =
+      match[2];
+
+    return (
+      `https://www.instagram.com/` +
+      `${type}/${encodeURIComponent(
+        shortcode
+      )}/embed/`
+    );
   } catch {
     return null;
   }
 }
 
-function createMedia(media?: TimelineMedia) {
+/* -------------------------------------------------------------------------- */
+/* Instagram media                                                             */
+/* -------------------------------------------------------------------------- */
+
+function createInstagramHTML(
+  url: string
+): string {
+  const embedUrl =
+    getInstagramEmbedUrl(url);
+
+  if (!embedUrl) {
+    return `
+      <div
+        style="
+          padding:20px;
+          font-family:Arial,Helvetica,sans-serif;
+        "
+      >
+        Invalid Instagram URL
+      </div>
+    `;
+  }
+
+  return `
+    <div
+      style="
+        width:100%;
+        max-width:605px;
+        margin:0 auto;
+        display:flex;
+        justify-content:center;
+      "
+    >
+
+      <iframe
+        src="${embedUrl}"
+        width="100%"
+        height="700"
+        frameborder="0"
+        scrolling="no"
+        allowtransparency="true"
+        allow="encrypted-media"
+        loading="lazy"
+        style="
+          display:block;
+          width:100%;
+          max-width:540px;
+          height:700px;
+          border:0;
+          border-radius:12px;
+          background:#ffffff;
+        "
+        title="Instagram post"
+      ></iframe>
+
+    </div>
+  `;
+}
+
+/* -------------------------------------------------------------------------- */
+/* TikTok                                                                      */
+/* -------------------------------------------------------------------------- */
+
+function getTikTokId(
+  url: string
+): string | null {
+  try {
+    const parsed =
+      new URL(url);
+
+    const match =
+      parsed.pathname.match(
+        /\/video\/(\d+)/
+      );
+
+    return (
+      match?.[1] || null
+    );
+  } catch {
+    return null;
+  }
+}
+
+function createTikTokHTML(
+  url: string
+): string {
+  const videoId =
+    getTikTokId(url);
+
+  if (!videoId) {
+    return `
+      <div
+        style="
+          padding:20px;
+          text-align:center;
+        "
+      >
+        <a
+          href="${url}"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          View this TikTok
+        </a>
+      </div>
+    `;
+  }
+
+  return `
+    <blockquote
+      class="tiktok-embed"
+      cite="${url}"
+      data-video-id="${videoId}"
+      style="
+        max-width:605px;
+        min-width:325px;
+        margin:0 auto;
+      "
+    >
+      <section>
+        <a
+          href="${url}"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          View this TikTok
+        </a>
+      </section>
+    </blockquote>
+  `;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Create TimelineJS media                                                     */
+/* -------------------------------------------------------------------------- */
+
+function createMedia(
+  media?: TimelineMedia
+): any {
   if (!media) {
     return undefined;
   }
 
-  /*
-   * Normal image
-   */
-  if (media.type === "image") {
+  /* IMAGE */
+
+  if (
+    media.type === "image"
+  ) {
     return {
       url: media.url,
-      caption: media.caption || "",
-      credit: media.credit || "",
+
+      caption:
+        media.caption || "",
+
+      credit:
+        media.credit || "",
     };
   }
 
-  /*
-   * YouTube
-   *
-   * TimelineJS natively understands YouTube URLs.
-   */
-  if (media.type === "youtube") {
-    const videoId = getYouTubeId(media.url);
+  /* YOUTUBE */
+
+  if (
+    media.type === "youtube"
+  ) {
+    const videoId =
+      getYouTubeId(
+        media.url
+      );
 
     if (!videoId) {
       return {
@@ -223,168 +476,194 @@ function createMedia(media?: TimelineMedia) {
     }
 
     return {
-      url: `https://www.youtube.com/watch?v=${videoId}`,
+      url:
+        `https://www.youtube.com/watch?v=${videoId}`,
     };
   }
 
-  /*
-   * Instagram
-   */
-  if (media.type === "instagram") {
-    const instagramUrl =
-      getInstagramUrl(media.url);
+  /* INSTAGRAM */
+
+  if (
+    media.type === "instagram"
+  ) {
+    /*
+     * IMPORTANT
+     *
+     * We use the MEDIA area of TimelineJS,
+     * just like TikTok.
+     *
+     * But we do NOT give TimelineJS the
+     * real Instagram URL.
+     *
+     * The actual Instagram URL only exists
+     * inside our custom iframe.
+     */
 
     return {
-      url: instagramUrl,
-
-      html: `
-        <blockquote
-          class="instagram-media"
-          data-instgrm-permalink="${instagramUrl}"
-          data-instgrm-version="14"
-          style="
-            background:#FFF;
-            border:0;
-            border-radius:3px;
-            box-shadow:
-              0 0 1px 0 rgba(0,0,0,0.5),
-              0 1px 10px 0 rgba(0,0,0,0.15);
-            margin:1px;
-            max-width:540px;
-            min-width:326px;
-            padding:0;
-            width:calc(100% - 2px);
-          "
-        ></blockquote>
-      `,
+      url:
+        "https://www.example.com/",
+      html:
+        createInstagramHTML(
+          media.url
+        ),
     };
   }
 
-  /*
-   * TikTok
-   */
-  if (media.type === "tiktok") {
-    const videoId = getTikTokId(media.url);
+  /* TIKTOK */
 
-    if (!videoId) {
-      return {
-        url: media.url,
-      };
-    }
-
+  if (
+    media.type === "tiktok"
+  ) {
     return {
       url: media.url,
 
-      html: `
-        <blockquote
-          class="tiktok-embed"
-          cite="${media.url}"
-          data-video-id="${videoId}"
-          style="
-            max-width:605px;
-            min-width:325px;
-          "
-        >
-          <section>
-            <a
-              target="_blank"
-              href="${media.url}"
-            >
-              View this TikTok
-            </a>
-          </section>
-        </blockquote>
-      `,
+      html:
+        createTikTokHTML(
+          media.url
+        ),
     };
   }
 
   return undefined;
 }
 
+/* -------------------------------------------------------------------------- */
+/* Convert events                                                              */
+/* -------------------------------------------------------------------------- */
+
 function convertEvents(
   events: TimelineEvent[]
 ) {
-  return events.map((event, index) => {
-    const slide: any = {
-      unique_id:
-        event.id || `timeline-${index}`,
+  return events.map(
+    (event, index) => {
+      const slide: any = {
+        unique_id:
+          event.id ||
+          `timeline-${index}`,
 
-      start_date: {
-        year: event.start_date.year,
-      },
+        start_date: {
+          year:
+            event.start_date.year,
+        },
 
-      text: {
-        headline: event.title,
-        text: event.text || "",
-      },
-    };
+        text: {
+          headline:
+            event.title,
 
-    if (event.start_date.month) {
-      slide.start_date.month =
-        event.start_date.month;
-    }
-
-    if (event.start_date.day) {
-      slide.start_date.day =
-        event.start_date.day;
-    }
-
-    if (event.start_date.hour) {
-      slide.start_date.hour =
-        event.start_date.hour;
-    }
-
-    if (event.start_date.minute) {
-      slide.start_date.minute =
-        event.start_date.minute;
-    }
-
-    if (event.end_date) {
-      slide.end_date = {
-        year: event.end_date.year,
+          text:
+            event.text || "",
+        },
       };
 
-      if (event.end_date.month) {
-        slide.end_date.month =
-          event.end_date.month;
+      /* START DATE */
+
+      if (
+        event.start_date.month
+      ) {
+        slide.start_date.month =
+          event.start_date.month;
       }
 
-      if (event.end_date.day) {
-        slide.end_date.day =
-          event.end_date.day;
+      if (
+        event.start_date.day
+      ) {
+        slide.start_date.day =
+          event.start_date.day;
       }
 
-      if (event.end_date.hour) {
-        slide.end_date.hour =
-          event.end_date.hour;
+      if (
+        event.start_date.hour
+      ) {
+        slide.start_date.hour =
+          event.start_date.hour;
       }
 
-      if (event.end_date.minute) {
-        slide.end_date.minute =
-          event.end_date.minute;
+      if (
+        event.start_date.minute
+      ) {
+        slide.start_date.minute =
+          event.start_date.minute;
       }
+
+      /* END DATE */
+
+      if (
+        event.end_date
+      ) {
+        slide.end_date = {
+          year:
+            event.end_date.year,
+        };
+
+        if (
+          event.end_date.month
+        ) {
+          slide.end_date.month =
+            event.end_date.month;
+        }
+
+        if (
+          event.end_date.day
+        ) {
+          slide.end_date.day =
+            event.end_date.day;
+        }
+
+        if (
+          event.end_date.hour
+        ) {
+          slide.end_date.hour =
+            event.end_date.hour;
+        }
+
+        if (
+          event.end_date.minute
+        ) {
+          slide.end_date.minute =
+            event.end_date.minute;
+        }
+      }
+
+      /* GROUP */
+
+      if (
+        event.group
+      ) {
+        slide.group =
+          event.group;
+      }
+
+      /* BACKGROUND */
+
+      if (
+        event.background
+      ) {
+        slide.background = {
+          color:
+            event.background,
+        };
+      }
+
+      /* MEDIA */
+
+      const media =
+        createMedia(
+          event.media
+        );
+
+      if (media) {
+        slide.media =
+          media;
+      }
+
+      return slide;
     }
-
-    if (event.group) {
-      slide.group = event.group;
-    }
-
-    if (event.background) {
-      slide.background = {
-        color: event.background,
-      };
-    }
-
-    const media =
-      createMedia(event.media);
-
-    if (media) {
-      slide.media = media;
-    }
-
-    return slide;
-  });
+  );
 }
+
+/* -------------------------------------------------------------------------- */
+/* TimelineJS component                                                        */
+/* -------------------------------------------------------------------------- */
 
 export default function TimelineJS({
   events,
@@ -392,207 +671,206 @@ export default function TimelineJS({
   className = "",
 }: TimelineJSProps) {
   const containerRef =
-    useRef<HTMLDivElement>(null);
+    useRef<HTMLDivElement>(
+      null
+    );
 
   const timelineRef =
     useRef<any>(null);
 
-  /*
-   * Load TimelineJS from Knight Lab.
-   */
+  /* Load CSS */
+
   useEffect(() => {
     loadStylesheet(
       "timelinejs-css",
-      "https://cdn.knightlab.com/libs/timeline3/latest/css/timeline.css"
+      TIMELINE_CSS
     );
+  }, []);
 
+  /* Load TikTok */
+
+  useEffect(() => {
     loadScript(
-      "timelinejs-script",
-      "https://cdn.knightlab.com/libs/timeline3/latest/js/timeline.js"
+      "tiktok-embed-js",
+      TIKTOK_JS
     ).catch((error) => {
       console.error(
-        "TimelineJS failed to load:",
+        "TikTok script failed:",
         error
       );
     });
   }, []);
 
-  /*
-   * Load Instagram.
-   */
-  useEffect(() => {
-    loadScript(
-      "instagram-embed-script",
-      "https://www.instagram.com/embed.js"
-    ).catch((error) => {
+  /* Process TikTok */
+
+  function processTikTokEmbeds() {
+    try {
+      if (
+        window.tiktokEmbed
+          ?.lib?.render
+      ) {
+        window.tiktokEmbed.lib.render();
+      }
+    } catch (error) {
       console.error(
-        "Instagram embed failed:",
+        "TikTok processing error:",
         error
       );
-    });
-  }, []);
+    }
+  }
 
-  /*
-   * Load TikTok.
-   */
+  /* Initialise */
+
   useEffect(() => {
-    loadScript(
-      "tiktok-embed-script",
-      "https://www.tiktok.com/embed.js"
-    ).catch((error) => {
-      console.error(
-        "TikTok embed failed:",
-        error
-      );
-    });
-  }, []);
+    let cancelled =
+      false;
 
-  /*
-   * Create TimelineJS after the CDN library
-   * has loaded.
-   */
-  useEffect(() => {
-    let cancelled = false;
-
-    async function createTimeline() {
-      if (!containerRef.current) {
+    async function initialise() {
+      if (
+        !containerRef.current
+      ) {
         return;
       }
 
       try {
         await loadScript(
           "timelinejs-script",
-          "https://cdn.knightlab.com/libs/timeline3/latest/js/timeline.js"
+          TIMELINE_JS
         );
 
-        if (cancelled) {
+        if (
+          cancelled
+        ) {
           return;
         }
 
-        if (!window.TL?.Timeline) {
+        if (
+          !window.TL?.Timeline
+        ) {
           console.error(
-            "TimelineJS loaded but TL.Timeline is unavailable."
+            "TimelineJS did not initialise."
           );
 
           return;
         }
 
-        /*
-         * Destroy existing timeline.
-         */
-        if (timelineRef.current) {
+        /* Destroy old timeline */
+
+        if (
+          timelineRef.current
+        ) {
           try {
             timelineRef.current.destroy();
-          } catch {
-            // Ignore
-          }
+          } catch {}
 
-          timelineRef.current = null;
+          timelineRef.current =
+            null;
         }
 
-        /*
-         * Clear container.
-         */
-        containerRef.current.innerHTML = "";
+        /* Clear */
 
-        /*
-         * Convert our events to TimelineJS data.
-         */
+        containerRef.current.innerHTML =
+          "";
+
+        /* Data */
+
         const data = {
-          events: convertEvents(events),
+          events:
+            convertEvents(
+              events
+            ),
         };
 
-        /*
-         * Create TimelineJS.
-         */
+        /* Create */
+
         timelineRef.current =
           new window.TL.Timeline(
             containerRef.current,
             data,
             {
-              height,
-
-              hash_bookmark: false,
-
-              initial_zoom: 2,
+              hash_bookmark:
+                false,
 
               timenav_position:
                 "bottom",
 
-              start_at_end: false,
+              start_at_end:
+                false,
 
-              debug: false,
+              initial_zoom:
+                2,
+
+              debug:
+                false,
+
+              language:
+                "en",
+
+              scale_factor:
+                2,
             }
           );
 
         /*
-         * Give the social embed libraries
-         * time to process the new DOM.
+         * TikTok needs time to render
+         * its blockquote.
          */
-        window.setTimeout(() => {
-          processSocialEmbeds();
-        }, 1000);
+
+        window.setTimeout(
+          () => {
+            if (
+              !cancelled
+            ) {
+              processTikTokEmbeds();
+            }
+          },
+          1500
+        );
+
+        window.setTimeout(
+          () => {
+            if (
+              !cancelled
+            ) {
+              processTikTokEmbeds();
+            }
+          },
+          3000
+        );
 
       } catch (error) {
         console.error(
-          "Failed to create TimelineJS:",
+          "TimelineJS error:",
           error
         );
       }
     }
 
-    createTimeline();
+    initialise();
 
     return () => {
-      cancelled = true;
+      cancelled =
+        true;
 
-      if (timelineRef.current) {
+      if (
+        timelineRef.current
+      ) {
         try {
           timelineRef.current.destroy();
-        } catch {
-          // Ignore
-        }
+        } catch {}
 
-        timelineRef.current = null;
+        timelineRef.current =
+          null;
       }
     };
-  }, [events, height]);
-
-  /*
-   * Process Instagram and TikTok embeds.
-   */
-  function processSocialEmbeds() {
-    try {
-      if (
-        window.instgrm?.Embeds?.process
-      ) {
-        window.instgrm.Embeds.process();
-      }
-    } catch (error) {
-      console.error(
-        "Instagram processing failed:",
-        error
-      );
-    }
-
-    try {
-      if (
-        window.tiktokEmbed?.lib?.render
-      ) {
-        window.tiktokEmbed.lib.render();
-      }
-    } catch (error) {
-      console.error(
-        "TikTok processing failed:",
-        error
-      );
-    }
-  }
+  }, [events]);
 
   return (
     <div
       className={`w-full overflow-hidden ${className}`}
-      style={{ height }}
+      style={{
+        height,
+      }}
     >
       <div
         ref={containerRef}
