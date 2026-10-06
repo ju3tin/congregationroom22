@@ -7,6 +7,7 @@ import DJ from "@/models/DJ";
 import Event from "@/models/Event";
 import Mix from "@/models/Mix";
 
+
 export async function GET() {
   try {
     await dbConnect();
@@ -15,7 +16,7 @@ export async function GET() {
       await Promise.all([
         DJ.find({ featured: true })
           .sort({ createdAt: -1 })
-          .limit(6)
+          .limit(18)
           .lean(),
 
         Event.find({
