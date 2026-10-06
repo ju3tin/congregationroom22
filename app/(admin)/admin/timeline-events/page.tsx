@@ -171,7 +171,7 @@ export default function TimelineEventsPage() {
         )}
 
         {events.length === 0 ? (
-          <div className="rounded-xl border bg-white p-12 text-center shadow-sm">
+          <div className="rounded-xl border  p-12 text-center shadow-sm">
             <h2 className="text-lg font-semibold">
               No timeline events
             </h2>
@@ -188,7 +188,7 @@ export default function TimelineEventsPage() {
             </Link>
           </div>
         ) : (
-          <div className="overflow-hidden rounded-xl border bg-white shadow-sm">
+          <div className="overflow-hidden rounded-xl border  shadow-sm">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
                 <thead className="border-b bg-gray-50">
