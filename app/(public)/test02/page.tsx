@@ -1,4 +1,6 @@
 import Slideshow from "@/components/SlideShow";
+import HeroSlider from "@/components/HeroSlider";
+
 
 export default function Home() {
   const slides = [
@@ -21,11 +23,8 @@ export default function Home() {
 
   return (
     <main className="mx-auto max-w-5xl p-6">
-      <Slideshow
-        slides={slides}
-        autoPlay={true}
-        interval={5000}
-      />
+        <HeroSlider />
+     
     </main>
   );
 }
