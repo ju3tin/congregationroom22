@@ -323,15 +323,60 @@ export default function EditSlideshowPage() {
               </div>
 
               <Switch
-                checked={form.isPublic}
-                onCheckedChange={(checked) =>
-                  setForm({
-                    ...form,
-                    isPublic: checked,
-                  })
-                }
-                name="isPublic"
-              />
+  checked={form.isPublic}
+  onCheckedChange={async (checked) => {
+    // Update UI immediately
+    setForm((prev) => ({
+      ...prev,
+      isPublic: checked,
+    }));
+
+    try {
+      const response = await fetch(
+        `/api/slideshows/${id}/visibility`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            isPublic: checked,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.error || "Failed to update visibility"
+        );
+      }
+
+      console.log("Visibility saved:", data);
+
+      toast.success(
+        checked
+          ? "Slideshow is now public"
+          : "Slideshow is now private"
+      );
+    } catch (error) {
+      console.error(error);
+
+      // Revert UI if database update failed
+      setForm((prev) => ({
+        ...prev,
+        isPublic: !checked,
+      }));
+
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to update visibility"
+      );
+    }
+  }}
+/>
 
               <input
                 type="hidden"
