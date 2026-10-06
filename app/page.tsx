@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from "react";
+import HeroSection from "@/components/HeroSection";
 import Link from "next/link";
 import Image from "next/image";
 import axios from "axios";
@@ -67,7 +68,8 @@ export default function HomePage() {
 
       <main className="pb-20">
         {/* HERO */}
-        <section className="relative overflow-hidden">
+        <HeroSection />
+        {/* <section className="relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-background to-background" />
 
           <div className="relative max-w-7xl mx-auto px-4 py-24">
