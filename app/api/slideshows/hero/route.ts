@@ -1,5 +1,7 @@
+// app/api/slideshows/hero/route.ts
+
 import { NextResponse } from "next/server";
-import  dbConnect from "@/lib/db";
+import dbConnect from "@/lib/db";
 import Slideshow from "@/models/Slideshow";
 
 export async function GET() {
@@ -9,22 +11,43 @@ export async function GET() {
     const slideshow = await Slideshow.findOne({
       slug: "hero",
       isPublic: true,
-    }).lean();
+    })
+      .lean()
+      .exec();
 
     if (!slideshow) {
       return NextResponse.json(
-        { error: "Hero slideshow not found" },
-        { status: 404 }
+        {
+          error: "No public hero slideshow found",
+        },
+        {
+          status: 404,
+        }
       );
     }
 
-    return NextResponse.json(slideshow);
+    return NextResponse.json(
+      {
+        success: true,
+        slideshow,
+      },
+      {
+        status: 200,
+        headers: {
+          "Cache-Control": "no-store",
+        },
+      }
+    );
   } catch (error) {
     console.error("Hero slideshow API error:", error);
 
     return NextResponse.json(
-      { error: "Failed to load slideshow" },
-      { status: 500 }
+      {
+        error: "Failed to load hero slideshow",
+      },
+      {
+        status: 500,
+      }
     );
   }
 }

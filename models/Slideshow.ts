@@ -1,3 +1,5 @@
+// models/Slideshow.ts
+
 import mongoose, { Schema, Document, Model, Types } from "mongoose";
 
 export interface ISlide {
@@ -7,7 +9,7 @@ export interface ISlide {
   background?: string;
   transition?: string;
   notes?: string;
-  timer?: number;        // seconds (0 = manual)
+  timer?: number;
 }
 
 export interface ISlideshow extends Document {
@@ -23,30 +25,91 @@ export interface ISlideshow extends Document {
   updatedAt: Date;
 }
 
-const SlideSchema = new Schema({
-  title: { type: String, required: true },
-  content: { type: String, required: true },
-  image: String,
-  background: String,
-  transition: { type: String, default: "slide" },
-  notes: String,
-  timer: { type: Number, default: 0 },
-});
+const SlideSchema = new Schema<ISlide>(
+  {
+    title: {
+      type: String,
+      required: true,
+    },
+
+    content: {
+      type: String,
+      required: true,
+    },
+
+    image: {
+      type: String,
+    },
+
+    background: {
+      type: String,
+    },
+
+    transition: {
+      type: String,
+      default: "slide",
+    },
+
+    notes: {
+      type: String,
+    },
+
+    timer: {
+      type: Number,
+      default: 0,
+    },
+  },
+  {
+    _id: true,
+  }
+);
 
 const SlideshowSchema = new Schema<ISlideshow>(
   {
-    title: { type: String, required: true },
-    slug: { type: String, required: true, unique: true },
-    description: String,
-    slides: [SlideSchema],
-    theme: { type: String, default: "black" },
-    isPublic: { type: Boolean, default: true },
-    featured: { type: Boolean, default: false },
+    title: {
+      type: String,
+      required: true,
+    },
+
+    slug: {
+      type: String,
+      required: true,
+      unique: true,
+      index: true,
+    },
+
+    description: {
+      type: String,
+    },
+
+    slides: {
+      type: [SlideSchema],
+      default: [],
+    },
+
+    theme: {
+      type: String,
+      default: "black",
+    },
+
+    isPublic: {
+      type: Boolean,
+      default: true,
+      index: true,
+    },
+
+    featured: {
+      type: Boolean,
+      default: false,
+    },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+  }
 );
 
 const Slideshow: Model<ISlideshow> =
-  mongoose.models.Slideshow || mongoose.model<ISlideshow>("Slideshow", SlideshowSchema);
+  mongoose.models.Slideshow ||
+  mongoose.model<ISlideshow>("Slideshow", SlideshowSchema);
 
 export default Slideshow;
