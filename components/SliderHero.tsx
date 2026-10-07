@@ -65,7 +65,7 @@ export default function HeroSection() {
       ))}
 
       {/* Dark overlay */}
-      <div className="absolute inset-0 bg-black/50" />
+      <div className="absolute inset-0 z-10 bg-black/10" />
 
       {/* Existing gradient */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/30 via-background/60 to-background/80" />
