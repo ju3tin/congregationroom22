@@ -303,7 +303,7 @@ export default function TimelineEventForm({
               onChange={(e) => setId(e.target.value)}
               disabled={mode === "edit"}
               placeholder="youtube-test"
-              className="w-full rounded-lg border px-3 py-2.5 disabled:bg-gray-100"
+              className="w-full rounded-lg border px-3 py-2.5 disabled"
             />
 
             <p className="mt-1 text-xs text-gray-500">
