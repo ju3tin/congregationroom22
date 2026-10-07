@@ -287,7 +287,7 @@ export default function TimelineEventForm({
       )}
 
       {/* BASIC */}
-      <section className="rounded-xl border bg-white p-6 shadow-sm">
+      <section className="rounded-xl border  p-6 shadow-sm">
         <h2 className="mb-5 text-lg font-semibold">
           Event
         </h2>
@@ -354,7 +354,7 @@ export default function TimelineEventForm({
       </section>
 
       {/* START DATE */}
-      <section className="rounded-xl border bg-white p-6 shadow-sm">
+      <section className="rounded-xl border  p-6 shadow-sm">
         <h2 className="mb-2 text-lg font-semibold">
           Start date
         </h2>
@@ -409,7 +409,7 @@ export default function TimelineEventForm({
       </section>
 
       {/* END DATE */}
-      <section className="rounded-xl border bg-white p-6 shadow-sm">
+      <section className="rounded-xl border  p-6 shadow-sm">
         <div className="flex items-center justify-between gap-4">
           <div>
             <h2 className="text-lg font-semibold">
@@ -480,7 +480,7 @@ export default function TimelineEventForm({
       </section>
 
       {/* MEDIA */}
-      <section className="rounded-xl border bg-white p-6 shadow-sm">
+      <section className="rounded-xl border  p-6 shadow-sm">
         <div className="flex items-center justify-between gap-4">
           <div>
             <h2 className="text-lg font-semibold">
@@ -581,7 +581,7 @@ export default function TimelineEventForm({
       </section>
 
       {/* BACKGROUND */}
-      <section className="rounded-xl border bg-white p-6 shadow-sm">
+      <section className="rounded-xl border  p-6 shadow-sm">
         <div className="flex items-center justify-between gap-4">
           <div>
             <h2 className="text-lg font-semibold">
