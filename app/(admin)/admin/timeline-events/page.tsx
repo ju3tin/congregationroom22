@@ -245,14 +245,14 @@ export default function TimelineEventsPage() {
                       </td>
 
                       <td className="px-5 py-4">
-                        <code className="rounded bg-gray-100 px-2 py-1 text-xs">
+                        <code className="rounded bg-black-100 px-2 py-1 text-xs">
                           {event.id}
                         </code>
                       </td>
 
                       <td className="px-5 py-4">
                         {event.media ? (
-                          <span className="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium capitalize">
+                          <span className="rounded-full bg-black-100 px-2.5 py-1 text-xs font-medium capitalize">
                             {event.media.type}
                           </span>
                         ) : (
@@ -270,7 +270,7 @@ export default function TimelineEventsPage() {
                         <div className="flex justify-end gap-2">
                           <Link
                             href={`/admin/timeline-events/${event.id}/edit`}
-                            className="rounded-lg border px-3 py-2 text-xs font-medium hover:bg-gray-100"
+                            className="rounded-lg border px-3 py-2 text-xs font-medium hover:bg-black-100"
                           >
                             Edit
                           </Link>
