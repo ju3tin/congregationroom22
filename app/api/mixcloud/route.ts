@@ -1,21 +1,30 @@
 import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(
-  request: NextRequest
-) {
-  const url = request.nextUrl.searchParams.get("url");
+export async function GET(request: NextRequest) {
+  const apiUrl = request.nextUrl.searchParams.get("url");
 
-  if (!url) {
+  if (!apiUrl) {
     return NextResponse.json(
-      {
-        error: "Missing Mixcloud URL",
-      },
+      { error: "Missing Mixcloud URL" },
       { status: 400 }
     );
   }
 
   try {
-    const response = await fetch(url, {
+    // Only allow Mixcloud API URLs
+    const parsedUrl = new URL(apiUrl);
+
+    if (parsedUrl.hostname !== "api.mixcloud.com") {
+      return NextResponse.json(
+        { error: "Invalid Mixcloud URL" },
+        { status: 400 }
+      );
+    }
+
+    const embedUrl =
+      apiUrl.replace(/\/+$/, "") + "/embed-html/";
+
+    const response = await fetch(embedUrl, {
       headers: {
         Accept: "text/html",
         "User-Agent": "Mozilla/5.0",
@@ -34,17 +43,31 @@ export async function GET(
 
     const html = await response.text();
 
-    return new NextResponse(html, {
-      headers: {
-        "Content-Type": "text/html; charset=utf-8",
-        "Cache-Control": "public, max-age=300",
-      },
+    // Extract iframe src
+    const match = html.match(
+      /<iframe[^>]+src=["']([^"']+)["']/i
+    );
+
+    if (!match?.[1]) {
+      console.error("Mixcloud embed HTML:", html);
+
+      return NextResponse.json(
+        {
+          error: "No iframe found in Mixcloud response",
+        },
+        { status: 500 }
+      );
+    }
+
+    const iframeUrl = match[1]
+      .replace(/&amp;/g, "&")
+      .replace(/&#x2F;/g, "/");
+
+    return NextResponse.json({
+      iframeUrl,
     });
   } catch (error) {
-    console.error(
-      "Mixcloud proxy error:",
-      error
-    );
+    console.error("Mixcloud API error:", error);
 
     return NextResponse.json(
       {

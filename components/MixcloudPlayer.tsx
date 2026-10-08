@@ -1,115 +1,69 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 interface MixcloudPlayerProps {
   apiUrl: string;
   height?: number;
   color?: string;
-  width?: string | number;
-  hideCover?: boolean;
-  hideTracklist?: boolean;
-  mini?: boolean;
-  light?: boolean;
+}
+
+interface MixcloudApiResponse {
+  iframeUrl?: string;
+  error?: string;
 }
 
 export default function MixcloudPlayer({
   apiUrl,
   height = 180,
   color = "2563eb",
-  width = "100%",
-  hideCover = false,
-  hideTracklist = false,
-  mini = false,
-  light = false,
 }: MixcloudPlayerProps) {
-  const [iframeSrc, setIframeSrc] = useState<string | null>(null);
+  const [iframeUrl, setIframeUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const mounted = useRef(true);
-
   useEffect(() => {
-    mounted.current = true;
+    if (!apiUrl) {
+      setError("Missing Mixcloud URL");
+      return;
+    }
 
-    return () => {
-      mounted.current = false;
-    };
-  }, []);
-
-  useEffect(() => {
     async function loadPlayer() {
-      if (!apiUrl) {
-        setError("Missing Mixcloud API URL");
-        return;
-      }
-
       try {
         setError(null);
-        setIframeSrc(null);
+        setIframeUrl(null);
 
-        // Make sure we are using the API show URL
-        const cleanUrl = apiUrl.replace(/\/+$/, "");
+        const response = await fetch(
+          `/api/mixcloud?url=${encodeURIComponent(apiUrl)}`
+        );
 
-        const embedUrl =
-          `${cleanUrl}/embed-html/` +
-          `?width=${encodeURIComponent(String(width))}` +
-          `&height=${encodeURIComponent(String(height))}` +
-          `&color=${encodeURIComponent(color)}` +
-          `&hide_cover=${hideCover}` +
-          `&hide_tracklist=${hideTracklist}` +
-          `&mini=${mini}` +
-          `&light=${light}`;
-
-        const response = await fetch(embedUrl);
+        const data: MixcloudApiResponse = await response.json();
 
         if (!response.ok) {
           throw new Error(
-            `Mixcloud returned ${response.status}`
+            data.error || "Unable to load Mixcloud"
           );
         }
 
-        const html = await response.text();
+        if (!data.iframeUrl) {
+          throw new Error(
+            "No Mixcloud player URL returned"
+          );
+        }
 
-        // Find the iframe src returned by Mixcloud
-        const match = html.match(
-          /<iframe[^>]+src=["']([^"']+)["']/i
+        setIframeUrl(data.iframeUrl);
+      } catch (error) {
+        console.error("Mixcloud player error:", error);
+
+        setError(
+          error instanceof Error
+            ? error.message
+            : "Unable to load Mixcloud player"
         );
-
-        if (!match?.[1]) {
-          console.error("Mixcloud embed response:", html);
-          throw new Error("Could not find Mixcloud player iframe");
-        }
-
-        let src = match[1];
-
-        // Handle HTML encoded URLs
-        src = src
-          .replace(/&amp;/g, "&")
-          .replace(/&#x2F;/g, "/");
-
-        if (mounted.current) {
-          setIframeSrc(src);
-        }
-      } catch (err) {
-        console.error("Mixcloud player error:", err);
-
-        if (mounted.current) {
-          setError("Unable to load Mixcloud player");
-        }
       }
     }
 
     loadPlayer();
-  }, [
-    apiUrl,
-    height,
-    color,
-    width,
-    hideCover,
-    hideTracklist,
-    mini,
-    light,
-  ]);
+  }, [apiUrl]);
 
   if (error) {
     return (
@@ -119,30 +73,33 @@ export default function MixcloudPlayer({
     );
   }
 
-  if (!iframeSrc) {
+  if (!iframeUrl) {
     return (
       <div
         className="flex items-center justify-center rounded-lg bg-gray-100 text-sm text-gray-500"
-        style={{
-          width,
-          height,
-        }}
+        style={{ height }}
       >
         Loading Mixcloud...
       </div>
     );
   }
 
+  const separator = iframeUrl.includes("?") ? "&" : "?";
+
+  const finalUrl =
+    `${iframeUrl}${separator}` +
+    `color=${encodeURIComponent(color)}`;
+
   return (
     <iframe
-      src={iframeSrc}
-      width={width}
+      src={finalUrl}
+      width="100%"
       height={height}
       frameBorder="0"
       allow="autoplay"
       scrolling="no"
       title="Mixcloud player"
-      className="w-full rounded-lg"
+      className="w-full"
     />
   );
 }

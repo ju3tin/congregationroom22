@@ -1,22 +1,16 @@
-"use client";
+import { Suspense } from "react";
+import MixcloudPlayerClient from "./MixcloudPlayerClient";
 
-import { useSearchParams } from "next/navigation";
-import MixcloudPlayer from "@/components/MixcloudPlayer";
-
-export default function MixcloudPage() {
-  const searchParams = useSearchParams();
-
-  const apiUrl = searchParams.get("url");
-
-  if (!apiUrl) {
-    return <div>Missing Mixcloud URL</div>;
-  }
-
+export default function MixplayerPage() {
   return (
-    <MixcloudPlayer
-      apiUrl={apiUrl}
-      height={180}
-      color="2563eb"
-    />
+    <Suspense
+      fallback={
+        <div className="flex min-h-[200px] items-center justify-center">
+          Loading player...
+        </div>
+      }
+    >
+      <MixcloudPlayerClient />
+    </Suspense>
   );
 }
