@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import MixcloudPlayer from "@/components/MixcloudPlayer";
 import { Download, Play, Filter, Calendar, Clock, Headphones } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -123,6 +124,7 @@ export default function MixesPage() {
 
               return (
                 <Card key={mix._id} className="group overflow-hidden bg-card hover:bg-secondary/30 transition-colors border-border">
+                 {mix.type === "audio" && (
                   <CardContent className="p-0">
                     <div className="flex flex-col sm:flex-row">
                       <div className="relative w-full sm:w-48 h-48 sm:h-auto shrink-0">
@@ -191,6 +193,16 @@ export default function MixesPage() {
                       </div>
                     </div>
                   </CardContent>
+                  )}
+                  {mix.type === "mixcloud" && (
+                    <CardContent className="p-0">
+                     <MixcloudPlayer
+        apiUrl={mix.audioUrl}
+        height={180}
+        color="2563eb"
+      />
+                    </CardContent>
+                  )}
                 </Card>
               );
             })}
