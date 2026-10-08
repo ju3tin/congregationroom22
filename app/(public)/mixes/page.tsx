@@ -25,6 +25,7 @@ export default function MixesPage() {
       try {
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
         const { data } = await axios.get(`${apiUrl}/api/mixes`);
+        console.log(data);
         setMixes(data);
       } catch (error) {
         console.error("Failed to fetch mixes:", error);
@@ -32,7 +33,7 @@ export default function MixesPage() {
         setLoading(false);
       }
     };
-console.log(mixes);
+
     fetchMixes();
   }, []);
 
