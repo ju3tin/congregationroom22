@@ -34,6 +34,7 @@ export default function NewMixPage() {
     title: "",
     slug: "",
     djId: "",
+    type: "",
     genre: "",
     description: "",
     duration: "",
@@ -115,6 +116,11 @@ export default function NewMixPage() {
             <div>
               <Label>Genre</Label>
               <Input name="genre" required />
+            </div>
+
+            <div>
+              <Label>Type</Label>
+              <Input name="type" required />
             </div>
 
             <div>

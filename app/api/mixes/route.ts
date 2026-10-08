@@ -26,6 +26,7 @@ export async function GET(request: NextRequest) {
       _id: mix._id.toString(),
       title: mix.title,
       slug: mix.slug,
+      type: mix.type,
       djId: mix.djId?._id?.toString(),
       djName: mix.djId?.name || "Unknown DJ",
       djSlug: mix.djId?.slug,

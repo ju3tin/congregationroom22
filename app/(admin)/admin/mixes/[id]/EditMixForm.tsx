@@ -24,9 +24,10 @@ interface DJ {
 
 interface Mix {
   _id: string;
-  title: string;
+  title: string; 
   slug: string;
   djId: string;
+  type: string;
   genre: string;
   description?: string;
   duration: number;
@@ -118,6 +119,10 @@ export default function EditMixForm({
                   </option>
                 ))}
               </select>
+            </div>
+            <div className="space-y-2">
+              <Label>Type</Label>
+              <Input name="type" defaultValue={mix.type} required />
             </div>
             <div className="space-y-2">
               <Label>Genre</Label>

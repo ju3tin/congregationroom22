@@ -75,6 +75,7 @@ export async function updateMix(mixId: string, formData: FormData) {
     title: formData.get("title"),
     slug: String(formData.get("slug")).toLowerCase().trim().replace(/\s+/g, "-"),
     djId: formData.get("djId"),
+    type: formData.get("type"),
     genre: formData.get("genre"),
     description: formData.get("description"),
     duration: formData.get("duration"),

@@ -32,7 +32,7 @@ export default function MixesPage() {
         setLoading(false);
       }
     };
-
+console.log(mixes);
     fetchMixes();
   }, []);
 

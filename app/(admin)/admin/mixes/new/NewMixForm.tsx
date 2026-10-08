@@ -112,6 +112,14 @@ export default function NewMixForm({
             </div>
 
             <div className="space-y-2">
+              <Label>Type</Label>
+              <Input
+                name="type"
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
               <Label>Genre</Label>
               <Input
                 name="genre"

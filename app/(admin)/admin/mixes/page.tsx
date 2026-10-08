@@ -58,6 +58,7 @@ export default async function AdminMixesPage() {
               <TableRow>
                 <TableHead>Mix</TableHead>
                 <TableHead>DJ</TableHead>
+                <TableHead>Type</TableHead>
                 <TableHead>Genre</TableHead>
                 <TableHead>Release Date</TableHead>
                 <TableHead>Plays</TableHead>
@@ -85,7 +86,9 @@ export default async function AdminMixesPage() {
                   <TableCell>
                     {mix.djId?.name || "Unknown DJ"}
                   </TableCell>
-
+                  <TableCell>
+                    {mix.type}
+                  </TableCell>
                   <TableCell>
                     {mix.genre}
                   </TableCell>

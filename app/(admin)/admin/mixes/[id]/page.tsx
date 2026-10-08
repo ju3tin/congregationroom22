@@ -33,6 +33,7 @@ export default function EditMixPage() {
     title: "",
     slug: "",
     djId: "",
+    type: "",
     genre: "",
     description: "",
     duration: "",
@@ -59,7 +60,8 @@ export default function EditMixPage() {
         setForm({
           title: mix.title,
           slug: mix.slug,
-          djId: mix.djId,
+          djId: (mix.djId as any)?.toString() || "",
+          type: mix.type,
           genre: mix.genre,
           description: mix.description || "",
           duration: mix.duration.toString(),
@@ -144,9 +146,8 @@ export default function EditMixPage() {
                 </SelectContent>
               </Select>
             </div>
-
-            <div><Label>Genre</Label><Input name="genre" value={form.genre} onChange={(e) => setForm({ ...form, genre: e.target.value })} required /></div>
-
+            <div><Label>Type</Label><Input name="type" value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })} required /></div>
+              <div><Label>Genre</Label><Input name="genre" value={form.genre} onChange={(e) => setForm({ ...form, genre: e.target.value })} required /></div>
             <div><Label>Description</Label><Textarea name="description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={4} /></div>
 
             <div className="grid gap-4 sm:grid-cols-2">

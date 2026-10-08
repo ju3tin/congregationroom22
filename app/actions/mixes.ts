@@ -10,6 +10,7 @@ const mixSchema = z.object({
   title: z.string().min(1, "Title is required"),
   slug: z.string().min(1, "Slug is required"),
   djId: z.string().min(1, "DJ is required"),
+  type: z.string().min(1, "Type is required"),
   genre: z.string().min(1, "Genre is required"),
   description: z.string().optional(),
   duration: z.number().min(1, "Duration is required"),
@@ -33,7 +34,7 @@ export async function getMix(id: string) {
       ...mix,
       _id: mix._id.toString(),
       djId: mix.djId?._id?.toString() || mix.djId,
-      djName: mix.djId?.name || "",
+      djName: (mix.djId as any)?.name as string || "",
     };
   } catch (error) {
     console.error("Get mix error:", error);
@@ -52,6 +53,7 @@ export async function createMix(formData: FormData) {
     title: formData.get("title"),
     slug: (formData.get("slug") as string).toLowerCase().trim().replace(/\s+/g, "-"),
     djId: formData.get("djId"),
+    type: formData.get("type"),
     genre: formData.get("genre"),
     description: formData.get("description"),
     duration: Number(formData.get("duration")),
@@ -72,7 +74,7 @@ export async function createMix(formData: FormData) {
     const existingMix = await Mix.findOne({ slug: result.data.slug });
     if (existingMix) return { error: "A mix with this slug already exists" };
 
-    await Mix.create(result.data);
+    await Mix.create(result.data as any);
 
     revalidatePath("/admin/mixes");
     revalidatePath("/mixes");
@@ -95,6 +97,7 @@ export async function updateMix(id: string, formData: FormData) {
     slug: (formData.get("slug") as string).toLowerCase().trim().replace(/\s+/g, "-"),
     djId: formData.get("djId"),
     genre: formData.get("genre"),
+    type: formData.get("type"),
     description: formData.get("description"),
     duration: Number(formData.get("duration")),
     audioUrl: formData.get("audioUrl"),
