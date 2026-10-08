@@ -127,141 +127,106 @@ export default function HeroSlider() {
   const slide = slideshow.slides[current];
 
   return (
-    <section className="relative min-h-[600px] overflow-hidden bg-black">
-      {/* Slides */}
-      {slideshow.slides.map((item, index) => (
+   <section className="relative min-h-[600px] overflow-hidden bg-black">
+  {/* Slides */}
+  {slideshow.slides.map((item, index) => (
+    <div
+      key={item._id || index}
+      className={`absolute inset-0 transition-opacity duration-700 ${
+        index === current
+          ? "opacity-100"
+          : "pointer-events-none opacity-0"
+      }`}
+    >
+      {/* Full image - no cropping */}
+      {item.image && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black">
+          <img
+            src={item.image}
+            alt={item.title}
+            className="h-full w-full object-contain"
+          />
+        </div>
+      )}
+
+      {/* Optional background */}
+      {item.background && (
         <div
-          key={item._id || index}
-          className={`absolute inset-0 transition-opacity duration-700 ${
-            index === current
-              ? "opacity-100"
-              : "pointer-events-none opacity-0"
-          }`}
-        >
-          {slideshow.slides.map((item, index) => (
-  <div
-    key={item._id || index}
-    className={`absolute inset-0 transition-opacity duration-700 ${
-      index === current
-        ? "opacity-100"
-        : "pointer-events-none opacity-0"
-    }`}
-  >
-    {/* FULL IMAGE - NO CROPPING */}
-    {item.image && (
-      <div className="absolute inset-0 flex items-center justify-center bg-black">
-        <img
-          src={item.image}
-          alt={item.title}
-          className="h-full w-full object-contain"
+          className="absolute inset-0"
+          style={{
+            background: item.background,
+          }}
         />
-      </div>
-    )}
+      )}
 
-    {/* Optional background */}
-    {item.background && (
-      <div
-        className="absolute inset-0"
-        style={{
-          background: item.background,
-        }}
-      />
-    )}
+      {/* Consistent dark overlay */}
+      <div className="absolute inset-0 bg-black/10" />
 
-    {/* Dark overlay */}
-    <div className="absolute inset-0 bg-black/30" />
+      {/* Subtle left-to-right gradient for text */}
+      <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-black/10 to-transparent" />
+    </div>
+  ))}
 
-    {/* Gradient */}
-    <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/20 to-transparent" />
+  {/* Content */}
+  <div className="relative z-10 mx-auto flex min-h-[600px] max-w-7xl items-center px-4 py-24">
+    <div
+      key={slide._id || current}
+      className="max-w-3xl text-white"
+    >
+      <h1 className="mb-6 text-5xl font-bold md:text-7xl">
+        {slide.title}
+      </h1>
+
+      {slide.content && (
+        <p className="mb-8 max-w-2xl text-lg text-white/80 md:text-xl">
+          {slide.content}
+        </p>
+      )}
+    </div>
   </div>
-))}
 
-          {/* Optional background */}
-          {item.background && (
-            <div
-              className="absolute inset-0"
-              style={{
-                background: item.background,
-              }}
-            />
-          )}
+  {/* Previous */}
+  {slideshow.slides.length > 1 && (
+    <button
+      type="button"
+      onClick={previousSlide}
+      aria-label="Previous slide"
+      className="absolute left-4 top-1/2 z-30 -translate-y-1/2 rounded-full bg-black/40 p-3 text-white backdrop-blur transition hover:bg-black/70"
+    >
+      <ChevronLeft className="h-6 w-6" />
+    </button>
+  )}
 
-          {/* Dark overlay */}
-          <div className="absolute inset-0 bg-black/10" />
+  {/* Next */}
+  {slideshow.slides.length > 1 && (
+    <button
+      type="button"
+      onClick={nextSlide}
+      aria-label="Next slide"
+      className="absolute right-4 top-1/2 z-30 -translate-y-1/2 rounded-full bg-black/40 p-3 text-white backdrop-blur transition hover:bg-black/70"
+    >
+      <ChevronRight className="h-6 w-6" />
+    </button>
+  )}
 
-          {/* Gradient */}
-          <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent" />
-        </div>
+  {/* Dots */}
+  {slideshow.slides.length > 1 && (
+    <div className="absolute bottom-8 left-1/2 z-30 flex -translate-x-1/2 gap-2">
+      {slideshow.slides.map((item, index) => (
+        <button
+          key={item._id || index}
+          type="button"
+          onClick={() => setCurrent(index)}
+          aria-label={`Go to slide ${index + 1}`}
+          className={`h-2.5 rounded-full transition-all ${
+            index === current
+              ? "w-8 bg-white"
+              : "w-2.5 bg-white/50 hover:bg-white"
+          }`}
+        />
       ))}
-
-      {/* Content */}
-      <div className="relative z-10 mx-auto flex min-h-[600px] max-w-7xl items-center px-4 py-24">
-        <div
-          key={slide._id || current}
-          className="max-w-3xl text-white"
-        >
-          <h1 className="mb-6 text-5xl font-bold md:text-7xl">
-            {slide.title}
-          </h1>
-
-          {slide.content && (
-            <p className="mb-8 max-w-2xl text-lg text-white/80 md:text-xl">
-              {slide.content}
-            </p>
-          )}
-{/* */}
-          {/* <button
-            type="button"
-            className="inline-flex items-center rounded-lg bg-primary px-6 py-3 text-lg font-semibold text-white transition hover:opacity-90"
-          > */}
-            {/* <Radio className="mr-2 h-5 w-5" /> */}
-            {/* Listen Live */}
-            {/* </button> */}
-        </div>
-      </div>
-
-      {/* Previous */}
-      {slideshow.slides.length > 1 && (
-        <button
-          type="button"
-          onClick={previousSlide}
-          aria-label="Previous slide"
-          className="absolute left-4 top-1/2 z-30 -translate-y-1/2 rounded-full bg-black/40 p-3 text-white backdrop-blur transition hover:bg-black/70"
-        >
-          <ChevronLeft className="h-6 w-6" />
-        </button>
-      )}
-
-      {/* Next */}
-      {slideshow.slides.length > 1 && (
-        <button
-          type="button"
-          onClick={nextSlide}
-          aria-label="Next slide"
-          className="absolute right-4 top-1/2 z-30 -translate-y-1/2 rounded-full bg-black/40 p-3 text-white backdrop-blur transition hover:bg-black/70"
-        >
-          <ChevronRight className="h-6 w-6" />
-        </button>
-      )}
-
-      {/* Dots */}
-      {slideshow.slides.length > 1 && (
-        <div className="absolute bottom-8 left-1/2 z-30 flex -translate-x-1/2 gap-2">
-          {slideshow.slides.map((item, index) => (
-            <button
-              key={item._id || index}
-              type="button"
-              onClick={() => setCurrent(index)}
-              aria-label={`Go to slide ${index + 1}`}
-              className={`h-2.5 rounded-full transition-all ${
-                index === current
-                  ? "w-8 bg-white"
-                  : "w-2.5 bg-white/50 hover:bg-white"
-              }`}
-            />
-          ))}
-        </div>
-      )}
-    </section>
+    </div>
+  )}
+</section>
   );
 }
