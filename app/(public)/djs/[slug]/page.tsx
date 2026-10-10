@@ -5,6 +5,13 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import axios from 'axios';
+import MixcloudPlayer from "@/components/MixcloudPlayer";
+import {
+  Play,
+  Filter,
+  Clock,
+  Headphones,
+} from "lucide-react";
 
 import {
   ArrowLeft,
@@ -26,9 +33,16 @@ export default function DJProfilePage() {
   const params = useParams();
   const slug = params.slug as string;
 
+  const [selectedGenre, setSelectedGenre] = useState("All");
+  const [sortBy, setSortBy] = useState<"date" | "plays">("date");
+  const [currentPage, setCurrentPage] = useState(1);
+
   const [dj, setDj] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [notFoundError, setNotFoundError] = useState(false);
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedGenre, sortBy]);
 
   useEffect(() => {
     if (!slug) return;
@@ -281,65 +295,114 @@ export default function DJProfilePage() {
 
             <div className="grid gap-4">
               {mixes.map((mix: any) => (
-                <Card
-                  key={mix._id}
-                  className="hover:bg-secondary/30 transition-colors"
-                >
-                  <CardContent className="p-4">
-                    <div className="flex gap-4 items-center">
-                      <div className="relative w-20 h-20 rounded-lg overflow-hidden shrink-0">
-                        <Image
-                          src={
-                            mix.coverImage ||
-                            '/placeholder-mix.jpg'
-                          }
-                          alt={mix.title}
-                          fill
-                          className="object-cover"
-                        />
-                      </div>
+               <Card
+               key={mix._id}
+               className="group overflow-hidden bg-card hover:bg-secondary/30 transition-colors border-border"
+             >
+               {mix.type === "audio" && (
+                 <CardContent className="p-0">
+                   <div className="flex flex-col sm:flex-row">
+                     <div className="relative w-full sm:w-48 h-48 sm:h-auto sm:min-h-48 shrink-0">
+                       {mix.coverImage && (
+                         <Image
+                           src={mix.coverImage}
+                           alt={mix.title}
+                           fill
+                           sizes="(max-width: 640px) 100vw, 192px"
+                           className="object-cover"
+                         />
+                       )}
 
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-lg truncate">
-                          {mix.title}
-                        </h3>
+                       <button
+                         type="button"
+                         aria-label={`Preview ${mix.title}`}
+                         className="absolute inset-0 flex items-center justify-center bg-background/50 opacity-0 group-hover:opacity-100 transition-opacity"
+                       >
+                         <div className="w-14 h-14 rounded-full bg-primary flex items-center justify-center">
+                           <Play className="w-6 h-6 text-primary-foreground ml-1" />
+                         </div>
+                       </button>
+                     </div>
 
-                        <div className="flex flex-wrap gap-3 mt-2 text-sm text-muted-foreground">
-                          <span>{mix.genre}</span>
-                          <span>
-                            {formatDuration(mix.duration)}
-                          </span>
-                          <span>
-                            {(mix.plays || 0).toLocaleString()} plays
-                          </span>
-                        </div>
+                     <div className="flex-1 p-5 sm:p-6 flex flex-col">
+                       <div className="flex flex-wrap items-start justify-between gap-4 mb-3">
+                         <div>
+                           <h2 className="text-xl font-bold mb-1">
+                             {mix.title}
+                           </h2>
 
-                        {mix.description && (
-                          <p className="mt-2 text-sm text-muted-foreground line-clamp-2">
-                            {mix.description}
-                          </p>
-                        )}
-                      </div>
+                           {mix.djName && (
+                             <Link
+                               href={`/djs/${mix.djSlug || "#"}`}
+                               className="text-primary hover:underline font-medium"
+                             >
+                               {mix.djName}
+                             </Link>
+                           )}
+                         </div>
 
-                      {mix.audioUrl && (
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          asChild
-                        >
-                          <a
-                            href={mix.audioUrl}
-                            download
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            <Download className="w-4 h-4" />
-                          </a>
-                        </Button>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
+                         <Badge variant="secondary">{mix.genre}</Badge>
+                       </div>
+
+                       <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground mb-4">
+                         {mix.releaseDate &&
+                           !Number.isNaN(mix.releaseDate.getTime()) && (
+                             <div className="flex items-center gap-1.5">
+                               <Calendar className="w-4 h-4" />
+                               {mix.releaseDate.toLocaleDateString("en-GB", {
+                                 month: "short",
+                                 day: "numeric",
+                                 year: "numeric",
+                               })}
+                             </div>
+                           )}
+
+                         <div className="flex items-center gap-1.5">
+                           <Clock className="w-4 h-4" />
+                           {mix.duration}
+                         </div>
+
+                         <div className="flex items-center gap-1.5">
+                           <Headphones className="w-4 h-4" />
+                           {(mix.plays || 0).toLocaleString()} plays
+                         </div>
+                       </div>
+
+                       <div className="mt-auto flex flex-wrap items-center gap-3">
+                         {mix.audioUrl && (
+                           <a
+                             href={mix.audioUrl}
+                             download
+                             target="_blank"
+                             rel="noopener noreferrer"
+                           >
+                             <Button className="bg-primary hover:bg-primary/90">
+                               <Download className="w-4 h-4 mr-2" />
+                               Download MP3
+                             </Button>
+                           </a>
+                         )}
+
+                         <Button variant="outline">
+                           <Play className="w-4 h-4 mr-2" />
+                           Preview
+                         </Button>
+                       </div>
+                     </div>
+                   </div>
+                 </CardContent>
+               )}
+
+               {mix.type === "mixcloud" && (
+                 <CardContent className="p-0">
+                   <MixcloudPlayer
+                     apiUrl={mix.audioUrl}
+                     height={180}
+                     color="2563eb"
+                   />
+                 </CardContent>
+               )}
+             </Card>
               ))}
             </div>
           </section>

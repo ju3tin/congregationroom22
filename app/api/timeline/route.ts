@@ -63,7 +63,7 @@ export async function GET() {
               }
             : undefined,
 
-          group: event.category || "General",
+        //  group: event.category || "General",
           tags: event.tags?.length ? event.tags.join(", ") : undefined,
 
           background, // ← This is what TimelineJS uses
