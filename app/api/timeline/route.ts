@@ -62,7 +62,7 @@ export async function GET() {
                 credit: event.media.credit || "",
               }
             : undefined,
-
+ 
         //  group: event.category || "General",
           tags: event.tags?.length ? event.tags.join(", ") : undefined,
 
