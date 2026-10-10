@@ -262,8 +262,8 @@ function createInstagramHTML(
         title="Instagram post"
         style="
           width:100%;
-          max-width:540px;
-          height:700px;
+          max-width:300px;
+          height:500px;
           border:0;
           overflow:hidden;
           background:#fff;
@@ -323,7 +323,7 @@ function createTikTokHTML(
         style="
           width:100%;
           max-width:605px;
-          height:700px;
+          height:500px;
           border:0;
           background:#000;
         "
