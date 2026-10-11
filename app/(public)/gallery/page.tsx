@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
 import { Header } from "@/components/header"
+import CR22ArchiveTimeline from "@/components/cr22-archive/CR22ArchiveTimeline";
 
 export default function RadioTimeline() {
   const timelineRef = useRef<HTMLDivElement>(null);
@@ -75,7 +76,7 @@ export default function RadioTimeline() {
       <Header />    
       <div className="bg-gray-950">
       <div className="mx-auto">
-        <div ref={timelineRef} style={{height: "100vh", width: "100%" }} />
+      <CR22ArchiveTimeline />
       </div>
     </div>
       </div>
