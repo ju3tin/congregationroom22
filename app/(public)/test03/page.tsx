@@ -14,6 +14,7 @@ export default function Home() {
 
       <InstagramEmbed url={instagramUrl} />
       <VideoPlayer src="https://github.com/ju3tin/congregationroom22/raw/refs/heads/redr/public/instagram/4tay_da_hosta/3942791312635414081.mp4" />
+    <p>dsfsdf</p>
     </main>
   );
 }
