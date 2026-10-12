@@ -12,6 +12,7 @@ import {
   Tag,
   Settings,
   Music2,
+  Video,
 } from "lucide-react"
 
 const adminNav = [
@@ -25,6 +26,7 @@ const adminNav = [
   { name: "Timeline", href: "/admin/timeline", icon: Tag },
   { name: "Settings", href: "/admin/settings", icon: Settings },
   { name: "DJ's", href: "/admin/dj", icon: Music2 },
+  { name: "Video Streams", href: "/admin/video-streams", icon: Video },
   { name: "Mixes", href: "/admin/mixes", icon: Music2 },
   { name: "Images", href: "/admin/images", icon: Tag},
   { name: "Slideshows", href: "/admin/slideshows", icon: Tag },
