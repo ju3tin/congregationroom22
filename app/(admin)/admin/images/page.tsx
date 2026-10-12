@@ -283,7 +283,7 @@ export default function GitHubImagesPage() {
                 {/* Image */}
                 <div className="aspect-square bg-gray-100">
                   <img
-                    src={file.download_url}
+                    src={file.path}
                     alt={file.name}
                     className="h-full w-full object-cover"
                     loading="lazy"
