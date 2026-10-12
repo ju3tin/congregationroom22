@@ -3,26 +3,23 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import { StaticImageData } from "next/image";
 import type { ReactElement } from "react";
-import image1 from "@/public/1.png";
-import image2 from "@/public/CR22.png";
-import image3 from "@/public/dano.png";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 // Interface for image data
 interface ImageData {
-  src: StaticImageData;
+  src: string;
 }
 
 // Image data array
 const images: ImageData[] = [
   {
-    src: image1,
+    src: "/images/1.png",
   },
   {
-    src: image2,
+    src: "/images/CR22.png",
   },
   {
-    src: image3,
+    src: "/images/dano.png",
   },
 ];
 
