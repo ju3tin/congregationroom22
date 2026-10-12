@@ -13,8 +13,8 @@ export async function GET(
     const { filename } = await params;
 
     const githubUrl =
-      `https://media.githubusercontent.com/media/` +
-      `${GITHUB_OWNER}/${GITHUB_REPO}/refs/heads/${GITHUB_BRANCH}/` +
+      `https://raw.githubusercontent.com/` +
+      `${GITHUB_OWNER}/${GITHUB_REPO}/${GITHUB_BRANCH}/` +
       `${GITHUB_FOLDER}/${encodeURIComponent(filename)}`;
 
     const response = await fetch(githubUrl, {
