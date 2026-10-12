@@ -1,5 +1,6 @@
 
 import InstagramEmbed from "@/components/InstagramEmbed2";
+import VideoPlayer from "@/components/videoplayer";
 
 export default function Home() {
   const instagramUrl =
@@ -12,6 +13,7 @@ export default function Home() {
       </h1>
 
       <InstagramEmbed url={instagramUrl} />
+      <VideoPlayer src="https://github.com/ju3tin/congregationroom22/raw/refs/heads/redr/public/instagram/4tay_da_hosta/3942791312635414081.mp4" />
     </main>
   );
 }
